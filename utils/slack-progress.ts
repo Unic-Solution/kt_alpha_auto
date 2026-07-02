@@ -5,7 +5,11 @@ const CHANNEL_ID = process.env.SLACK_CHANNEL_ID;
 
 function slackApi(method: string, body: Record<string, unknown>): Promise<{ ts?: string }> {
   return new Promise((resolve) => {
-    if (!BOT_TOKEN || !CHANNEL_ID) { resolve({}); return; }
+    if (!BOT_TOKEN || !CHANNEL_ID) {
+      console.warn('[Slack] SLACK_BOT_TOKEN 또는 SLACK_CHANNEL_ID 환경변수 없음');
+      resolve({});
+      return;
+    }
     const payload = JSON.stringify(body);
     const req = request(
       {
@@ -20,10 +24,18 @@ function slackApi(method: string, body: Record<string, unknown>): Promise<{ ts?:
       (res) => {
         let data = '';
         res.on('data', chunk => (data += chunk));
-        res.on('end', () => { try { resolve(JSON.parse(data)); } catch { resolve({}); } });
+        res.on('end', () => {
+          try {
+            const parsed = JSON.parse(data);
+            if (!parsed.ok) console.warn(`[Slack] ${method} 실패:`, parsed.error);
+            resolve(parsed);
+          } catch {
+            resolve({});
+          }
+        });
       },
     );
-    req.on('error', () => resolve({}));
+    req.on('error', (e) => { console.warn('[Slack] 요청 오류:', e.message); resolve({}); });
     req.write(payload);
     req.end();
   });
