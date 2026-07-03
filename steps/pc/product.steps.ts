@@ -104,10 +104,23 @@ export class ProductSteps {
     return cartProductName.includes(productName);
   }
 
+  /** 장바구니 추천구좌 상품 및 페이지 이동 확인 */
+  async verifyCartRecommendation(): Promise<boolean> {
+    await this.productPage.clickCartRecommendProduct();
+    return await this.productPage.isProductDetailPage();
+  }
+
   /** 상품 > 구매하기 주문서 이동 확인 */
   async verifyProductBuy(): Promise<boolean> {
     await this.productPage.clickProduct();
     await this.productPage.clickProductBuy();
     return await this.productPage.isBuyOrderPage();
+  }
+
+  /** 상품 추천구좌 상품 및 페이지 이동 확인 */
+  async verifyRecommendProduct(): Promise<boolean> {
+    await this.productPage.clickProduct();
+    await this.productPage.clickRecommendProduct();
+    return await this.productPage.isProductDetailPage();
   }
 }

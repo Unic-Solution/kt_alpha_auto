@@ -106,6 +106,7 @@ export class MainPage extends BasePage {
 
   /** 카테고리 버튼 클릭 */
   async clickCategoryButton() {
+    await this.goToHome();
     await this.click(PcLocators.main.categoryButton);
   }
 
@@ -143,6 +144,7 @@ export class MainPage extends BasePage {
 
   /** 검색 버튼 클릭 */
   async clickSearchButton() {
+    await this.goToHome();
     await this.click(PcLocators.main.searchButton);
   }
 
@@ -164,5 +166,76 @@ export class MainPage extends BasePage {
   /** 상품 상세 페이지 이동 확인 */
   async isProductDetailPage(): Promise<boolean> {
     return this.urlContains(PcLocators.urls.productDetail);
+  }
+
+  /** 최근 본 상품 클릭 */
+  async clickRecentlyViewedProduct() {
+    await this.click(PcLocators.main.recentlyViewedProduct);
+  }
+
+  /** 카테고리 상품 클릭 */
+  async clickCategoryProduct() {
+    await this.click(PcLocators.main.categoryProduct);
+  }
+
+  /** 뒤로가기 클릭 */
+  async clickBackButton() {
+    await this.click(PcLocators.main.backButton);
+  }
+
+  /** 카테고리 추천 상품 클릭 */
+  async clickCategoryRecommendProduct() {
+    await this.click(PcLocators.main.categoryRecommendProduct);
+  }
+
+  /** 검색 추천 상품 클릭 */
+  async clickSearchRecommendProduct() {
+    await this.click(PcLocators.main.searchRecommendProduct);
+  }
+
+  /** 편성표 탭 클릭 */
+  async clickScheduleTab() {
+    await this.click(PcLocators.main.navItems);
+  }
+
+  /** '지금 방송 중' 문구 노출 확인 */
+  async isOnAirTextVisible(): Promise<boolean> {
+    return await this.isVisible('text=지금 방송 중');
+  }
+
+  /** 편성표 > TV+ 탭 클릭 */
+  async clickTvPlusTab() {
+    await this.click(PcLocators.main.tvPlusTab);
+  }
+
+  /** 혜택/이벤트 탭 클릭 */
+  async clickBenefitTab() {
+    await this.goToHome();
+    await this.click(PcLocators.main.benefitTab);
+  }
+
+  /** 헤더 텍스트 추출 */
+  async getHeaderTitle(): Promise<string> {
+    return await this.getText(PcLocators.main.benefitTitle);
+  }
+
+  /** 혜택/이벤트 > 신규가입 혜택 클릭 */
+  async clickNewSignBenefitTab() {
+    await this.click(PcLocators.main.newSignBenefitTab);
+  }
+
+  /** 혜택/이벤트 > 이달의 선물 클릭 */
+  async clickMonthGiftTab() {
+    await this.click(PcLocators.main.monthGiftTab);
+  }
+
+  /** 혜택/이벤트 > 멤버십 혜택 클릭 */
+  async clickMembershipBenefitTab() {
+    await this.click(PcLocators.main.membershipBenefitTab);
+  }
+
+  /** 혜택/이벤트 > 수신동의 쿠폰팩 클릭 */
+  async clickAgreeReceiveTab() {
+    await this.click(PcLocators.main.agreeReceiveTab);
   }
 }

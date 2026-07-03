@@ -75,7 +75,6 @@ export class MainSteps {
 
   /** 카테고리 및 필터 기능 확인 */
   async verifyCategory(): Promise<boolean> {
-    await this.mainPage.goToHome();
     await this.mainPage.clickCategoryButton();
     await this.mainPage.clickHomeShoppingOneDepth();
     await this.mainPage.clickCategoryTwoDepth();
@@ -94,7 +93,6 @@ export class MainSteps {
 
   /** 검색 후 상품 상세 페이지 이동 확인 */
   async verifySearch(): Promise<boolean> {
-    await this.mainPage.goToHome();
     await this.mainPage.clickSearchButton();
     const popularWord = await this.mainPage.clickPopularWord();
     await this.mainPage.clickSearchProduct();
@@ -103,5 +101,78 @@ export class MainSteps {
     parameter('상품 클릭 후 URL', this.mainPage.getCurrentURL());
 
     return await this.mainPage.isProductDetailPage();
+  }
+
+  /** 최근 본 상품 추천구좌 상품 및 페이지 이동 확인 */
+  async verifyRecentlyViewedProductRecommend(): Promise<boolean> {
+    await this.mainPage.goToHome();
+    await this.mainPage.clickRecentlyViewedProduct();
+    return await this.mainPage.isProductDetailPage();
+  }
+
+  /** 카테고리 추천구좌 상품 및 페이지 이동 확인 */
+  async verifyCategoryRecommend(): Promise<boolean> {
+    await this.mainPage.clickCategoryButton();
+    await this.mainPage.clickHomeShoppingOneDepth();
+    await this.mainPage.clickCategoryTwoDepth();
+    await this.mainPage.clickHomeShoppingThreeDepth();
+    await this.mainPage.clickCategoryProduct();
+    await this.mainPage.clickBackButton();
+    await this.mainPage.clickCategoryRecommendProduct();
+    return await this.mainPage.isProductDetailPage();
+  }
+
+  /** 검색 추천구좌 상품 및 페이지 이동 확인 */
+  async verifySearchRecommend(): Promise<boolean> {
+    await this.mainPage.clickSearchButton();
+    await this.mainPage.clickPopularWord();
+    await this.mainPage.clickSearchRecommendProduct();
+    return await this.mainPage.isProductDetailPage();
+  }
+
+  /** 편성표 > TV/TV+ 탭 변경 시 지금 방송중 상품 확인 */
+  async verifyScheduleOnAir(): Promise<boolean> {
+    await this.mainPage.goToHome();
+    await this.mainPage.clickScheduleTab();
+    const tvTab = await this.mainPage.isOnAirTextVisible();
+    await this.mainPage.clickTvPlusTab();
+    const tvPlusTab = await this.mainPage.isOnAirTextVisible();
+
+    parameter('TV 탭 "지금 방송중" 문구 확인', `${tvTab}`)
+    parameter('TV+ 탭 "지금 방송중" 문구 확인', `${tvPlusTab}`)
+
+    return tvTab && tvPlusTab;
+  }
+
+  /** 혜택/이벤트 > 신규가입 혜택 페이지 이동 확인 */
+  async verifyNewSignBenefit(): Promise<boolean> {
+    await this.mainPage.clickBenefitTab();
+    await this.mainPage.clickNewSignBenefitTab();
+    const txt = await this.mainPage.getHeaderTitle();
+    return txt.includes('신규가입')
+  }
+
+  /** 혜택/이벤트 > 이달의 선물 페이지 이동 확인 */
+  async verifyMonthGift(): Promise<boolean> {
+    await this.mainPage.clickBenefitTab();
+    await this.mainPage.clickMonthGiftTab();
+    const txt = await this.mainPage.getHeaderTitle();
+    return txt.includes('이달의 선물')
+  }
+
+  /** 혜택/이벤트 > 멤버십 혜택 페이지 이동 확인 */
+  async verifyMembershipBenefit(): Promise<boolean> {
+    await this.mainPage.clickBenefitTab();
+    await this.mainPage.clickMembershipBenefitTab();
+    const txt = await this.mainPage.getHeaderTitle();
+    return txt.includes('멤버십 혜택')
+  }
+
+  /** 혜택/이벤트 > 수신동의 쿠폰팩 페이지 이동 확인 */
+  async verifyAgreeReceive(): Promise<boolean> {
+    await this.mainPage.clickBenefitTab();
+    await this.mainPage.clickAgreeReceiveTab();
+    const txt = await this.mainPage.getHeaderTitle();
+    return txt.includes('수신동의')
   }
 }

@@ -15,5 +15,7 @@ test('상품 페이지', async ({ basePage }) => {
   await run('상품 > 상품문의 탭 노출 확인', () => productSteps.verifyProductQna());
   await run('상품 > 선물하기 주문서 페이지 이동 확인', () => productSteps.verifyProductGift());
   await run('상품 > 장바구니 상품 추가 확인', () => productSteps.verifyProductCart());
+  await run('장바구니 추천구좌 상품 및 페이지 이동 확인', () => productSteps.verifyCartRecommendation());
   await run('상품 > 구매하기 주문서 페이지 이동 확인', () => productSteps.verifyProductBuy());
+  await run('상품 추천구좌 상품 및 페이지 이동 확인', () => productSteps.verifyRecommendProduct());
 });

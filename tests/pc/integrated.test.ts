@@ -42,6 +42,14 @@ test('통합 테스트', async ({ sharedBasePage }) => {
   await run('ON AIR > 바로구매 > 구매하기 주문서 페이지 이동 확인', () => mainSteps.verifyOnAirBuy());
   await run('카테고리 정상 노출 및 필터 기능 확인', () => mainSteps.verifyCategory());
   await run('검색 후 상품 상세 페이지 이동 확인', () => mainSteps.verifySearch());
+  await run('최근 본 상품 추천구좌 상품 및 페이지 이동 확인', () => mainSteps.verifyRecentlyViewedProductRecommend());
+  await run('카테고리 추천구좌 상품 및 페이지 이동 확인', () => mainSteps.verifyCategoryRecommend());
+  await run('검색 추천구좌 상품 및 페이지 이동 확인', () => mainSteps.verifySearchRecommend());
+  await run('편성표 > TV/TV+ 탭 > 지금 방송 중 상품 확인', () => mainSteps.verifyScheduleOnAir());
+  await run('혜택/이벤트 > 신규가입 혜택 페이지 이동 확인', () => mainSteps.verifyNewSignBenefit());
+  await run('혜택/이벤트 > 이달의 선물 페이지 이동 확인', () => mainSteps.verifyMonthGift());
+  await run('혜택/이벤트 > 멤버십 혜택 페이지 이동 확인', () => mainSteps.verifyMembershipBenefit());
+  await run('혜택/이벤트 > 수신동의 쿠폰팩 페이지 이동 확인', () => mainSteps.verifyAgreeReceive());
 
   await run('ON AIR > VOD 영상 재생 확인', () => productSteps.verifyVOD());
   await run('편성표 > 방송알림 신청 및 등록 완료 확인', () => productSteps.verifyBroadcastNotification());
@@ -52,7 +60,9 @@ test('통합 테스트', async ({ sharedBasePage }) => {
   await run('상품 > 상품문의 탭 노출 확인', () => productSteps.verifyProductQna());
   await run('상품 > 선물하기 주문서 페이지 이동 확인', () => productSteps.verifyProductGift());
   await run('상품 > 장바구니 상품 추가 확인', () => productSteps.verifyProductCart());
+  await run('장바구니 추천구좌 상품 및 페이지 이동 확인', () => productSteps.verifyCartRecommendation());
   await run('상품 > 구매하기 주문서 페이지 이동 확인', () => productSteps.verifyProductBuy());
+  await run('상품 추천구좌 상품 및 페이지 이동 확인', () => productSteps.verifyRecommendProduct());
 
   await run('독바 > ON AIR > 바로구매 > 선물하기 주문서 페이지 이동 확인', () => quickSteps.verifyOnAirGift());
   await run('독바 > ON AIR > 바로구매 > 장바구니 상품 추가 확인', () => quickSteps.verifyOnAirCart());

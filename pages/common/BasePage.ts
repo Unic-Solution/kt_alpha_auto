@@ -88,7 +88,8 @@ export class BasePage {
   }
 
   /** 요소의 텍스트 내용 반환 */
-  async getText(selector: string): Promise<string> {
+  async getText(selector: string,  timeout = 3): Promise<string> {
+    await this.waitForElement(selector, timeout);
     return await this.page.locator(selector).innerText();
   }
 

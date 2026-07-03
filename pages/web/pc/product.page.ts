@@ -188,6 +188,16 @@ export class ProductPage extends BasePage {
     await this.click(PcLocators.main.cartDeleteButton);
   }
 
+  /** 장바구니 추천구좌 상품 클릭 */
+  async clickCartRecommendProduct() {
+    await this.click(PcLocators.main.cartRecommendProduct);
+  }
+
+  /** 상품 상세 페이지 이동 확인 */
+  async isProductDetailPage(): Promise<boolean> {
+    return this.urlContains(PcLocators.urls.productDetail);
+  }
+
   /** 상품 > 구매하기 버튼 클릭 (옵션 선택 포함) */
   async clickProductBuy() {
     await this.click(PcLocators.main.onAirBuyButton, true);
@@ -198,5 +208,10 @@ export class ProductPage extends BasePage {
   /** 구매하기 주문서 페이지 URL 확인 */
   async isBuyOrderPage(): Promise<boolean> {
     return this.urlContains(PcLocators.urls.onAirBuyOrder);
+  }
+
+  /** 상품 > 추천구좌 상품 클릭 */
+  async clickRecommendProduct() {
+    await this.click(PcLocators.product.recommendProduct);
   }
 }
