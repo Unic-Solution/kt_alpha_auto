@@ -4,7 +4,7 @@ import { writeFileSync, mkdirSync } from 'fs';
 import { randomUUID } from 'crypto';
 import { join } from 'path';
 import { toFriendlyError } from './error-map';
-import { postProgress, updateProgress } from './slack-progress';
+import { postProgress, replyProgress } from './slack-progress';
 
 // workers: 1 환경 전제 — 테스트가 순차 실행되므로 모듈 레벨 전역 변수로 관리해도 안전
 let _params: Array<{ name: string; value: string }> = [];
@@ -109,7 +109,7 @@ export function createRun(epicName: string, featureName: string, page?: Page) {
 
   return async (name: string, fn: () => Promise<boolean>, hard = false) => {
     await initPost;
-    if (progressTs) updateProgress(progressTs, `🔄 *${featureName}* 진행 중\n현재: *${name}*`);
+    if (progressTs) replyProgress(progressTs, `▶ ${name}`);
     const start = Date.now();
     let passed = true;
     let errorMsg: string | undefined;

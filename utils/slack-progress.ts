@@ -46,6 +46,6 @@ export async function postProgress(text: string): Promise<string | undefined> {
   return res.ts;
 }
 
-export function updateProgress(ts: string, text: string): void {
-  slackApi('chat.update', { channel: CHANNEL_ID!, ts, text }).catch(() => {});
+export function replyProgress(threadTs: string, text: string): void {
+  slackApi('chat.postMessage', { channel: CHANNEL_ID!, thread_ts: threadTs, text }).catch(() => {});
 }
