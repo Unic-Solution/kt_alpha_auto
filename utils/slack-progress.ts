@@ -3,7 +3,7 @@ import { request } from 'https';
 const BOT_TOKEN = process.env.SLACK_BOT_TOKEN;
 const CHANNEL_ID = process.env.SLACK_CHANNEL_ID;
 
-function slackApi(method: string, body: Record<string, unknown>): Promise<{ ts?: string }> {
+function slackApi(method: string, body: Record<string, unknown>): Promise<Record<string, unknown>> {
   return new Promise((resolve) => {
     if (!BOT_TOKEN || !CHANNEL_ID) {
       console.warn('[Slack] SLACK_BOT_TOKEN 또는 SLACK_CHANNEL_ID 환경변수 없음');
@@ -41,11 +41,17 @@ function slackApi(method: string, body: Record<string, unknown>): Promise<{ ts?:
   });
 }
 
-export async function postProgress(text: string): Promise<string | undefined> {
-  const res = await slackApi('chat.postMessage', { channel: CHANNEL_ID!, text });
-  return res.ts;
+export async function getLatestMessageTs(): Promise<string | undefined> {
+  const res = await slackApi('conversations.history', { channel: CHANNEL_ID!, limit: 1 });
+  const messages = res.messages as Array<{ ts: string }> | undefined;
+  return messages?.[0]?.ts;
 }
 
-export function replyProgress(threadTs: string, text: string): void {
-  slackApi('chat.postMessage', { channel: CHANNEL_ID!, thread_ts: threadTs, text }).catch(() => {});
+export async function postThreadReply(threadTs: string, text: string): Promise<string | undefined> {
+  const res = await slackApi('chat.postMessage', { channel: CHANNEL_ID!, thread_ts: threadTs, text });
+  return res.ts as string | undefined;
+}
+
+export function updateMessage(ts: string, text: string): void {
+  slackApi('chat.update', { channel: CHANNEL_ID!, ts, text }).catch(() => {});
 }
