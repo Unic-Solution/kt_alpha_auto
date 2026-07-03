@@ -54,7 +54,7 @@ export const PcLocators = {
     productLikeButton: '(//div[contains(@class,"ProdActions_support")]//button)[1]',
     likePageLikeButton: '//div[contains(@class,"ProductItem_box")]/button',
     productDetailInfoTab: '(//div[contains(@class,"ProductTemplate_tab")]//button)[1]',
-    productDetailInfo: '//div[contains(@class,"ProdDetailInfo_wrap")]',
+    productDetailInfo: '//div[contains(@class,"ProdDetailInfo_wrap") or contains(@class,"CombinedProductList_wrap")]',
     productBuyInfoTab: '(//div[contains(@class,"ProductTemplate_tab")]//button)[2]',
     productBuyInfo: '//div[contains(@class,"BuyDetailInfo_wrap")]',
     productReviewTab: '(//div[contains(@class,"ProductTemplate_tab")]//button)[3]',
