@@ -133,7 +133,7 @@ export class BasePage {
   /** 요소가 화면에 보이는지 여부 반환 */
   async isVisible(selector: string): Promise<boolean> {
     await this.waitForElement(selector, 3).catch(() => {});
-    return await this.page.locator(selector).isVisible();
+    return await this.page.locator(selector).first().isVisible();
   }
 
   /** 요소가 활성화(enabled) 상태인지 여부 반환 */
