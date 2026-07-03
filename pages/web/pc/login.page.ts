@@ -57,7 +57,7 @@ export class LoginPage extends BasePage {
 
   /** 구매하기 버튼 클릭 (옵션 선택 전) */
   async clickBuyButtonBeforeOption() {
-    await this.click(PcLocators.main.onAirBuyButton);
+    await this.click(PcLocators.main.onAirBuyButton, true);
   }
 
   /** 구매하기 > 옵션 선택 */
