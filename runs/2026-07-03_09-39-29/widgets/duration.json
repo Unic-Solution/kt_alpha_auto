@@ -1,0 +1,1 @@
+[{"uid":"478e22ed019d4d2a","name":"GNB 메뉴별 화면 확인","time":{"start":1783039175287,"stop":1783039194152,"duration":18865},"status":"passed","severity":"normal"},{"uid":"5fdab925922b3183","name":"ON AIR > 현재 방송 중인 상품 정보 노출 확인","time":{"start":1783039194550,"stop":1783039198864,"duration":4314},"status":"passed","severity":"normal"}]
