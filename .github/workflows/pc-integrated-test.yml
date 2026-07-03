@@ -96,9 +96,11 @@ jobs:
             TEXT="실패"
           fi
 
-          curl -s -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+          curl -s -X POST "https://slack.com/api/chat.postMessage" \
+            -H "Authorization: Bearer ${{ secrets.SLACK_BOT_TOKEN }}" \
             -H 'Content-type: application/json' \
             --data "{
+              \"channel\": \"${{ secrets.SLACK_CHANNEL_ID }}\",
               \"blocks\": [
                 {
                   \"type\": \"header\",
