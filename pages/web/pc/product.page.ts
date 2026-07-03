@@ -145,7 +145,7 @@ export class ProductPage extends BasePage {
 
   /** 상품 > 선물하기 버튼 클릭 (옵션 선택 포함) */
   async clickProductGift() {
-    await this.click(PcLocators.main.onAirGiftButton);
+    await this.click(PcLocators.main.onAirGiftButton, true);
     await this.selectFirstEnabledOption();
     await this.lastClick(PcLocators.main.onAirGiftButton);
   }
@@ -166,7 +166,7 @@ export class ProductPage extends BasePage {
 
     if (!exists) return false;
 
-    await this.click(PcLocators.main.onAirCartButton);
+    await this.click(PcLocators.main.onAirCartButton, true);
     await this.selectFirstEnabledOption();
     await this.lastClick(PcLocators.main.onAirCartButton);
     return true;
@@ -190,7 +190,7 @@ export class ProductPage extends BasePage {
 
   /** 상품 > 구매하기 버튼 클릭 (옵션 선택 포함) */
   async clickProductBuy() {
-    await this.click(PcLocators.main.onAirBuyButton);
+    await this.click(PcLocators.main.onAirBuyButton, true);
     await this.selectFirstEnabledOption();
     await this.lastClick(PcLocators.main.onAirBuyButton);
   }
