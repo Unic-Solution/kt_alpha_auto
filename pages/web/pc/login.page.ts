@@ -60,9 +60,16 @@ export class LoginPage extends BasePage {
     await this.click(PcLocators.main.onAirBuyButton, true);
   }
 
-  /** 구매하기 > 옵션 선택 */
-  async clickFirstEnabledOption() {
-    await this.clickFirstEnabled(PcLocators.main.onAirDirectBuyFirstOption);
+  /** 구매하기 > 옵션 선택(중첩 옵션박스 대응) */
+  async selectFirstEnabledOption() {
+    let prevCount = 0;
+
+    while (true) {
+      const count = await this.count(PcLocators.product.optionBox);
+      if (count === 0 || count === prevCount) return;
+      prevCount = count;
+      await this.clickFirstEnabled(PcLocators.main.onAirDirectBuyFirstOption);
+    }
   }
 
   /** 구매하기 > 옵션 선택 > 구매하기 버튼 클릭 */

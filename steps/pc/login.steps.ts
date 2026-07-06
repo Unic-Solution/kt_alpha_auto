@@ -35,7 +35,7 @@ export class LoginSteps {
     await this.loginPage.goToHome();
     await this.loginPage.clickProduct();
     await this.loginPage.clickBuyButtonBeforeOption();
-    await this.loginPage.clickFirstEnabledOption();
+    await this.loginPage.selectFirstEnabledOption();
     await this.loginPage.clickBuyButtonAfterOption();
     await this.loginPage.fillId(id);
     await this.loginPage.fillPw(pw);
