@@ -110,6 +110,16 @@ export class MainSteps {
     return await this.mainPage.isProductDetailPage();
   }
 
+  /** 묶음 배송 상품 추천구좌 상품 및 페이지 이동 확인 */
+  async verifyCombinedProductRecommend(word: string): Promise<boolean> {
+    await this.mainPage.clickSearchButton();
+    await this.mainPage.fillSearchInput(word); // 검색어 입력
+    await this.mainPage.clickSearchRecommendProduct();
+    await this.mainPage.clickBackButton();
+    await this.mainPage.clickRecommendProduct();
+    return await this.mainPage.isProductDetailPage();
+  }
+
   /** 카테고리 추천구좌 상품 및 페이지 이동 확인 */
   async verifyCategoryRecommend(): Promise<boolean> {
     await this.mainPage.clickCategoryButton();
@@ -118,7 +128,7 @@ export class MainSteps {
     await this.mainPage.clickHomeShoppingThreeDepth();
     await this.mainPage.clickCategoryProduct();
     await this.mainPage.clickBackButton();
-    await this.mainPage.clickCategoryRecommendProduct();
+    await this.mainPage.clickRecommendProduct();
     return await this.mainPage.isProductDetailPage();
   }
 
@@ -127,6 +137,16 @@ export class MainSteps {
     await this.mainPage.clickSearchButton();
     await this.mainPage.clickPopularWord();
     await this.mainPage.clickSearchRecommendProduct();
+    return await this.mainPage.isProductDetailPage();
+  }
+
+  /** 상품 추천구좌 상품 및 페이지 이동 확인 */
+  async verifyProductRecommend(): Promise<boolean> {
+    await this.mainPage.goToHome();
+    await this.mainPage.scrollToProduct();
+    await this.mainPage.clickProduct();
+    await this.mainPage.clickBackButton();
+    await this.mainPage.clickRecommendProduct();
     return await this.mainPage.isProductDetailPage();
   }
 

@@ -11,6 +11,7 @@ import { createRun } from '../../utils/step-runner';
 const ENV = {
   id: process.env.LOGIN_ID ?? '',
   pw: process.env.LOGIN_PW ?? '',
+  combinedProduct: process.env.COMBINED_PRODUCT_CODE ?? '',
   name: process.env.NAME ?? '',
   year: process.env.YEAR ?? '',
   month: process.env.MONTH ?? '',
@@ -43,8 +44,10 @@ test('통합 테스트', async ({ sharedBasePage }) => {
   await run('카테고리 정상 노출 및 필터 기능 확인', () => mainSteps.verifyCategory());
   await run('검색 후 상품 상세 페이지 이동 확인', () => mainSteps.verifySearch());
   await run('최근 본 상품 추천구좌 상품 및 페이지 이동 확인', () => mainSteps.verifyRecentlyViewedProductRecommend());
+  await run('묶음 배송 추천구좌 상품 및 페이지 이동 확인', () => mainSteps.verifyCombinedProductRecommend(ENV.combinedProduct));
   await run('카테고리 추천구좌 상품 및 페이지 이동 확인', () => mainSteps.verifyCategoryRecommend());
   await run('검색 추천구좌 상품 및 페이지 이동 확인', () => mainSteps.verifySearchRecommend());
+  await run('상품 추천구좌 상품 및 페이지 이동 확인', () => mainSteps.verifyProductRecommend());
   await run('편성표 > TV/TV+ 탭 > 지금 방송 중 상품 확인', () => mainSteps.verifyScheduleOnAir());
   await run('혜택/이벤트 > 신규가입 혜택 페이지 이동 확인', () => mainSteps.verifyNewSignBenefit());
   await run('혜택/이벤트 > 이달의 선물 페이지 이동 확인', () => mainSteps.verifyMonthGift());

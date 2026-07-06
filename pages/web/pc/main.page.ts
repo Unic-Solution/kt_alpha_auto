@@ -173,6 +173,12 @@ export class MainPage extends BasePage {
     await this.click(PcLocators.main.recentlyViewedProduct);
   }
 
+  /** 검색어 입력 */
+  async fillSearchInput(word: string) {
+    await this.pressSequentially(PcLocators.main.searchInput, word)
+    await this.click(PcLocators.main.searchSubmitButton);
+  }
+
   /** 카테고리 상품 클릭 */
   async clickCategoryProduct() {
     await this.click(PcLocators.main.categoryProduct);
@@ -183,14 +189,24 @@ export class MainPage extends BasePage {
     await this.click(PcLocators.main.backButton);
   }
 
-  /** 카테고리 추천 상품 클릭 */
-  async clickCategoryRecommendProduct() {
-    await this.click(PcLocators.main.categoryRecommendProduct);
+  /** 추천 상품 클릭 */
+  async clickRecommendProduct() {
+    await this.click(PcLocators.main.recommendProduct);
   }
 
   /** 검색 추천 상품 클릭 */
   async clickSearchRecommendProduct() {
     await this.click(PcLocators.main.searchRecommendProduct);
+  }
+
+  /** 상품 영역으로 스크롤 */
+  async scrollToProduct() {
+    await this.scrollIntoView(PcLocators.main.productSection);
+  }
+
+  /** 상품 클릭 */
+  async clickProduct() {
+    await this.click(PcLocators.main.product);
   }
 
   /** 편성표 탭 클릭 */
