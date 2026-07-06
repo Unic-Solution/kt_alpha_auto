@@ -168,16 +168,6 @@ export class BasePage {
     return this.page.url();
   }
 
-  /** URL이 변경될 때까지 요소를 반복 클릭 (최대 maxAttempts회) */
-  async clickUntilURLChanges(selector: string, maxAttempts = 10): Promise<void> {
-    const initialURL = this.getCurrentURL();
-    for (let i = 0; i < maxAttempts; i++) {
-      await this.click(selector);
-      if (this.getCurrentURL() !== initialURL) return;
-      await this.wait(1);
-    }
-  }
-
   /** 현재 URL이 특정 문자열을 포함하는지 여부 반환 */
   async urlContains(url: string, text: string = url): Promise<boolean> {
     await this.waitForURLContains(url);
