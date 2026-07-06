@@ -1,1 +1,0 @@
-{"uuid":"9dc6a8f0-0fa0-4afb-a179-efd2b339cc61","name":"편성표 > 방송알림 신청 및 등록 완료 확인","status":"passed","start":1782793326453,"stop":1782793342661,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20260630_13:18:13)"}],"parameters":[{"name":"방송알림 등록 완료","value":"true"}]}

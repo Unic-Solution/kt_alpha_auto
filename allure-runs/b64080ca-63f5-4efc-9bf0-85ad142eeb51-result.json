@@ -1,1 +1,0 @@
-{"uuid":"b64080ca-63f5-4efc-9bf0-85ad142eeb51","name":"독바 > ON AIR > 바로구매 > 장바구니 상품 추가 확인","status":"passed","start":1782880066255,"stop":1782880087277,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20260701_13:17:19)"}],"parameters":[{"name":"독바 > ON AIR > 바로구매 > 장바구니","value":"장바구니 버튼 없는 케이스"}]}

@@ -1,1 +1,0 @@
-{"uuid":"2e961b50-d32b-4a65-bba5-b070d9ddcafd","name":"기프티쇼 > 상품 > 선물하기 > 내 번호로 보내기 확인","status":"passed","start":1782882330748,"stop":1782882331739,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20260701_13:50:49)"}],"parameters":[{"name":"기프티쇼 > 상품 > 선물하기 > 내 번호로 보내기 > 보내는 사람 input 값","value":"이주*"},{"name":"비교할 회원명","value":"이주호"}]}

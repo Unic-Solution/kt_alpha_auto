@@ -1,1 +1,0 @@
-{"uuid":"49e356e3-8694-4300-9697-1236a744a2cc","name":"회원 정보 수정 확인","status":"passed","start":1783311566314,"stop":1783311588514,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20260706_13:06:37)"}],"parameters":[{"name":"본인인증","value":"true"}]}

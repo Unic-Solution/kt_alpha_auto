@@ -1,1 +1,0 @@
-{"uuid":"e6e67948-a695-4d36-a6cc-71f7c64a76f7","name":"상품 > 장바구니 상품 추가 확인","status":"passed","start":1783311394814,"stop":1783311420319,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20260706_13:06:37)"}],"parameters":[{"name":"상품명","value":"[비비안][1+1]쿨메쉬패드일체형심리스브라"},{"name":"장바구니 상품명","value":"[비비안][1+1]쿨메쉬패드일체형심리스브라"}]}

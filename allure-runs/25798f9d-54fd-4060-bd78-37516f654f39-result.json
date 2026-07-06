@@ -1,1 +1,0 @@
-{"uuid":"25798f9d-54fd-4060-bd78-37516f654f39","name":"기프티쇼 > 상품 > 선물하기 > 받는 사람 확인","status":"passed","start":1782955540389,"stop":1782955540577,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20260702_10:15:36)"}],"parameters":[{"name":"받는 사람 입력 전","value":"0"},{"name":"받는 사람 입력 후","value":"1"}]}

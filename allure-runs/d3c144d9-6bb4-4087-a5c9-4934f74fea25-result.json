@@ -1,1 +1,0 @@
-{"uuid":"d3c144d9-6bb4-4087-a5c9-4934f74fea25","name":"ON AIR > 바로구매 > 장바구니 상품 추가 확인","status":"passed","start":1782881616131,"stop":1782881653414,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20260701_13:50:49)"}],"parameters":[{"name":"ON AIR 상품명","value":"슈리오썸머메쉬컴포트화"},{"name":"장바구니 상품명","value":"[TV상품]슈리오썸머메쉬컴포트화"}]}

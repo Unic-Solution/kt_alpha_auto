@@ -1,1 +1,0 @@
-{"uuid":"2b1ae4da-e57f-4a08-9f20-60391c6b42c8","name":"기프티쇼 > 상품 > 좋아요 추가 및 삭제 확인","status":"passed","start":1782955478268,"stop":1782955496208,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20260702_10:15:36)"}],"parameters":[{"name":"마이페이지 > 좋아요 > 좋아요 버튼(클릭 전)","value":"true"},{"name":"마이페이지 > 좋아요 > 좋아요 버튼(클릭 후)","value":"false"}]}

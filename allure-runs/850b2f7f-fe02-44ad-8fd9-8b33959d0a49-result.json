@@ -1,1 +1,0 @@
-{"uuid":"850b2f7f-fe02-44ad-8fd9-8b33959d0a49","name":"카테고리 정상 노출 및 필터 기능 확인","status":"passed","start":1782793276750,"stop":1782793296247,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20260630_13:18:13)"}],"parameters":[{"name":"필터 적용 전 상품 개수","value":"0"},{"name":"필터 적용 후 상품 개수","value":"0"}]}

@@ -1,1 +1,0 @@
-{"uuid":"acc85415-c6c2-41d1-9c9b-536b3eb84718","name":"ON AIR > 바로구매 > 구매하기 주문서 페이지 이동 확인","status":"passed","start":1783319466237,"stop":1783319486647,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20260706_15:28:07)"}],"parameters":[{"name":"ON AIR 상품명","value":"베이지"}]}
