@@ -160,6 +160,7 @@ export class BasePage {
   /** 요소가 뷰포트 내로 스크롤될 때까지 이동 */
   async scrollIntoView(selector: string) {
     await this.page.locator(selector).first().scrollIntoViewIfNeeded();
+    await this.wait(2);
   }
 
   /** 현재 페이지의 URL 반환 */

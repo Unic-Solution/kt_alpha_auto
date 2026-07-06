@@ -29,7 +29,7 @@ async function gotoSafe(page: Page, url: string) {
  * 마이페이지 접근 후 로그인 버튼이 노출되면 세션 만료로 판단하여 재로그인 수행
  */
 async function ensureLoggedIn(page: Page) {
-  const myPageUrl = CommonLocators.urls.homePage.replace(/\/$/, '') + PcLocators.urls.myPage;
+  const myPageUrl = PcLocators.urls.myPage;
   await gotoSafe(page, myPageUrl);
   await page.locator(PcLocators.login.loginButton).waitFor({ state: 'visible', timeout: 5_000 }).catch(() => {});
   const isNotLoggedIn = await page.locator(PcLocators.login.loginButton).isVisible();

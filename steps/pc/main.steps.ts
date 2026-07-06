@@ -114,6 +114,7 @@ export class MainSteps {
   async verifyCombinedProductRecommend(word: string): Promise<boolean> {
     await this.mainPage.clickSearchButton();
     await this.mainPage.fillSearchInput(word); // 검색어 입력
+    parameter('묶음 배송 상품 검색어', `${word}`)
     await this.mainPage.clickSearchRecommendProduct();
     await this.mainPage.clickBackButton();
     await this.mainPage.clickRecommendProduct();
@@ -146,6 +147,8 @@ export class MainSteps {
     await this.mainPage.scrollToProduct();
     await this.mainPage.clickProduct();
     await this.mainPage.clickBackButton();
+    await this.mainPage.closeModal();
+    await this.mainPage.scrollToProduct();
     await this.mainPage.clickRecommendProduct();
     return await this.mainPage.isProductDetailPage();
   }
