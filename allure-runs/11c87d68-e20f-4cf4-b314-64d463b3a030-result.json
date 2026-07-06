@@ -1,0 +1,1 @@
+{"uuid":"11c87d68-e20f-4cf4-b314-64d463b3a030","name":"카테고리 추천구좌 상품 및 페이지 이동 확인","status":"passed","start":1783311098047,"stop":1783311122352,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20260706_13:06:37)"}],"parameters":[{"name":"재시도","value":"1회"}]}
