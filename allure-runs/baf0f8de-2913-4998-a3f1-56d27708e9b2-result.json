@@ -1,0 +1,1 @@
+{"uuid":"baf0f8de-2913-4998-a3f1-56d27708e9b2","name":"혜택/이벤트 > 멤버십 혜택 페이지 이동 확인","status":"passed","start":1783302733348,"stop":1783302759904,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20260706_10:45:55)"}],"parameters":[{"name":"재시도","value":"1회"}]}
