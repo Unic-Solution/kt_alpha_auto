@@ -237,21 +237,21 @@ export class MainPage extends BasePage {
 
   /** 혜택/이벤트 > 신규가입 혜택 클릭 */
   async clickNewSignBenefitTab() {
-    await this.clickUntilURLChanges(PcLocators.main.newSignBenefitTab);
+    await this.click(PcLocators.main.newSignBenefitTab, true);
   }
 
   /** 혜택/이벤트 > 이달의 선물 클릭 */
   async clickMonthGiftTab() {
-    await this.clickUntilURLChanges(PcLocators.main.monthGiftTab);
+    await this.click(PcLocators.main.monthGiftTab, true);
   }
 
   /** 혜택/이벤트 > 멤버십 혜택 클릭 */
   async clickMembershipBenefitTab() {
-    await this.clickUntilURLChanges(PcLocators.main.membershipBenefitTab);
+    await this.click(PcLocators.main.membershipBenefitTab, true);
   }
 
   /** 혜택/이벤트 > 수신동의 쿠폰팩 클릭 */
   async clickAgreeReceiveTab() {
-    await this.clickUntilURLChanges(PcLocators.main.agreeReceiveTab);
+    await this.click(PcLocators.main.agreeReceiveTab, true);
   }
 }
