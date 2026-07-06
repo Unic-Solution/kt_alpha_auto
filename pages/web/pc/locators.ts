@@ -34,7 +34,7 @@ export const PcLocators = {
     popularWords: '//ul[contains(@class,"PopularWords")]//p',
     searchProduct: '(//div[contains(@class,"ProductItem_box")]//a)[1]',
     recentlyViewedProduct: '((//div[contains(@class,"ProductDisplay_section")])[1]//div[contains(@class,"ProductItem_box")])[1]',
-    searchInput: '//div[contains(@class,"searchInput")]',
+    searchInput: '//div[contains(@class,"searchInput")]/input',
     searchSubmitButton: '//div[contains(@class,"Search_search")]//button[@type="submit"]',
     categoryProduct: '(//div[contains(@class,"CategoryDetailPage_productList")]//div[contains(@class,"ProductItem_box")])[1]',
     backButton: '//div[contains(@class,"Header_back")]',
