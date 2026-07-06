@@ -1,0 +1,3 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"","44622","일반 계정 로그인 확인","","2026-07-06","passed","2026-07-06","","","",""
+"","80290","임의 상품 상세 > 구매하기 > 일반 계정 로그인 확인","","2026-07-06","failed","2026-07-06","","","",""
