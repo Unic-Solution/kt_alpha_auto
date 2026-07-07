@@ -14,6 +14,7 @@ export default defineConfig({
   reporter: [
     ['html'],
     ['./utils/suite-timing-reporter.ts'],
+    ['./utils/slack-reporter.ts'],
   ],
 
   use: {

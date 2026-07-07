@@ -1,5 +1,6 @@
 import { writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
+import { postMessage } from '../utils/slack-progress';
 
 /**
  * 모든 테스트 시작 전 한 번만 실행 (playwright.config.ts의 globalSetup)
@@ -18,6 +19,8 @@ export default async function globalSetup() {
   if (missing.length > 0) {
     throw new Error(`필수 환경변수 누락: ${missing.join(', ')}`);
   }
+
+  await postMessage('PC 통합 테스트 시작');
 
   mkdirSync('allure-results', { recursive: true });
   writeFileSync(

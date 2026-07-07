@@ -41,6 +41,11 @@ function slackApi(method: string, body: Record<string, unknown>): Promise<Record
   });
 }
 
+export async function postMessage(text: string): Promise<string | undefined> {
+  const res = await slackApi('chat.postMessage', { channel: CHANNEL_ID!, text });
+  return res.ts as string | undefined;
+}
+
 export async function getLatestMessageTs(): Promise<string | undefined> {
   const res = await slackApi('conversations.history', { channel: CHANNEL_ID!, limit: 1 });
   const messages = res.messages as Array<{ ts: string }> | undefined;
