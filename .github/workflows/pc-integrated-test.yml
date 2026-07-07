@@ -45,6 +45,7 @@ jobs:
           DAY: ${{ secrets.DAY }}
           PHONE_NUMBER: ${{ secrets.PHONE_NUMBER }}
           BASE_URL: https://www.kshop.co.kr/
+          COMBINED_PRODUCT_CODE: ${{ secrets.COMBINED_PRODUCT_CODE }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
         run: npx playwright test tests/pc/integrated --project=pc-no-auth --headed
