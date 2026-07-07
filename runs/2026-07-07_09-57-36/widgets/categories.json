@@ -1,0 +1,1 @@
+{"total":2,"items":[{"uid":"1c1c38c25cf5514bba0626663851b280","name":"타임아웃","statistic":{"failed":3,"broken":0,"skipped":0,"passed":0,"unknown":0,"total":3}},{"uid":"c6e3822f7b9ada21be3541e9060a92c1","name":"검증 실패","statistic":{"failed":2,"broken":0,"skipped":0,"passed":0,"unknown":0,"total":2}}]}
