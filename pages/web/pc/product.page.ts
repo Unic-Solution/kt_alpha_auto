@@ -144,10 +144,14 @@ export class ProductPage extends BasePage {
   }
 
   /** 상품 > 선물하기 버튼 클릭 (옵션 선택 포함) */
-  async clickProductGift() {
+  async clickProductGift(): Promise<boolean> {
+    const exists = await this.isVisible(PcLocators.main.onAirGiftButton);
+    if (!exists) return false;
+
     await this.click(PcLocators.main.onAirGiftButton, true);
     await this.selectFirstEnabledOption();
     await this.lastClick(PcLocators.main.onAirGiftButton);
+    return true;
   }
 
   /** 선물하기 주문서 페이지 URL 확인 */
@@ -163,7 +167,6 @@ export class ProductPage extends BasePage {
   /** 상품 > 장바구니 버튼 클릭 (버튼 없으면 false 반환, 옵션 선택 포함) */
   async clickProductCart(): Promise<boolean> {
     const exists = await this.isVisible(PcLocators.main.onAirCartButton);
-
     if (!exists) return false;
 
     await this.click(PcLocators.main.onAirCartButton, true);

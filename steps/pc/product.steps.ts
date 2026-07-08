@@ -80,6 +80,9 @@ export class ProductSteps {
   /** 상품 > 선물하기 주문서 이동 확인 */
   async verifyProductGift(): Promise<boolean> {
     await this.productPage.clickProduct();
+    const productName = await this.productPage.getProductName();
+    parameter('상품명', productName);
+    
     await this.productPage.clickProductGift();
     return await this.productPage.isGiftOrderPage();
   }
@@ -88,6 +91,8 @@ export class ProductSteps {
   async verifyProductCart(): Promise<boolean> {
     await this.productPage.clickProduct();
     const productName = await this.productPage.getProductName();
+    parameter('상품명', productName);
+
     const clicked = await this.productPage.clickProductCart();
     if (!clicked) {
       parameter('메인페이지 > 상품 > 장바구니', '장바구니 버튼 없는 케이스');
@@ -96,10 +101,9 @@ export class ProductSteps {
 
     await this.productPage.clickProductCartMoveButton();
     const cartProductName = await this.productPage.getCartProductName();
-    await this.productPage.clickCartDeleteButton();
-
-    parameter('상품명', productName);
     parameter('장바구니 상품명', cartProductName);
+
+    await this.productPage.clickCartDeleteButton();
 
     return cartProductName.includes(productName);
   }
