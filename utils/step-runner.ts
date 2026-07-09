@@ -117,7 +117,7 @@ export function createRun(epicName: string, featureName: string, page?: Page) {
       await test.step(name, async () => {
         let lastError: unknown;
         let lastAttempt = 0;
-        for (let attempt = 0; attempt <= 1; attempt++) {
+        for (let attempt = 0; attempt <= 0; attempt++) {
           lastAttempt = attempt;
           _params = [];
           try {
