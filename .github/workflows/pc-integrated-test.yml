@@ -2,13 +2,22 @@ name: KT ALPHA 통합 테스트(PC)
 
 on:
   workflow_dispatch:
+    inputs:
+      runner_type:
+        description: '실행할 Runner OS'
+        required: true
+        default: 'Windows'
+        type: choice
+        options:
+          - Windows
+          - macOS
 
 permissions:
   contents: write
 
 jobs:
   test:
-    runs-on: self-hosted
+    runs-on: [self-hosted, "${{ inputs.runner_type }}"]
     timeout-minutes: 30
 
     steps:
