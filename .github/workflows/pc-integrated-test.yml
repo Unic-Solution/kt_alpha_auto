@@ -44,7 +44,7 @@ jobs:
       - name: 타임스탬프 설정 (Windows)
         if: runner.os == 'Windows'
         run: echo "RUN_TIMESTAMP=$(Get-Date -Format 'yyyy-MM-dd_HH-mm-ss')" >> $env:GITHUB_ENV
-        shell: pwsh
+        shell: powershell
 
       - name: 이전 테스트 결과 초기화 (Mac)
         if: runner.os == 'macOS'
@@ -55,7 +55,7 @@ jobs:
         run: |
           if (Test-Path allure-results) { Remove-Item -Recurse -Force allure-results }
           New-Item -ItemType Directory -Path allure-results
-        shell: pwsh
+        shell: powershell
 
       - name: PC 통합 테스트 실행
         id: test
@@ -89,7 +89,7 @@ jobs:
           (Get-Content allure-report/index.html) -replace 'lang="en"', 'lang="kr"' | Set-Content allure-report/index.html
           Get-ChildItem allure-report/assets/*.js | ForEach-Object { (Get-Content $_) -replace 'sorter:`sorter.name`', 'sorter:`sorter.order`' | Set-Content $_ }
           (Get-Content allure-report/index.html) -replace '<head>', '<head><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">' | Set-Content allure-report/index.html
-        shell: pwsh
+        shell: powershell
 
       - name: GitHub Pages 배포
         if: always()
@@ -134,7 +134,7 @@ jobs:
           git push origin develop
           Set-Location -
           Remove-Item -Recurse -Force "$TEMP"
-        shell: pwsh
+        shell: powershell
 
       - name: 임시 파일 정리 (Mac)
         if: always() && runner.os == 'macOS'
@@ -143,4 +143,4 @@ jobs:
       - name: 임시 파일 정리 (Windows)
         if: always() && runner.os == 'Windows'
         run: Remove-Item -Recurse -Force "$env:USERPROFILE\actions_github_pages_*" -ErrorAction SilentlyContinue
-        shell: pwsh
+        shell: powershell
