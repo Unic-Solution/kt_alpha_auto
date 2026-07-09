@@ -31,8 +31,30 @@ jobs:
         with:
           node-version: '20'
 
-      - name: 의존성 설치
-        run: npm install
+      - name: 의존성 설치 (Mac)
+        if: inputs.runner_type == 'macOS'
+        run: |
+          LOCK_HASH=$(md5 -q package-lock.json)
+          HASH_FILE="node_modules/.npm-lock-hash"
+          if [ -f "$HASH_FILE" ] && [ "$(cat $HASH_FILE)" = "$LOCK_HASH" ]; then
+            echo "변경 없음, npm install 건너뜀"
+          else
+            npm install
+            echo "$LOCK_HASH" > $HASH_FILE
+          fi
+
+      - name: 의존성 설치 (Windows)
+        if: inputs.runner_type == 'Windows'
+        run: |
+          $lockHash = (Get-FileHash package-lock.json -Algorithm MD5).Hash
+          $hashFile = "node_modules/.npm-lock-hash"
+          if ((Test-Path $hashFile) -and ((Get-Content $hashFile) -eq $lockHash)) {
+            Write-Host "변경 없음, npm install 건너뜀"
+          } else {
+            npm install
+            $lockHash | Set-Content $hashFile
+          }
+        shell: powershell
 
       - name: Playwright 브라우저 설치
         run: npx playwright install chromium
