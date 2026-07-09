@@ -1,6 +1,7 @@
 import type { FullResult, Reporter, TestCase, TestResult } from '@playwright/test/reporter';
 import { existsSync, readFileSync, unlinkSync } from 'fs';
 import { postMessage, postThreadReply, uploadScreenshot } from './slack-progress';
+import { toFriendlyError } from './error-map';
 
 export default class SlackReporter implements Reporter {
   private initialMessageTs: string | undefined;
@@ -19,11 +20,12 @@ export default class SlackReporter implements Reporter {
 
     const passed = result.status === 'passed';
     const emoji = passed ? '✅' : '❌';
-    const error = result.errors[0]?.message ?? '';
-    const firstLine = error.split('\n')[0].trim();
 
     let message = `${emoji} ${test.title}`;
-    if (!passed && firstLine) message += `\n${firstLine}`;
+    if (!passed) {
+      const error = result.errors[0]?.message ?? '';
+      message += `\n${toFriendlyError(error)}`;
+    }
 
     const task = postThreadReply(this.initialMessageTs, message).then(async () => {
       if (passed) return;
