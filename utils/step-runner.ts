@@ -4,7 +4,7 @@ import { writeFileSync, mkdirSync } from 'fs';
 import { randomUUID } from 'crypto';
 import { join } from 'path';
 import { toFriendlyError } from './error-map';
-import { getLatestMessageTs, postThreadReply, updateMessage } from './slack-progress';
+import { getLatestMessageTs, postThreadReply, updateMessage, uploadScreenshot } from './slack-progress';
 
 // workers: 1 환경 전제 — 테스트가 순차 실행되므로 모듈 레벨 전역 변수로 관리해도 안전
 let _params: Array<{ name: string; value: string }> = [];
@@ -151,7 +151,15 @@ export function createRun(epicName: string, featureName: string, page?: Page) {
         : undefined;
       writeStepResult(name, epicName, featureName, passed ? 'passed' : 'failed', start, Date.now(), [..._params], errorMsg, screenshot);
       _params = [];
-      if (replyTs) updateMessage(replyTs, passed ? `:white_check_mark: ${name}` : `:x: ${name}`);
+      if (replyTs) {
+        const statusMsg = passed
+          ? `:white_check_mark: ${name}`
+          : `:x: ${name}\n${toFriendlyError(errorMsg ?? '')}`;
+        updateMessage(replyTs, statusMsg);
+      }
+      if (!passed && screenshot && parentTs) {
+        uploadScreenshot(screenshot, name, parentTs).catch(() => {});
+      }
     }
   };
 }

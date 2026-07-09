@@ -62,10 +62,13 @@ export function updateMessage(ts: string, text: string): void {
   slackApi('chat.update', { channel: CHANNEL_ID!, ts, text }).catch(() => {});
 }
 
-export async function uploadScreenshot(filePath: string, title: string, threadTs?: string): Promise<void> {
-  if (!BOT_TOKEN || !CHANNEL_ID || !existsSync(filePath)) return;
+export async function uploadScreenshot(fileOrPath: Buffer | string, title: string, threadTs?: string): Promise<void> {
+  if (!BOT_TOKEN || !CHANNEL_ID) return;
   try {
-    const fileContent = readFileSync(filePath);
+    const fileContent = typeof fileOrPath === 'string'
+      ? (existsSync(fileOrPath) ? readFileSync(fileOrPath) : null)
+      : fileOrPath;
+    if (!fileContent) return;
 
     // Step 1: 업로드 URL 발급
     const urlRes = await slackApi('files.getUploadURLExternal', {
@@ -77,7 +80,7 @@ export async function uploadScreenshot(filePath: string, title: string, threadTs
     // Step 2: 파일 업로드
     await fetch(urlRes.upload_url as string, {
       method: 'PUT',
-      body: fileContent,
+      body: new Uint8Array(fileContent),
       headers: { 'Content-Type': 'application/octet-stream' },
     });
 
