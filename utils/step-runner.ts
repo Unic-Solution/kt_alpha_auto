@@ -4,7 +4,7 @@ import { writeFileSync, mkdirSync } from 'fs';
 import { randomUUID } from 'crypto';
 import { join } from 'path';
 import { toFriendlyError } from './error-map';
-import { getLatestMessageTs, postThreadReply, updateMessage, uploadScreenshot } from './slack-progress';
+import { readThreadTs, postThreadReply, updateMessage, uploadScreenshot } from './slack-progress';
 
 // workers: 1 환경 전제 — 테스트가 순차 실행되므로 모듈 레벨 전역 변수로 관리해도 안전
 let _params: Array<{ name: string; value: string }> = [];
@@ -104,10 +104,9 @@ export function createMobileRun(epicName: string, featureName: string) {
  * @param hard true면 해당 스텝 실패 시 테스트 즉시 중단, false면 soft fail로 계속 진행
  */
 export function createRun(epicName: string, featureName: string, page?: Page) {
-  const parentTsPromise = getLatestMessageTs();
+  const parentTs = readThreadTs();
 
   return async (name: string, fn: () => Promise<boolean>, hard = false) => {
-    const parentTs = await parentTsPromise;
     const replyTs = parentTs ? await postThreadReply(parentTs, `:arrow_forward: ${name}`) : undefined;
     const start = Date.now();
     let passed = true;
@@ -154,7 +153,7 @@ export function createRun(epicName: string, featureName: string, page?: Page) {
       if (replyTs) {
         const statusMsg = passed
           ? `:white_check_mark: ${name}`
-          : `:x: ${name}\n${toFriendlyError(errorMsg ?? '')}`;
+          : `:x: ${name}\n실패 이유: ${toFriendlyError(errorMsg ?? '')}`;
         updateMessage(replyTs, statusMsg);
       }
       if (!passed && screenshot && parentTs) {
