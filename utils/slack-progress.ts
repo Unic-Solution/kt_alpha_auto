@@ -62,37 +62,57 @@ export function updateMessage(ts: string, text: string): void {
   slackApi('chat.update', { channel: CHANNEL_ID!, ts, text }).catch(() => {});
 }
 
-export async function uploadScreenshot(fileOrPath: Buffer | string, title: string, threadTs?: string): Promise<void> {
-  if (!BOT_TOKEN || !CHANNEL_ID) return;
-  try {
-    const fileContent = typeof fileOrPath === 'string'
-      ? (existsSync(fileOrPath) ? readFileSync(fileOrPath) : null)
-      : fileOrPath;
-    if (!fileContent) return;
+export function uploadScreenshot(fileOrPath: Buffer | string, title: string, threadTs?: string): Promise<void> {
+  return new Promise((resolve) => {
+    if (!BOT_TOKEN || !CHANNEL_ID) { resolve(); return; }
+    try {
+      const fileContent = typeof fileOrPath === 'string'
+        ? (existsSync(fileOrPath) ? readFileSync(fileOrPath) : null)
+        : fileOrPath;
+      if (!fileContent) { resolve(); return; }
 
-    // Step 1: 업로드 URL 발급
-    const urlRes = await slackApi('files.getUploadURLExternal', {
-      filename: 'screenshot.png',
-      length: fileContent.length,
-    });
-    if (!urlRes.ok) { console.warn('[Slack] 업로드 URL 발급 실패:', urlRes.error); return; }
+      const boundary = `----Boundary${Date.now()}`;
+      const parts: Buffer[] = [];
+      const field = (name: string, value: string) =>
+        parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="${name}"\r\n\r\n${value}\r\n`));
 
-    // Step 2: 파일 업로드
-    await fetch(urlRes.upload_url as string, {
-      method: 'PUT',
-      body: new Uint8Array(fileContent),
-      headers: { 'Content-Type': 'application/octet-stream' },
-    });
+      field('channels', CHANNEL_ID);
+      field('title', title);
+      if (threadTs) field('thread_ts', threadTs);
+      parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="screenshot.png"\r\nContent-Type: image/png\r\n\r\n`));
+      parts.push(fileContent);
+      parts.push(Buffer.from(`\r\n--${boundary}--\r\n`));
+      const body = Buffer.concat(parts);
 
-    // Step 3: 업로드 완료 및 채널 공유
-    const completeBody: Record<string, unknown> = {
-      files: [{ id: urlRes.file_id, title }],
-      channel_id: CHANNEL_ID,
-    };
-    if (threadTs) completeBody.thread_ts = threadTs;
-    const completeRes = await slackApi('files.completeUploadExternal', completeBody);
-    if (!completeRes.ok) console.warn('[Slack] 업로드 완료 실패:', completeRes.error);
-  } catch (e: any) {
-    console.warn('[Slack] 파일 업로드 오류:', e.message);
-  }
+      const req = request(
+        {
+          hostname: 'slack.com',
+          path: '/api/files.upload',
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${BOT_TOKEN}`,
+            'Content-Type': `multipart/form-data; boundary=${boundary}`,
+            'Content-Length': body.length,
+          },
+        },
+        (res) => {
+          let data = '';
+          res.on('data', chunk => (data += chunk));
+          res.on('end', () => {
+            try {
+              const parsed = JSON.parse(data);
+              if (!parsed.ok) console.warn('[Slack] 파일 업로드 실패:', parsed.error);
+            } catch {}
+            resolve();
+          });
+        },
+      );
+      req.on('error', (e) => { console.warn('[Slack] 파일 업로드 오류:', e.message); resolve(); });
+      req.write(body);
+      req.end();
+    } catch (e: any) {
+      console.warn('[Slack] 파일 업로드 오류:', e.message);
+      resolve();
+    }
+  });
 }
