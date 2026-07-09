@@ -17,7 +17,7 @@ export const PcLocators = {
     onAirDirectBuyFirstOption: '//div[contains(@class,"SelectBox_optionList")]/*[self::button or self::div]',
     onAirDirectBuySecondOption: '//button[contains(@class,"SelectBox_option")]',
     onAirGiftButton: '//div[contains(@class,"ButtonPurchase")]//span[text()="선물하기"]',
-    onAirProductName: '//div[contains(@class,"prodOptionTitle")]//strong',
+    onAirProductName: '//a[contains(@class,"OnAirProgram_title")]',
     onAirCartButton: '//div[contains(@class,"ButtonPurchase")]//span[text()="장바구니"]',
     onAirCartMoveButton: '//span[text()="바로가기"]',
     cartProductName: '(//button[contains(@class,"OrderProductItem_prodName")])[last()]',
