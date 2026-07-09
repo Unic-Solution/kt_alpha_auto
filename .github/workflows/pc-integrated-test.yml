@@ -60,13 +60,13 @@ jobs:
       - name: PC 통합 테스트 실행
         id: test
         env:
-          LOGIN_ID: ${{ secrets.LOGIN_ID }}
-          LOGIN_PW: ${{ secrets.LOGIN_PW }}
-          NAME: ${{ secrets.NAME }}
-          YEAR: ${{ secrets.YEAR }}
-          MONTH: ${{ secrets.MONTH }}
-          DAY: ${{ secrets.DAY }}
-          PHONE_NUMBER: ${{ secrets.PHONE_NUMBER }}
+          LOGIN_ID: ${{ inputs.runner_type == 'Windows' && secrets.WIN_LOGIN_ID || secrets.MAC_LOGIN_ID }}
+          LOGIN_PW: ${{ inputs.runner_type == 'Windows' && secrets.WIN_LOGIN_PW || secrets.MAC_LOGIN_PW }}
+          NAME: ${{ inputs.runner_type == 'Windows' && secrets.WIN_NAME || secrets.MAC_NAME }}
+          YEAR: ${{ inputs.runner_type == 'Windows' && secrets.WIN_YEAR || secrets.MAC_YEAR }}
+          MONTH: ${{ inputs.runner_type == 'Windows' && secrets.WIN_MONTH || secrets.MAC_MONTH }}
+          DAY: ${{ inputs.runner_type == 'Windows' && secrets.WIN_DAY || secrets.MAC_DAY }}
+          PHONE_NUMBER: ${{ inputs.runner_type == 'Windows' && secrets.WIN_PHONE_NUMBER || secrets.MAC_PHONE_NUMBER }}
           BASE_URL: https://www.kshop.co.kr/
           COMBINED_PRODUCT_CODE: ${{ secrets.COMBINED_PRODUCT_CODE }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
