@@ -23,10 +23,12 @@ export class MainPage extends BasePage {
     return await this.isVisible(PcLocators.main.onAirDisplay);
   }
 
-  /** 홈 > ON AIR(지금 방송중) > 바로구매 버튼 클릭 */
-  async clickDirectBuyButton() {
+  /** 홈 > ON AIR(지금 방송중) > 바로구매 버튼 클릭 (뷰포트 내 상품명 반환) */
+  async clickDirectBuyButton(): Promise<string> {
     await this.scrollIntoView(PcLocators.main.onAirDirectBuyButton);
+    const productName = await this.getTextFirstInViewport(PcLocators.main.onAirProductName);
     await this.clickFirstInViewport(PcLocators.main.onAirDirectBuyButton);
+    return productName;
   }
 
   /** 홈 > ON AIR(지금 방송중) > 바로구매 > 옵션 선택 (중첩 옵션박스 대응) */
@@ -43,11 +45,12 @@ export class MainPage extends BasePage {
     }
   }
 
-  /** 홈 > ON AIR(지금 방송중) > 바로구매 > 옵션 선택까지 수행 */
-  async selectOnAirOption() {
+  /** 홈 > ON AIR(지금 방송중) > 바로구매 > 옵션 선택까지 수행 (뷰포트 내 상품명 반환) */
+  async selectOnAirOption(): Promise<string> {
     await this.goToHome();
-    await this.clickDirectBuyButton();
+    const productName = await this.clickDirectBuyButton();
     await this.selectFirstEnabledOption();
+    return productName;
   }
 
   /** ON AIR > 선물하기 버튼 클릭 (버튼 없으면 false 반환) */
@@ -63,9 +66,9 @@ export class MainPage extends BasePage {
     return this.urlContains(PcLocators.urls.onAirGiftOrder);
   }
 
-  /** ON AIR 상품 이름 추출 */
+  /** ON AIR 상품 이름 추출 (뷰포트 내 노출된 상품 기준) */
   async getOnAirProductName(): Promise<string> {
-    return (await this.getText(PcLocators.main.onAirProductName)).replace(/\s/g, '');
+    return (await this.getTextFirstInViewport(PcLocators.main.onAirProductName)).replace(/\s/g, '');
   }
 
   /** ON AIR > 장바구니 버튼 클릭 (버튼 없으면 false 반환) */

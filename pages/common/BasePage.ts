@@ -174,6 +174,23 @@ export class BasePage {
     return this.getCurrentURL().includes(text);
   }
 
+  /** 뷰포트 내에 실제로 노출된 첫 번째 요소의 텍스트 반환 */
+  async getTextFirstInViewport(selector: string): Promise<string> {
+    const locator = this.page.locator(selector);
+    const count = await locator.count();
+    for (let i = 0; i < count; i++) {
+      const el = locator.nth(i);
+      const isInViewport = await el.evaluate(node => {
+        const rect = node.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const vw = window.innerWidth || document.documentElement.clientWidth;
+        return centerX > vw / 3 && centerX < (vw * 2) / 3;
+      });
+      if (isInViewport) return (await el.textContent()) ?? '';
+    }
+    throw new Error(`뷰포트 내에 텍스트를 가져올 수 없음: ${selector}`);
+  }
+
   /** 뷰포트 내에 실제로 노출된 첫 번째 요소 클릭 (캐러셀 등 transform으로 숨겨진 요소 대응) */
   async clickFirstInViewport(selector: string) {
     const locator = this.page.locator(selector);

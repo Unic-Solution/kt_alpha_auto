@@ -29,8 +29,7 @@ export class MainSteps {
 
   /** 홈 > ON AIR(지금 방송중) > 바로구매 > 선물하기 주문서 이동 확인 */
   async verifyOnAirGift(): Promise<boolean> {
-    await this.mainPage.selectOnAirOption();
-    const onAirProductName = await this.mainPage.getOnAirProductName();
+    const onAirProductName = await this.mainPage.selectOnAirOption();
     parameter('ON AIR 상품명', onAirProductName);
 
     const clicked = await this.mainPage.clickOnAirGiftButton();
@@ -44,8 +43,7 @@ export class MainSteps {
 
   /** 홈 > ON AIR(지금 방송중) > 바로구매 > 장바구니 상품 추가 확인 */
   async verifyOnAirCart(): Promise<boolean> {
-    await this.mainPage.selectOnAirOption();
-    const onAirProductName = await this.mainPage.getOnAirProductName();
+    const onAirProductName = await this.mainPage.selectOnAirOption();
     parameter('ON AIR 상품명', onAirProductName);
 
     const clicked = await this.mainPage.clickOnAirCartButton();
@@ -65,8 +63,7 @@ export class MainSteps {
 
   /** 홈 > ON AIR(지금 방송중) > 바로구매 > 구매하기 주문서 이동 확인 */
   async verifyOnAirBuy(): Promise<boolean> {
-    await this.mainPage.selectOnAirOption();
-    const onAirProductName = await this.mainPage.getOnAirProductName();
+    const onAirProductName = await this.mainPage.selectOnAirOption();
     await this.mainPage.clickOnAirBuyButton();
 
     parameter('ON AIR 상품명', onAirProductName);
