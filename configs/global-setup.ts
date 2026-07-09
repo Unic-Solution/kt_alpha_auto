@@ -20,7 +20,8 @@ export default async function globalSetup() {
     throw new Error(`필수 환경변수 누락: ${missing.join(', ')}`);
   }
 
-  await postMessage('PC 통합 테스트 시작');
+  const startMessageTs = await postMessage('PC 통합 테스트 시작');
+  if (startMessageTs) writeFileSync('.slack-ts', startMessageTs);
 
   mkdirSync('allure-results', { recursive: true });
   writeFileSync(

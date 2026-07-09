@@ -1,4 +1,5 @@
 import { request } from 'https';
+import { existsSync, readFileSync } from 'fs';
 
 const BOT_TOKEN = process.env.SLACK_BOT_TOKEN;
 const CHANNEL_ID = process.env.SLACK_CHANNEL_ID;
@@ -59,4 +60,27 @@ export async function postThreadReply(threadTs: string, text: string): Promise<s
 
 export function updateMessage(ts: string, text: string): void {
   slackApi('chat.update', { channel: CHANNEL_ID!, ts, text }).catch(() => {});
+}
+
+export async function uploadScreenshot(filePath: string, title: string, threadTs?: string): Promise<void> {
+  if (!BOT_TOKEN || !CHANNEL_ID || !existsSync(filePath)) return;
+  try {
+    const fileContent = readFileSync(filePath);
+    const formData = new FormData();
+    formData.append('channels', CHANNEL_ID);
+    formData.append('title', title);
+    formData.append('filename', 'screenshot.png');
+    if (threadTs) formData.append('thread_ts', threadTs);
+    formData.append('file', new Blob([fileContent], { type: 'image/png' }), 'screenshot.png');
+
+    const res = await fetch('https://slack.com/api/files.upload', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${BOT_TOKEN}` },
+      body: formData,
+    });
+    const data = await res.json() as { ok: boolean; error?: string };
+    if (!data.ok) console.warn('[Slack] 파일 업로드 실패:', data.error);
+  } catch (e: any) {
+    console.warn('[Slack] 파일 업로드 오류:', e.message);
+  }
 }
