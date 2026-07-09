@@ -142,6 +142,8 @@ jobs:
       - name: 히스토리 develop 브랜치에 누적 (Windows)
         if: always() && inputs.runner_type == 'Windows'
         run: |
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+          $originalDir = (Get-Location).Path
           $TEMP = New-TemporaryFile | ForEach-Object { Remove-Item $_; New-Item -ItemType Directory -Path "$($_.FullName)" }
           git clone --depth=1 --branch=develop https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/HUJO733/kt_alpha_auto.git "$TEMP"
           $TIMESTAMP = Get-Date -Format 'yyyy-MM-dd_HH-mm-ss'
@@ -154,7 +156,7 @@ jobs:
           git diff --cached --quiet
           if ($LASTEXITCODE -ne 0) { git commit -m "chore: 테스트 결과 누적 [$TIMESTAMP] [skip ci]" }
           git push origin develop
-          Set-Location -
+          Set-Location $originalDir
           Remove-Item -Recurse -Force "$TEMP"
         shell: powershell
 
