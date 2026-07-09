@@ -28,11 +28,25 @@ jobs:
       - name: Playwright 브라우저 설치
         run: npx playwright install chromium
 
-      - name: 타임스탬프 설정
+      - name: 타임스탬프 설정 (Mac)
+        if: runner.os == 'macOS'
         run: echo "RUN_TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)" >> $GITHUB_ENV
 
-      - name: 이전 테스트 결과 초기화
+      - name: 타임스탬프 설정 (Windows)
+        if: runner.os == 'Windows'
+        run: echo "RUN_TIMESTAMP=$(Get-Date -Format 'yyyy-MM-dd_HH-mm-ss')" >> $env:GITHUB_ENV
+        shell: pwsh
+
+      - name: 이전 테스트 결과 초기화 (Mac)
+        if: runner.os == 'macOS'
         run: rm -rf allure-results && mkdir -p allure-results
+
+      - name: 이전 테스트 결과 초기화 (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          if (Test-Path allure-results) { Remove-Item -Recurse -Force allure-results }
+          New-Item -ItemType Directory -Path allure-results
+        shell: pwsh
 
       - name: PC 통합 테스트 실행
         id: test
@@ -51,13 +65,22 @@ jobs:
         run: npx playwright test tests/pc/integrated --project=pc-no-auth --headed
         continue-on-error: true
 
-      - name: Allure 리포트 생성
-        if: always()
+      - name: Allure 리포트 생성 (Mac)
+        if: always() && runner.os == 'macOS'
         run: |
           npx allure generate allure-results --clean -o allure-report
           sed -i '' 's/lang="en"/lang="kr"/' allure-report/index.html
           sed -i '' 's/sorter:`sorter.name`/sorter:`sorter.order`/' allure-report/assets/*.js
           sed -i '' 's|<head>|<head><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">|' allure-report/index.html
+
+      - name: Allure 리포트 생성 (Windows)
+        if: always() && runner.os == 'Windows'
+        run: |
+          npx allure generate allure-results --clean -o allure-report
+          (Get-Content allure-report/index.html) -replace 'lang="en"', 'lang="kr"' | Set-Content allure-report/index.html
+          Get-ChildItem allure-report/assets/*.js | ForEach-Object { (Get-Content $_) -replace 'sorter:`sorter.name`', 'sorter:`sorter.order`' | Set-Content $_ }
+          (Get-Content allure-report/index.html) -replace '<head>', '<head><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">' | Set-Content allure-report/index.html
+        shell: pwsh
 
       - name: GitHub Pages 배포
         if: always()
@@ -68,8 +91,8 @@ jobs:
           destination_dir: runs/${{ env.RUN_TIMESTAMP }}
           keep_files: true
 
-      - name: 히스토리 develop 브랜치에 누적
-        if: always()
+      - name: 히스토리 develop 브랜치에 누적 (Mac)
+        if: always() && runner.os == 'macOS'
         run: |
           TEMP=$(mktemp -d)
           git clone --depth=1 --branch=develop https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/HUJO733/kt_alpha_auto.git "$TEMP"
@@ -85,6 +108,30 @@ jobs:
           cd -
           rm -rf "$TEMP"
 
-      - name: 임시 파일 정리
-        if: always()
+      - name: 히스토리 develop 브랜치에 누적 (Windows)
+        if: always() && runner.os == 'Windows'
+        run: |
+          $TEMP = New-TemporaryFile | ForEach-Object { Remove-Item $_; New-Item -ItemType Directory -Path "$($_.FullName)" }
+          git clone --depth=1 --branch=develop https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/HUJO733/kt_alpha_auto.git "$TEMP"
+          $TIMESTAMP = Get-Date -Format 'yyyy-MM-dd_HH-mm-ss'
+          New-Item -ItemType Directory -Path "$TEMP/allure-runs" -Force
+          Copy-Item allure-results/*-result.json "$TEMP/allure-runs/" -ErrorAction SilentlyContinue
+          Set-Location "$TEMP"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add allure-runs/
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) { git commit -m "chore: 테스트 결과 누적 [$TIMESTAMP] [skip ci]" }
+          git push origin develop
+          Set-Location -
+          Remove-Item -Recurse -Force "$TEMP"
+        shell: pwsh
+
+      - name: 임시 파일 정리 (Mac)
+        if: always() && runner.os == 'macOS'
         run: rm -rf ~/actions_github_pages_*
+
+      - name: 임시 파일 정리 (Windows)
+        if: always() && runner.os == 'Windows'
+        run: Remove-Item -Recurse -Force "$env:USERPROFILE\actions_github_pages_*" -ErrorAction SilentlyContinue
+        shell: pwsh
