@@ -1,0 +1,1 @@
+{"uuid":"2ec8458f-46b6-4698-9edf-0fc1905e9a18","name":"ON AIR > 바로구매 > 구매하기 주문서 페이지 이동 확인","status":"passed","start":1783558497728,"stop":1783558511080,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20260709_09:52:01)"}],"parameters":[{"name":"ON AIR 상품명","value":"블랙/225mm"}]}
