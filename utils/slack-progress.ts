@@ -113,12 +113,6 @@ export async function postMessage(text: string): Promise<string | undefined> {
   return res.ts as string | undefined;
 }
 
-export async function getLatestMessageTs(): Promise<string | undefined> {
-  const res = await slackApi('conversations.history', { channel: CHANNEL_ID!, limit: 1 });
-  const messages = res.messages as Array<{ ts: string }> | undefined;
-  return messages?.[0]?.ts;
-}
-
 export async function postThreadReply(threadTs: string, text: string): Promise<string | undefined> {
   const res = await slackApi('chat.postMessage', { channel: CHANNEL_ID!, thread_ts: threadTs, text });
   return res.ts as string | undefined;
