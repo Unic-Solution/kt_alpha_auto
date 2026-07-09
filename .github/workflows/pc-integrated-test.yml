@@ -72,7 +72,7 @@ jobs:
         if: always()
         run: |
           TEMP=$(mktemp -d)
-          git clone --depth=1 --branch=develop https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/Unic-Solution/kt_alpha_auto.git "$TEMP"
+          git clone --depth=1 --branch=develop https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/HUJO733/kt_alpha_auto.git "$TEMP"
           TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
           mkdir -p "$TEMP/allure-runs"
           cp allure-results/*-result.json "$TEMP/allure-runs/" 2>/dev/null || true
