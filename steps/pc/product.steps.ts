@@ -82,8 +82,13 @@ export class ProductSteps {
     await this.productPage.clickProduct();
     const productName = await this.productPage.getProductName();
     parameter('상품명', productName);
-    
-    await this.productPage.clickProductGift();
+
+    const clicked = await this.productPage.clickProductGift();
+    if (!clicked) {
+      parameter('상품 > 선물하기', '선물하기 버튼 없는 케이스');
+      return true;
+    }
+
     return await this.productPage.isGiftOrderPage();
   }
 

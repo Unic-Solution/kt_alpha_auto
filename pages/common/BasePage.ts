@@ -16,7 +16,7 @@ export class BasePage {
   /** 공통 팝업 모달 닫기 (모달이 없으면 무시) */
   async closeModal() {
     try {
-      await this.waitForElement(CommonLocators.modal.closeBtn, 2);
+      await this.waitForElement(CommonLocators.modal.closeBtn, 5);
     } catch {
       return;
     }

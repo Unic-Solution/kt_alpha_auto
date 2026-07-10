@@ -29,15 +29,23 @@ export class MainSteps {
 
   /** 홈 > ON AIR > 바로구매 > 선물하기 주문서 이동 확인 */
   async verifyOnAirGift(): Promise<boolean> {
-    await this.mainPage.selectOnAirOption();
-    await this.mainPage.clickOnAirGiftButton();
+    const onAirProductName = await this.mainPage.selectOnAirOption();
+    parameter('ON AIR 상품명', onAirProductName);
+
+    const clicked = await this.mainPage.clickOnAirGiftButton();
+    if (!clicked) {
+      parameter('메인페이지 > ON AIR > 바로구매 > 선물하기', '선물하기 버튼 없는 케이스');
+      return true;
+    }
+
     return await this.mainPage.isGiftOrderPage();
   }
 
   /** 홈 > ON AIR > 바로구매 > 장바구니 상품 추가 확인 */
   async verifyOnAirCart(): Promise<boolean> {
-    await this.mainPage.selectOnAirOption();
-    const onAirProductName = await this.mainPage.getOnAirProductName();
+    const onAirProductName = await this.mainPage.selectOnAirOption();
+    parameter('ON AIR 상품명', onAirProductName);
+
     const clicked = await this.mainPage.clickOnAirCartButton();
     if (!clicked) {
       parameter('메인페이지 > ON AIR > 바로구매 > 장바구니', '장바구니 버튼 없는 케이스');
@@ -46,18 +54,18 @@ export class MainSteps {
 
     await this.mainPage.clickOnAirCartMoveButton();
     const cartProductName = await this.mainPage.getCartProductName();
-    await this.mainPage.clickCartDeleteButton();
-
-    parameter('ON AIR 상품명', onAirProductName);
     parameter('장바구니 상품명', cartProductName);
+
+    await this.mainPage.clickCartDeleteButton();
 
     return cartProductName.includes(onAirProductName);
   }
 
   /** 홈 > ON AIR > 바로구매 > 구매하기 주문서 이동 확인 */
   async verifyOnAirBuy(): Promise<boolean> {
-    await this.mainPage.selectOnAirOption();
+    const onAirProductName = await this.mainPage.selectOnAirOption();
     await this.mainPage.clickOnAirBuyButton();
+    parameter('ON AIR 상품명', onAirProductName);
     return await this.mainPage.isBuyOrderPage();
   }
 

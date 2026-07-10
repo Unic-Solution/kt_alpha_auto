@@ -21,9 +21,11 @@ export class MainPage extends BasePage {
     return await this.isVisible(MwLocators.main.onAirDisplay);
   }
 
-  async clickDirectBuyButton() {
+  async clickDirectBuyButton(): Promise<string> {
     await this.scrollIntoView(MwLocators.main.onAirDirectBuyButton);
+    const productName = await this.getTextFirstInViewport(MwLocators.main.onAirProductName);
     await this.clickFirstInViewport(MwLocators.main.onAirDirectBuyButton);
+    return productName;
   }
 
   async selectFirstEnabledOption() {
@@ -39,14 +41,18 @@ export class MainPage extends BasePage {
     }
   }
 
-  async selectOnAirOption() {
+  async selectOnAirOption(): Promise<string> {
     await this.goToHome();
-    await this.clickDirectBuyButton();
+    const productName = await this.clickDirectBuyButton();
     await this.selectFirstEnabledOption();
+    return productName;
   }
 
-  async clickOnAirGiftButton() {
+  async clickOnAirGiftButton(): Promise<boolean> {
+    const exists = await this.isVisible(MwLocators.main.onAirGiftButton);
+    if (!exists) return false;
     await this.click(MwLocators.main.onAirGiftButton);
+    return true;
   }
 
   async isGiftOrderPage(): Promise<boolean> {
@@ -54,7 +60,7 @@ export class MainPage extends BasePage {
   }
 
   async getOnAirProductName(): Promise<string> {
-    return (await this.getText(MwLocators.main.onAirProductName)).replace(/\s/g, '');
+    return (await this.getTextFirstInViewport(MwLocators.main.onAirProductName)).replace(/\s/g, '');
   }
 
   async clickOnAirCartButton(): Promise<boolean> {
