@@ -1,10 +1,9 @@
 import type { FullResult, Reporter } from '@playwright/test/reporter';
 import { unlinkSync } from 'fs';
-import { postMessage, flushScreenshots } from './slack-progress';
+import { postMessage } from './slack-progress';
 
 export default class SlackReporter implements Reporter {
   async onEnd(result: FullResult) {
-    await flushScreenshots();
     const passed = result.status === 'passed';
     const emoji = passed ? '✅' : '❌';
     const status = passed ? '통과' : '실패';

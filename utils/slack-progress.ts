@@ -64,28 +64,18 @@ export function updateMessage(ts: string, text: string): void {
   slackApi('chat.update', { channel: CHANNEL_ID!, ts, text }).catch(() => {});
 }
 
-const screenshotQueue: Array<{ file: Buffer; threadTs?: string; initialComment?: string }> = [];
-
-export function queueScreenshot(file: Buffer, threadTs?: string, initialComment?: string): void {
-  screenshotQueue.push({ file, threadTs, initialComment });
-}
-
-export async function flushScreenshots(): Promise<void> {
+export async function uploadScreenshot(file: Buffer, threadTs?: string, initialComment?: string): Promise<void> {
   if (!slackClient || !CHANNEL_ID) return;
-  for (const { file, threadTs, initialComment } of screenshotQueue) {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (slackClient.filesUploadV2 as any)({
-        channel_id: CHANNEL_ID,
-        ...(threadTs ? { thread_ts: threadTs } : {}),
-        ...(initialComment ? { initial_comment: initialComment } : {}),
-        file,
-        filename: 'screenshot.png',
-      });
-      await new Promise(r => setTimeout(r, 1000));
-    } catch (e: any) {
-      console.warn('[Slack] 파일 업로드 실패:', e.message);
-    }
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (slackClient.filesUploadV2 as any)({
+      channel_id: CHANNEL_ID,
+      ...(threadTs ? { thread_ts: threadTs } : {}),
+      ...(initialComment ? { initial_comment: initialComment } : {}),
+      file,
+      filename: 'screenshot.png',
+    });
+  } catch (e: any) {
+    console.warn('[Slack] 파일 업로드 실패:', e.message);
   }
-  screenshotQueue.length = 0;
 }

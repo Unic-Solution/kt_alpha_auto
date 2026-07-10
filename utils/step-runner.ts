@@ -4,7 +4,7 @@ import { writeFileSync, mkdirSync } from 'fs';
 import { randomUUID } from 'crypto';
 import { join } from 'path';
 import { toFriendlyError } from './error-map';
-import { readThreadTs, postThreadReply, updateMessage, queueScreenshot } from './slack-progress';
+import { readThreadTs, postThreadReply, updateMessage, uploadScreenshot } from './slack-progress';
 
 // workers: 1 환경 전제 — 테스트가 순차 실행되므로 모듈 레벨 전역 변수로 관리해도 안전
 let _params: Array<{ name: string; value: string }> = [];
@@ -157,7 +157,7 @@ export function createRun(epicName: string, featureName: string, page?: Page) {
         updateMessage(replyTs, statusMsg);
       }
       if (!passed && screenshot) {
-        queueScreenshot(screenshot, parentTs, `실패 스크린샷: ${name}`);
+        uploadScreenshot(screenshot, parentTs, `실패 스크린샷: ${name}`).catch(() => {});
       }
     }
   };
