@@ -35,6 +35,7 @@ test('통합 테스트', async ({ sharedBasePage }) => {
 
   await run('일반 계정 로그인 확인', () => loginSteps.verifyLocalLogin(ENV.id, ENV.pw));
   await run('임의 상품 상세 > 구매하기 > 일반 계정 로그인 확인', () => loginSteps.verifyBuyAndLogin(ENV.id, ENV.pw), true);
+  await run('회원 정보 수정 확인', () => mySteps.verifyModifyCustomerInfo(ENV.name, ENV.year, ENV.month, ENV.day, ENV.phoneNumber));
 
   await run('GNB 메뉴별 화면 확인', () => mainSteps.verifyAllNavItems());
   await run('ON AIR > 현재 방송 중인 상품 정보 노출 확인', () => mainSteps.verifyOnAirModal());
@@ -84,7 +85,7 @@ test('통합 테스트', async ({ sharedBasePage }) => {
   await run('이용권등록 확인', () => mySteps.verifyTicket());
   await run('방송 알림 설정 확인', () => mySteps.verifyBroadcastNotification());
   await run('간편 로그인 연결 확인', () => mySteps.verifySimpleLogin());
-  await run('회원 정보 수정 확인', () => mySteps.verifyModifyCustomerInfo(ENV.name, ENV.year, ENV.month, ENV.day, ENV.phoneNumber));
+  
   await run('혜택 관리 확인', () => mySteps.verifyBenefit());
   await run('장바구니 확인', () => mySteps.verifyCart());
   await run('좋아요 확인', () => mySteps.verifyLike());
