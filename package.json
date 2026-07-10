@@ -67,5 +67,8 @@
     "tsx": "^4.21.0",
     "typescript": "^6.0.3",
     "webdriverio": "^9.27.1"
+  },
+  "dependencies": {
+    "@slack/web-api": "^7.19.0"
   }
 }

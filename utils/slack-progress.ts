@@ -1,8 +1,11 @@
 import { request } from 'https';
 import { readFileSync } from 'fs';
+import { WebClient } from '@slack/web-api';
 
 const BOT_TOKEN = process.env.SLACK_BOT_TOKEN;
 const CHANNEL_ID = process.env.SLACK_CHANNEL_ID;
+
+const slackClient = BOT_TOKEN ? new WebClient(BOT_TOKEN) : null;
 
 function slackApi(method: string, body: Record<string, unknown>): Promise<Record<string, unknown>> {
   return new Promise((resolve) => {
@@ -59,4 +62,19 @@ export async function postThreadReply(threadTs: string, text: string): Promise<s
 
 export function updateMessage(ts: string, text: string): void {
   slackApi('chat.update', { channel: CHANNEL_ID!, ts, text }).catch(() => {});
+}
+
+export async function uploadScreenshot(file: Buffer, threadTs?: string): Promise<void> {
+  if (!slackClient || !CHANNEL_ID) return;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (slackClient.filesUploadV2 as any)({
+      channel_id: CHANNEL_ID,
+      thread_ts: threadTs,
+      file,
+      filename: 'screenshot.png',
+    });
+  } catch (e: any) {
+    console.warn('[Slack] 파일 업로드 실패:', e.message);
+  }
 }
