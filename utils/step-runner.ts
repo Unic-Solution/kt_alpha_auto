@@ -151,13 +151,11 @@ export function createRun(epicName: string, featureName: string, page?: Page) {
       writeStepResult(name, epicName, featureName, passed ? 'passed' : 'failed', start, Date.now(), [..._params], errorMsg, screenshot);
       _params = [];
       if (replyTs) {
-        const statusMsg = passed
-          ? `:white_check_mark: ${name}`
-          : `:x: ${name}\n실패 이유: ${toFriendlyError(errorMsg ?? '')}`;
-        updateMessage(replyTs, statusMsg);
+        updateMessage(replyTs, passed ? `:white_check_mark: ${name}` : `:x: ${name}`);
       }
-      if (!passed && screenshot) {
-        uploadScreenshot(screenshot, parentTs).catch(() => {});
+      if (!passed && parentTs) {
+        if (screenshot) await uploadScreenshot(screenshot, parentTs).catch(() => {});
+        await postThreadReply(parentTs, `실패 이유: ${toFriendlyError(errorMsg ?? '')}`).catch(() => {});
       }
     }
   };
