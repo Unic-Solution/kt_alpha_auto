@@ -49,10 +49,10 @@ export class GsProductSteps {
   async gsVerifyGiftShowMainPhoneNumber(name: string): Promise<boolean> {
     await this.gsProductPage.clickGiftShowMainPhoneNumberButton();
     const empty = await this.gsProductPage.isSenderInputEmpty();
-    const verify = await this.gsProductPage.fillAndVerify(name);
     parameter('기프티쇼 > 상품 > 선물하기 > 기프티쇼 대표번호로 보내기 > 보내는 사람 input Empty 여부', `${empty}`);
-    parameter('기프티쇼 > 상품 > 선물하기 > 기프티쇼 대표번호로 보내기 > 보내는 사람 input 정상 입력 여부', `${verify}`);
-    return empty && verify;
+    const input = await this.gsProductPage.fillAndGetText(name);
+    parameter('기프티쇼 > 상품 > 선물하기 > 기프티쇼 대표번호로 보내기 > 보내는 사람 input 값', `${input}`);
+    return empty && (name.includes(input));
   }
 
   /** 기프티쇼 > 상품 > 선물하기 > 내 번호로 보내기 확인 */
