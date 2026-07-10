@@ -1,0 +1,1 @@
+[{"uid":"d400ddaaabc2285f","name":"일반 계정 로그인 확인","time":{"start":1783642929608,"stop":1783642985652,"duration":56044},"status":"failed","severity":"normal"},{"uid":"a03653b8b00655f3","name":"임의 상품 상세 > 구매하기 > 일반 계정 로그인 확인","time":{"start":1783642986012,"stop":1783643053516,"duration":67504},"status":"failed","severity":"normal"}]
