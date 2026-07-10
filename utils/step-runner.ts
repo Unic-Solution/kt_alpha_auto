@@ -157,7 +157,7 @@ export function createRun(epicName: string, featureName: string, page?: Page) {
         updateMessage(replyTs, statusMsg);
       }
       if (!passed && screenshot) {
-        uploadScreenshot(screenshot, parentTs, `실패 스크린샷: ${name}`).catch(() => {});
+        await uploadScreenshot(screenshot, parentTs, `실패 스크린샷: ${name}`).catch(() => {});
       }
     }
   };
