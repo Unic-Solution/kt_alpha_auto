@@ -7,6 +7,7 @@ const CHANNEL_ID = process.env.SLACK_CHANNEL_ID;
 
 const slackClient = BOT_TOKEN ? new WebClient(BOT_TOKEN) : null;
 
+/** Slack REST API 호출 (환경변수 미설정 시 무시) */
 function slackApi(method: string, body: Record<string, unknown>): Promise<Record<string, unknown>> {
   return new Promise((resolve) => {
     if (!BOT_TOKEN || !CHANNEL_ID) {
@@ -45,25 +46,30 @@ function slackApi(method: string, body: Record<string, unknown>): Promise<Record
   });
 }
 
+/** 이전 테스트 실행의 Slack 스레드 ts를 .slack-ts 파일에서 읽기 */
 export function readThreadTs(): string | undefined {
   try { return readFileSync('.slack-ts', 'utf-8').trim() || undefined; }
   catch { return undefined; }
 }
 
+/** 채널에 새 메시지를 보내고 ts(타임스탬프)를 반환 */
 export async function postMessage(text: string): Promise<string | undefined> {
   const res = await slackApi('chat.postMessage', { channel: CHANNEL_ID!, text });
   return res.ts as string | undefined;
 }
 
+/** 스레드에 답글을 보내고 ts를 반환 */
 export async function postThreadReply(threadTs: string, text: string): Promise<string | undefined> {
   const res = await slackApi('chat.postMessage', { channel: CHANNEL_ID!, thread_ts: threadTs, text });
   return res.ts as string | undefined;
 }
 
+/** 기존 메시지를 수정 (단계별 진행 상태 업데이트용) */
 export function updateMessage(ts: string, text: string): void {
   slackApi('chat.update', { channel: CHANNEL_ID!, ts, text }).catch(() => {});
 }
 
+/** 스크린샷 파일을 Slack에 업로드 (실패 시 스레드에 첨부) */
 export async function uploadScreenshot(file: Buffer, threadTs?: string, initialComment?: string): Promise<void> {
   if (!slackClient || !CHANNEL_ID) return;
   try {

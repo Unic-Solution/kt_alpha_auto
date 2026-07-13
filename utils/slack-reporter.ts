@@ -2,7 +2,9 @@ import type { FullResult, Reporter } from '@playwright/test/reporter';
 import { unlinkSync } from 'fs';
 import { postMessage } from './slack-progress';
 
+/** 테스트 종료 시 최종 결과를 Slack에 전송하는 Playwright 리포터 */
 export default class SlackReporter implements Reporter {
+  /** 전체 테스트 완료 후 통과/실패 결과와 Allure 링크를 채널에 게시 */
   async onEnd(result: FullResult) {
     const passed = result.status === 'passed';
     const emoji = passed ? '✅' : '❌';

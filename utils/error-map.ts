@@ -16,13 +16,22 @@ const ERROR_MAP: [RegExp, string][] = [
   [/Cannot read properties of|TypeError/, '스크립트 오류가 발생했습니다'],
 ];
 
+/** 에러 메시지를 패턴 매칭으로 한글 설명으로 변환 */
 export function toFriendlyError(errorMsg: string): string {
   return ERROR_MAP.find(([pattern]) => pattern.test(errorMsg))?.[1] ?? '예기치 않은 오류가 발생했습니다';
 }
 
+/** 스택 트레이스에서 실패한 page 메서드명을 추출 (예: isAllNavItemsVisible > click) */
 export function extractFailedMethod(error: unknown): string | undefined {
   if (!(error instanceof Error) || !error.stack) return undefined;
-  const line = error.stack.split('\n').find(l => l.includes('.page.ts'));
-  const match = line?.match(/at \w+\.(\w+)/);
-  return match?.[1];
+  const lines = error.stack.split('\n');
+
+  const pageLine = lines.find(l => l.includes('.page.ts') && !l.includes('BasePage.ts'));
+  const baseLine = lines.find(l => l.includes('BasePage.ts'));
+
+  const pageMethod = pageLine?.match(/at \w+\.(\w+)/)?.[1];
+  const baseMethod = baseLine?.match(/at \w+\.(\w+)/)?.[1];
+
+  if (pageMethod && baseMethod) return `${pageMethod} > ${baseMethod}`;
+  return pageMethod ?? baseMethod;
 }

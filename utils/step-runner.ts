@@ -9,6 +9,7 @@ import { readThreadTs, postThreadReply, updateMessage, uploadScreenshot } from '
 // workers: 1 환경 전제 — 테스트가 순차 실행되므로 모듈 레벨 전역 변수로 관리해도 안전
 let _params: Array<{ name: string; value: string }> = [];
 
+/** Allure 리포트에 표시할 파라미터를 현재 스텝에 추가 */
 export function parameter(name: string, value: string): void {
   _params.push({ name, value });
 }
