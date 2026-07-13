@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       runner_type:
-        description: '실행할 Runner OS'
+        description: '실행할 Runner 레이블'
         required: true
         default: 'Windows'
         type: choice
@@ -32,7 +32,7 @@ jobs:
           node-version: '20'
 
       - name: 의존성 설치 (Mac)
-        if: inputs.runner_type == 'macOS'
+        if: runner.os == 'macOS'
         run: |
           LOCK_HASH=$(md5 -q package-lock.json)
           HASH_FILE="node_modules/.npm-lock-hash"
@@ -44,7 +44,7 @@ jobs:
           fi
 
       - name: 의존성 설치 (Windows)
-        if: inputs.runner_type == 'Windows'
+        if: runner.os == 'Windows'
         run: |
           $lockHash = (Get-FileHash package-lock.json -Algorithm MD5).Hash
           $hashFile = "node_modules/.npm-lock-hash"
@@ -60,35 +60,51 @@ jobs:
         run: npx playwright install chromium
 
       - name: 타임스탬프 설정 (Mac)
-        if: inputs.runner_type == 'macOS'
+        if: runner.os == 'macOS'
         run: echo "RUN_TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)" >> $GITHUB_ENV
 
       - name: 타임스탬프 설정 (Windows)
-        if: inputs.runner_type == 'Windows'
+        if: runner.os == 'Windows'
         run: echo "RUN_TIMESTAMP=$(Get-Date -Format 'yyyy-MM-dd_HH-mm-ss')" >> $env:GITHUB_ENV
         shell: powershell
 
       - name: 이전 테스트 결과 초기화 (Mac)
-        if: inputs.runner_type == 'macOS'
+        if: runner.os == 'macOS'
         run: rm -rf allure-results && mkdir -p allure-results
 
       - name: 이전 테스트 결과 초기화 (Windows)
-        if: inputs.runner_type == 'Windows'
+        if: runner.os == 'Windows'
         run: |
           if (Test-Path allure-results) { Remove-Item -Recurse -Force allure-results }
           New-Item -ItemType Directory -Path allure-results
         shell: powershell
 
+      - name: 환경변수 설정 (Windows)
+        if: inputs.runner_type == 'Windows'
+        shell: powershell
+        run: |
+          echo "LOGIN_ID=${{ secrets.WIN_LOGIN_ID }}" >> $env:GITHUB_ENV
+          echo "LOGIN_PW=${{ secrets.WIN_LOGIN_PW }}" >> $env:GITHUB_ENV
+          echo "NAME=${{ secrets.WIN_NAME }}" >> $env:GITHUB_ENV
+          echo "YEAR=${{ secrets.WIN_YEAR }}" >> $env:GITHUB_ENV
+          echo "MONTH=${{ secrets.WIN_MONTH }}" >> $env:GITHUB_ENV
+          echo "DAY=${{ secrets.WIN_DAY }}" >> $env:GITHUB_ENV
+          echo "PHONE_NUMBER=${{ secrets.WIN_PHONE_NUMBER }}" >> $env:GITHUB_ENV
+
+      - name: 환경변수 설정 (macOS)
+        if: inputs.runner_type == 'macOS'
+        run: |
+          echo "LOGIN_ID=${{ secrets.MAC_LOGIN_ID }}" >> $GITHUB_ENV
+          echo "LOGIN_PW=${{ secrets.MAC_LOGIN_PW }}" >> $GITHUB_ENV
+          echo "NAME=${{ secrets.MAC_NAME }}" >> $GITHUB_ENV
+          echo "YEAR=${{ secrets.MAC_YEAR }}" >> $GITHUB_ENV
+          echo "MONTH=${{ secrets.MAC_MONTH }}" >> $GITHUB_ENV
+          echo "DAY=${{ secrets.MAC_DAY }}" >> $GITHUB_ENV
+          echo "PHONE_NUMBER=${{ secrets.MAC_PHONE_NUMBER }}" >> $GITHUB_ENV
+
       - name: PC 통합 테스트 실행
         id: test
         env:
-          LOGIN_ID: ${{ inputs.runner_type == 'Windows' && secrets.WIN_LOGIN_ID || secrets.MAC_LOGIN_ID }}
-          LOGIN_PW: ${{ inputs.runner_type == 'Windows' && secrets.WIN_LOGIN_PW || secrets.MAC_LOGIN_PW }}
-          NAME: ${{ inputs.runner_type == 'Windows' && secrets.WIN_NAME || secrets.MAC_NAME }}
-          YEAR: ${{ inputs.runner_type == 'Windows' && secrets.WIN_YEAR || secrets.MAC_YEAR }}
-          MONTH: ${{ inputs.runner_type == 'Windows' && secrets.WIN_MONTH || secrets.MAC_MONTH }}
-          DAY: ${{ inputs.runner_type == 'Windows' && secrets.WIN_DAY || secrets.MAC_DAY }}
-          PHONE_NUMBER: ${{ inputs.runner_type == 'Windows' && secrets.WIN_PHONE_NUMBER || secrets.MAC_PHONE_NUMBER }}
           BASE_URL: https://www.kshop.co.kr/
           COMBINED_PRODUCT_CODE: ${{ secrets.COMBINED_PRODUCT_CODE }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -98,7 +114,7 @@ jobs:
         continue-on-error: true
 
       - name: Allure 리포트 생성 (Mac)
-        if: always() && inputs.runner_type == 'macOS'
+        if: always() && runner.os == 'macOS'
         run: |
           npx allure generate allure-results --clean -o allure-report
           sed -i '' 's/lang="en"/lang="kr"/' allure-report/index.html
@@ -106,7 +122,7 @@ jobs:
           sed -i '' 's|<head>|<head><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">|' allure-report/index.html
 
       - name: Allure 리포트 생성 (Windows)
-        if: always() && inputs.runner_type == 'Windows'
+        if: always() && runner.os == 'Windows'
         run: |
           npx allure generate allure-results --clean -o allure-report
           (Get-Content allure-report/index.html -Encoding UTF8) -replace 'lang="en"', 'lang="kr"' | Set-Content allure-report/index.html -Encoding UTF8
@@ -124,7 +140,7 @@ jobs:
           keep_files: true
 
       - name: 히스토리 develop 브랜치에 누적 (Mac)
-        if: always() && inputs.runner_type == 'macOS'
+        if: always() && runner.os == 'macOS'
         run: |
           TEMP=$(mktemp -d)
           git clone --depth=1 --branch=develop https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/HUJO733/kt_alpha_auto.git "$TEMP"
@@ -141,7 +157,7 @@ jobs:
           rm -rf "$TEMP"
 
       - name: 히스토리 develop 브랜치에 누적 (Windows)
-        if: always() && inputs.runner_type == 'Windows'
+        if: always() && runner.os == 'Windows'
         run: |
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           $originalDir = (Get-Location).Path
@@ -162,10 +178,10 @@ jobs:
         shell: powershell
 
       - name: 임시 파일 정리 (Mac)
-        if: always() && inputs.runner_type == 'macOS'
+        if: always() && runner.os == 'macOS'
         run: rm -rf ~/actions_github_pages_*
 
       - name: 임시 파일 정리 (Windows)
-        if: always() && inputs.runner_type == 'Windows'
+        if: always() && runner.os == 'Windows'
         run: Remove-Item -Recurse -Force "$env:USERPROFILE\actions_github_pages_*" -ErrorAction SilentlyContinue
         shell: powershell
