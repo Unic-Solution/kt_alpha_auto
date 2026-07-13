@@ -6,6 +6,7 @@ export class MainPage extends BasePage {
   /** GNB 전체 순회 - 각 항목 클릭 후 main 영역 노출 여부 반환 */
   async isAllNavItemsVisible(): Promise<{ index: number; isVisible: boolean }[]> {
     const count = await this.count(PcLocators.main.navItems);
+    if (count === 0) return [];
     const results: { index: number; isVisible: boolean }[] = [];
 
     for (let i = 0; i < count; i++) {

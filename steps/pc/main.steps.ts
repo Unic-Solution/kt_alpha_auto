@@ -18,7 +18,7 @@ export class MainSteps {
       parameter(`nav[${index}]`, isVisible ? 'visible' : 'not visible');
     }
 
-    return results.every(({ isVisible }) => isVisible);
+    return results.length > 0 && results.every(({ isVisible }) => isVisible);
   }
 
   /** 홈 > ON AIR(지금 방송중) 상품 노출 확인 */
