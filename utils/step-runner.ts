@@ -167,7 +167,7 @@ export function createRun(epicName: string, featureName: string, page?: Page) {
         const devMsg = `:x: ${name}${methodStr}\n실패 이유: ${toFriendlyError(errorMsg ?? '')}`;
         await postDevThreadReply(devParentTs, devMsg);
         if (screenshot) {
-          await uploadDevScreenshot(screenshot, devParentTs, `실패 스크린샷: ${name}`).catch(() => {});
+          await uploadDevScreenshot(screenshot, devParentTs, ':arrow_down: 실패 스크린샷').catch(() => {});
         }
       }
     }
