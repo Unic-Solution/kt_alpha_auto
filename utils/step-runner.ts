@@ -3,7 +3,7 @@ import type { Page } from '@playwright/test';
 import { writeFileSync, mkdirSync } from 'fs';
 import { randomUUID } from 'crypto';
 import { join } from 'path';
-import { toFriendlyError } from './error-map';
+import { toFriendlyError, extractFailedMethod } from './error-map';
 import { readThreadTs, postThreadReply, updateMessage, uploadScreenshot } from './slack-progress';
 
 // workers: 1 환경 전제 — 테스트가 순차 실행되므로 모듈 레벨 전역 변수로 관리해도 안전
@@ -111,6 +111,7 @@ export function createRun(epicName: string, featureName: string, page?: Page) {
     const start = Date.now();
     let passed = true;
     let errorMsg: string | undefined;
+    let lastErrorObj: unknown;
     _params = [];
     try {
       await test.step(name, async () => {
@@ -132,6 +133,7 @@ export function createRun(epicName: string, featureName: string, page?: Page) {
         }
         passed = false;
         errorMsg = String(lastError);
+        lastErrorObj = lastError;
         _params.push({ name: '재시도', value: `${lastAttempt}회` });
         if (hard) throw lastError;
         expect.soft(false, String(lastError)).toBe(true);
@@ -139,6 +141,10 @@ export function createRun(epicName: string, featureName: string, page?: Page) {
     } catch (e) {
       if (hard) throw e;
     } finally {
+      const failedMethod = extractFailedMethod(lastErrorObj);
+      if (!passed && failedMethod) {
+        _params.push({ name: '실패 메서드', value: failedMethod });
+      }
       if (!passed && errorMsg) {
         _params.push({ name: '실패 원인', value: toFriendlyError(errorMsg) });
       }
@@ -151,9 +157,10 @@ export function createRun(epicName: string, featureName: string, page?: Page) {
       writeStepResult(name, epicName, featureName, passed ? 'passed' : 'failed', start, Date.now(), [..._params], errorMsg, screenshot);
       _params = [];
       if (replyTs) {
+        const methodStr = failedMethod ? `\n실패 메서드: ${failedMethod}` : '';
         const statusMsg = passed
           ? `:white_check_mark: ${name}`
-          : `:x: ${name}\n실패 이유: ${toFriendlyError(errorMsg ?? '')}`;
+          : `:x: ${name}${methodStr}\n실패 이유: ${toFriendlyError(errorMsg ?? '')}`;
         updateMessage(replyTs, statusMsg);
       }
       if (!passed && screenshot) {

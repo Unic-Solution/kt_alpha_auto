@@ -19,3 +19,10 @@ const ERROR_MAP: [RegExp, string][] = [
 export function toFriendlyError(errorMsg: string): string {
   return ERROR_MAP.find(([pattern]) => pattern.test(errorMsg))?.[1] ?? '예기치 않은 오류가 발생했습니다';
 }
+
+export function extractFailedMethod(error: unknown): string | undefined {
+  if (!(error instanceof Error) || !error.stack) return undefined;
+  const line = error.stack.split('\n').find(l => l.includes('.page.ts'));
+  const match = line?.match(/at \w+\.(\w+)/);
+  return match?.[1];
+}
