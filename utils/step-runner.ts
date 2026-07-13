@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { writeFileSync, mkdirSync, readFileSync } from 'fs';
+import { writeFileSync, mkdirSync } from 'fs';
 import { randomUUID } from 'crypto';
 import { join } from 'path';
 import { toFriendlyError, extractFailedMethod } from './error-map';
@@ -8,19 +8,6 @@ import { readThreadTs, postThreadReply, updateMessage, uploadScreenshot } from '
 
 // workers: 1 환경 전제 — 테스트가 순차 실행되므로 모듈 레벨 전역 변수로 관리해도 안전
 let _params: Array<{ name: string; value: string }> = [];
-
-/** 실패한 스텝 정보를 failures/{TEST_RUN_TIMESTAMP}.json 에 실시간 누적 */
-function appendFailure(step: string, method: string | undefined, reason: string) {
-  const ts = process.env.TEST_RUN_TIMESTAMP;
-  if (!ts) return;
-  const dir = 'failures';
-  const file = join(dir, `${ts}.json`);
-  mkdirSync(dir, { recursive: true });
-  let list: unknown[] = [];
-  try { list = JSON.parse(readFileSync(file, 'utf-8')); } catch {}
-  list.push({ step, ...(method ? { method } : {}), reason });
-  writeFileSync(file, JSON.stringify(list, null, 2));
-}
 
 /** Allure 리포트에 표시할 파라미터를 현재 스텝에 추가 */
 export function parameter(name: string, value: string): void {
@@ -176,9 +163,6 @@ export function createRun(epicName: string, featureName: string, page?: Page) {
           ? `:white_check_mark: ${name}`
           : `:x: ${name}${methodStr}\n실패 이유: ${toFriendlyError(errorMsg ?? '')}`;
         updateMessage(replyTs, statusMsg);
-      }
-      if (!passed) {
-        appendFailure(name, failedMethod, toFriendlyError(errorMsg ?? ''));
       }
       if (!passed && screenshot) {
         await uploadScreenshot(screenshot, parentTs, `실패 스크린샷: ${name}`).catch(() => {});
