@@ -1,0 +1,1 @@
+{"uuid":"5f3da00b-d1b4-4976-a865-183cc192e7b3","name":"ON AIR > 바로구매 > 구매하기 주문서 페이지 이동 확인","status":"passed","start":1783917279687,"stop":1783917295272,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20260713_13:31:24)"}],"parameters":[{"name":"ON AIR 상품명","value":"[TV상품]타파웨어 빅T 텀블러 9종 세트"}]}
