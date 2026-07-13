@@ -63,11 +63,13 @@ export class BasePage {
 
   /** index번째 요소 클릭 */
   async nthClick(selector: string, index: number) {
+    await this.waitForElement(selector);
     await this.page.locator(selector).nth(index).click();
   }
 
   /** 마지막 요소 클릭 */
   async lastClick(selector: string) {
+    await this.waitForElement(selector);
     await this.page.locator(selector).last().click();
   }
 
