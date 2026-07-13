@@ -14,5 +14,6 @@ export default class SlackReporter implements Reporter {
     await postMessage(`${emoji} PC 통합 테스트 ${status}${link}`);
 
     try { unlinkSync('.slack-ts'); } catch {}
+    try { unlinkSync('.slack-dev-ts'); } catch {}
   }
 }

@@ -1,6 +1,6 @@
 import { writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
-import { postMessage } from '../utils/slack-progress';
+import { postMessage, postDevMessage } from '../utils/slack-progress';
 
 /**
  * 모든 테스트 시작 전 한 번만 실행 (playwright.config.ts의 globalSetup)
@@ -22,6 +22,9 @@ export default async function globalSetup() {
 
   const startMessageTs = await postMessage('PC 통합 테스트 시작');
   if (startMessageTs) writeFileSync('.slack-ts', startMessageTs);
+
+  const devStartMessageTs = await postDevMessage('PC 통합 테스트 시작');
+  if (devStartMessageTs) writeFileSync('.slack-dev-ts', devStartMessageTs);
 
   mkdirSync('allure-results', { recursive: true });
   writeFileSync(

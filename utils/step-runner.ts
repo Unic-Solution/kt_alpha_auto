@@ -4,7 +4,7 @@ import { writeFileSync, mkdirSync } from 'fs';
 import { randomUUID } from 'crypto';
 import { join } from 'path';
 import { toFriendlyError, extractFailedMethod } from './error-map';
-import { readThreadTs, postThreadReply, updateMessage, uploadScreenshot } from './slack-progress';
+import { readThreadTs, postThreadReply, updateMessage, readDevThreadTs, postDevThreadReply, uploadDevScreenshot } from './slack-progress';
 
 // workers: 1 환경 전제 — 테스트가 순차 실행되므로 모듈 레벨 전역 변수로 관리해도 안전
 let _params: Array<{ name: string; value: string }> = [];
@@ -106,6 +106,7 @@ export function createMobileRun(epicName: string, featureName: string) {
  */
 export function createRun(epicName: string, featureName: string, page?: Page) {
   const parentTs = readThreadTs();
+  const devParentTs = readDevThreadTs();
 
   return async (name: string, fn: () => Promise<boolean>, hard = false) => {
     const replyTs = parentTs ? await postThreadReply(parentTs, `:arrow_forward: ${name}`) : undefined;
@@ -158,14 +159,16 @@ export function createRun(epicName: string, featureName: string, page?: Page) {
       writeStepResult(name, epicName, featureName, passed ? 'passed' : 'failed', start, Date.now(), [..._params], errorMsg, screenshot);
       _params = [];
       if (replyTs) {
-        const methodStr = failedMethod ? `\n실패 메서드: ${failedMethod}` : '';
-        const statusMsg = passed
-          ? `:white_check_mark: ${name}`
-          : `:x: ${name}${methodStr}\n실패 이유: ${toFriendlyError(errorMsg ?? '')}`;
+        const statusMsg = passed ? `:white_check_mark: ${name}` : `:x: ${name}`;
         updateMessage(replyTs, statusMsg);
       }
-      if (!passed && screenshot) {
-        await uploadScreenshot(screenshot, parentTs, `실패 스크린샷: ${name}`).catch(() => {});
+      if (!passed && devParentTs) {
+        const methodStr = failedMethod ? `\n실패 메서드: ${failedMethod}` : '';
+        const devMsg = `:x: ${name}${methodStr}\n실패 이유: ${toFriendlyError(errorMsg ?? '')}`;
+        await postDevThreadReply(devParentTs, devMsg);
+        if (screenshot) {
+          await uploadDevScreenshot(screenshot, devParentTs, `실패 스크린샷: ${name}`).catch(() => {});
+        }
       }
     }
   };

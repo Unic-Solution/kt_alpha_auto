@@ -93,6 +93,7 @@ jobs:
           COMBINED_PRODUCT_CODE: ${{ secrets.COMBINED_PRODUCT_CODE }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+          SLACK_DEV_CHANNEL_ID: ${{ secrets.SLACK_DEV_CHANNEL_ID }}
         run: npx playwright test tests/pc/integrated --project=pc-no-auth --headed
         continue-on-error: true
 
