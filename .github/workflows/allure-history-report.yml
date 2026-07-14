@@ -57,7 +57,7 @@ jobs:
       - name: Slack 알림
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+          SLACK_CHANNEL_ID: ${{ secrets.SLACK_DEV_CHANNEL_ID }}
           SLACK_TEXT: "📊 누적 결과 리포트 생성 완료\n<https://hujo733.github.io/kt_alpha_auto/history/|Allure-history-report>"
         run: |
           node -e "
