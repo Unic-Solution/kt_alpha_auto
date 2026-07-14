@@ -13,7 +13,7 @@ interface SuiteTiming {
  * Allure 리포트 Overview의 Environment 섹션에 표시됨
  */
 class SuiteTimingReporter implements Reporter {
-  // suite 이름을 키로, 해당 suite 내 모든 테스트의 최조 시작~최후 종료 시간을 값으로 보관
+  // suite 이름을 키로, 해당 suite 내 모든 테스트의 최초 시작~최후 종료 시간을 값으로 보관
   private timings = new Map<string, SuiteTiming>();
 
   onTestEnd(test: TestCase, result: TestResult) {

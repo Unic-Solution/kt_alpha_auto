@@ -55,19 +55,22 @@ export function readThreadTs(): string | undefined {
 
 /** 채널에 새 메시지를 보내고 ts(타임스탬프)를 반환 */
 export async function postMessage(text: string): Promise<string | undefined> {
-  const res = await slackApi('chat.postMessage', { channel: CHANNEL_ID!, text });
+  if (!CHANNEL_ID) return undefined;
+  const res = await slackApi('chat.postMessage', { channel: CHANNEL_ID, text });
   return res.ts as string | undefined;
 }
 
 /** 스레드에 답글을 보내고 ts를 반환 */
 export async function postThreadReply(threadTs: string, text: string): Promise<string | undefined> {
-  const res = await slackApi('chat.postMessage', { channel: CHANNEL_ID!, thread_ts: threadTs, text });
+  if (!CHANNEL_ID) return undefined;
+  const res = await slackApi('chat.postMessage', { channel: CHANNEL_ID, thread_ts: threadTs, text });
   return res.ts as string | undefined;
 }
 
 /** 기존 메시지를 수정 (단계별 진행 상태 업데이트용) */
 export function updateMessage(ts: string, text: string): void {
-  slackApi('chat.update', { channel: CHANNEL_ID!, ts, text }).catch(() => {});
+  if (!CHANNEL_ID) return;
+  slackApi('chat.update', { channel: CHANNEL_ID, ts, text }).catch(() => {});
 }
 
 /** 스크린샷 파일을 Slack에 업로드 (실패 시 스레드에 첨부) */
