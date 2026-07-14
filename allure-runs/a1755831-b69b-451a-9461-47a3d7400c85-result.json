@@ -1,0 +1,1 @@
+{"uuid":"a1755831-b69b-451a-9461-47a3d7400c85","name":"기프티쇼 카테고리 및 필터 기능 확인","status":"passed","start":1783990435237,"stop":1783990451528,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20260714_09:43:36)"}],"parameters":[{"name":"필터 적용 전 상품 개수","value":"7"},{"name":"필터 적용 후 상품 개수","value":"5"}]}
