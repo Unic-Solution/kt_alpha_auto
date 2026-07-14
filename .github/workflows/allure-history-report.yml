@@ -57,7 +57,7 @@ jobs:
           const https = require('https');
           const data = JSON.stringify({
             channel: process.env.SLACK_CHANNEL_ID,
-            text: '📊 누적 결과 리포트 생성 완료\nhttps://hujo733.github.io/kt_alpha_auto/history/'
+            text: '📊 누적 결과 리포트 생성 완료\n<https://hujo733.github.io/kt_alpha_auto/history/|Allure-history-report>'
           });
           const req = https.request({
             hostname: 'slack.com',

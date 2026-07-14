@@ -20,9 +20,9 @@ export default defineConfig({
   use: {
     actionTimeout: 30_000,
     navigationTimeout: 30_000,
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    trace: 'off',
+    screenshot: 'off',
+    video: 'off',
   },
 
   projects: [
