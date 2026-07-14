@@ -1,1 +1,0 @@
-{"uuid":"9d8dcf76-f0ed-464e-99d4-ceb82c4798c5","name":"편성표 > TV/TV+ 탭 > 지금 방송 중 상품 확인","status":"passed","start":1783387516927,"stop":1783387528717,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20260707_10:20:04)"}],"parameters":[{"name":"TV 탭 \"지금 방송중\" 문구 확인","value":"true"},{"name":"TV+ 탭 \"지금 방송중\" 문구 확인","value":"true"}]}

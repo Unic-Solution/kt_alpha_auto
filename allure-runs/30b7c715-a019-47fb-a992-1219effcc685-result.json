@@ -1,1 +1,0 @@
-{"uuid":"30b7c715-a019-47fb-a992-1219effcc685","name":"묶음 배송 추천구좌 상품 및 페이지 이동 확인","status":"passed","start":1783558555724,"stop":1783558571480,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20260709_09:52:01)"}],"parameters":[{"name":"묶음 배송 상품 검색어","value":"6321404"}]}

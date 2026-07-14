@@ -1,1 +1,0 @@
-{"uuid":"e0e61f65-7a78-49de-b9c6-a91451d9edfa","name":"독바 > ON AIR > 바로구매 > 장바구니 상품 추가 확인","status":"passed","start":1783558872551,"stop":1783558893163,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20260709_09:52:01)"}],"parameters":[{"name":"ON AIR 상품명","value":"시슬리클래시메리제인"},{"name":"장바구니 상품명","value":"[TV상품]시슬리클래시메리제인"}]}
