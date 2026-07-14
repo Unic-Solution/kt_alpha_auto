@@ -26,7 +26,7 @@ jobs:
       - name: Allure 리포트 생성 및 HTML 수정 (Mac)
         if: runner.os == 'macOS'
         run: |
-          npx allure generate allure-runs --clean -o allure-report-history
+          npx allure generate allure-runs/*/ --clean -o allure-report-history
           sed -i '' 's/lang="en"/lang="kr"/' allure-report-history/index.html
           sed -i '' 's/sorter:`sorter.name`/sorter:`sorter.order`/' allure-report-history/assets/*.js
           sed -i '' 's|<head>|<head><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">|' allure-report-history/index.html
@@ -35,7 +35,8 @@ jobs:
         if: runner.os == 'Windows'
         shell: powershell
         run: |
-          npx allure generate allure-runs --clean -o allure-report-history
+          $dirs = Get-ChildItem allure-runs -Directory | Select-Object -ExpandProperty FullName
+          npx allure generate $dirs --clean -o allure-report-history
           (Get-Content allure-report-history/index.html -Encoding UTF8) -replace 'lang="en"', 'lang="kr"' | Set-Content allure-report-history/index.html -Encoding UTF8
           Get-ChildItem allure-report-history/assets/*.js | ForEach-Object { (Get-Content $_ -Encoding UTF8) -replace 'sorter:`sorter.name`', 'sorter:`sorter.order`' | Set-Content $_ -Encoding UTF8 }
           (Get-Content allure-report-history/index.html -Encoding UTF8) -replace '<head>', '<head><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">' | Set-Content allure-report-history/index.html -Encoding UTF8
