@@ -53,12 +53,13 @@ jobs:
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+          SLACK_TEXT: "📊 누적 결과 리포트 생성 완료\n<https://hujo733.github.io/kt_alpha_auto/history/|Allure-history-report>"
         run: |
           node -e "
           const https = require('https');
           const data = JSON.stringify({
             channel: process.env.SLACK_CHANNEL_ID,
-            text: '📊 누적 결과 리포트 생성 완료\n<https://hujo733.github.io/kt_alpha_auto/history/|Allure-history-report>'
+            text: process.env.SLACK_TEXT.replace('\\\\n', '\\n')
           });
           const req = https.request({
             hostname: 'slack.com',
