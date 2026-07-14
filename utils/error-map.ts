@@ -3,7 +3,7 @@ const ERROR_MAP: [RegExp, string][] = [
   [/expected true but received false/, '검증 조건을 만족하지 못했습니다'],
   [/ERR_ABORTED|interrupted by another navigation/, '페이지 이동이 중단되었습니다'],
   [/net::ERR_|NS_ERROR_/, '네트워크 오류가 발생했습니다'],
-  [/Navigation failed|navigation/, '페이지 이동에 실패했습니다'],
+  [/Navigation failed/, '페이지 이동에 실패했습니다'],
   [/Target closed|browser has been closed|context or browser/, '브라우저 또는 페이지가 예기치 않게 종료되었습니다'],
   [/intercepts pointer events|obscures it/, '다른 요소가 가리고 있어 클릭할 수 없습니다'],
   [/out of viewport/, '요소가 화면 밖에 있습니다'],
