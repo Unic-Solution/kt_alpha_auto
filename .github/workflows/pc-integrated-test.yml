@@ -82,14 +82,22 @@ jobs:
       - name: 환경변수 설정 (Windows)
         if: inputs.runner_type == 'Windows'
         shell: powershell
+        env:
+          WIN_LOGIN_ID: ${{ secrets.WIN_LOGIN_ID }}
+          WIN_LOGIN_PW: ${{ secrets.WIN_LOGIN_PW }}
+          WIN_NAME: ${{ secrets.WIN_NAME }}
+          WIN_YEAR: ${{ secrets.WIN_YEAR }}
+          WIN_MONTH: ${{ secrets.WIN_MONTH }}
+          WIN_DAY: ${{ secrets.WIN_DAY }}
+          WIN_PHONE_NUMBER: ${{ secrets.WIN_PHONE_NUMBER }}
         run: |
-          echo "LOGIN_ID=${{ secrets.WIN_LOGIN_ID }}" >> $env:GITHUB_ENV
-          echo "LOGIN_PW=${{ secrets.WIN_LOGIN_PW }}" >> $env:GITHUB_ENV
-          echo "NAME=${{ secrets.WIN_NAME }}" >> $env:GITHUB_ENV
-          echo "YEAR=${{ secrets.WIN_YEAR }}" >> $env:GITHUB_ENV
-          echo "MONTH=${{ secrets.WIN_MONTH }}" >> $env:GITHUB_ENV
-          echo "DAY=${{ secrets.WIN_DAY }}" >> $env:GITHUB_ENV
-          echo "PHONE_NUMBER=${{ secrets.WIN_PHONE_NUMBER }}" >> $env:GITHUB_ENV
+          echo "LOGIN_ID=$env:WIN_LOGIN_ID" >> $env:GITHUB_ENV
+          echo "LOGIN_PW=$env:WIN_LOGIN_PW" >> $env:GITHUB_ENV
+          echo "NAME=$env:WIN_NAME" >> $env:GITHUB_ENV
+          echo "YEAR=$env:WIN_YEAR" >> $env:GITHUB_ENV
+          echo "MONTH=$env:WIN_MONTH" >> $env:GITHUB_ENV
+          echo "DAY=$env:WIN_DAY" >> $env:GITHUB_ENV
+          echo "PHONE_NUMBER=$env:WIN_PHONE_NUMBER" >> $env:GITHUB_ENV
 
       - name: 환경변수 설정 (macOS)
         if: inputs.runner_type == 'macOS'
