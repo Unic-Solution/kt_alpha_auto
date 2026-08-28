@@ -151,7 +151,7 @@ jobs:
         if: always() && runner.os == 'macOS'
         run: |
           TEMP=$(mktemp -d)
-          git clone --depth=1 --branch=develop https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/HUJO733/kt_alpha_auto.git "$TEMP"
+          git clone --depth=1 --branch=develop https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/Unic-Solution/kt_alpha_auto.git "$TEMP"
           mkdir -p "$TEMP/allure-runs/$RUN_TIMESTAMP"
           cp allure-results/*-result.json "$TEMP/allure-runs/$RUN_TIMESTAMP/" 2>/dev/null || true
           cd "$TEMP"
@@ -169,7 +169,7 @@ jobs:
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           $originalDir = (Get-Location).Path
           $TEMP = New-TemporaryFile | ForEach-Object { Remove-Item $_; New-Item -ItemType Directory -Path "$($_.FullName)" }
-          git clone --depth=1 --branch=develop https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/HUJO733/kt_alpha_auto.git "$TEMP"
+          git clone --depth=1 --branch=develop https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/Unic-Solution/kt_alpha_auto.git "$TEMP"
           $TIMESTAMP = $env:RUN_TIMESTAMP
           New-Item -ItemType Directory -Path "$TEMP/allure-runs/$TIMESTAMP" -Force
           Copy-Item allure-results/*-result.json "$TEMP/allure-runs/$TIMESTAMP/" -ErrorAction SilentlyContinue
