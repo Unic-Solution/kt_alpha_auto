@@ -41,16 +41,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/HUJO733/kt_alpha_auto.git"
+    "url": "git+https://github.com/Unic-Solution/kt_alpha_auto.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/HUJO733/kt_alpha_auto/issues"
+    "url": "https://github.com/Unic-Solution/kt_alpha_auto/issues"
   },
-  "homepage": "https://github.com/HUJO733/kt_alpha_auto#readme",
+  "homepage": "https://github.com/Unic-Solution/kt_alpha_auto#readme",
   "devDependencies": {
     "@playwright/test": "^1.60.0",
     "@types/mocha": "^10.0.10",
