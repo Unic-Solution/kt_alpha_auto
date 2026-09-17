@@ -110,7 +110,6 @@ export class ProductSteps {
 
     await this.productPage.clickCartDeleteButton();
 
-    // return cartProductName.includes(productName);
     return (await this.productPage.isStringSimilarity(cartProductName, productName)) > 0.7;
   }
 
