@@ -161,6 +161,7 @@ export class ProductPage extends BasePage {
 
   /** 상품 이름 추출 */
   async getProductName(): Promise<string> {
+    await this.waitForElement(PcLocators.product.productName)
     return (await this.getText(PcLocators.product.productName)).replace(/\s/g, '');
   }
 
@@ -183,6 +184,10 @@ export class ProductPage extends BasePage {
   /** 장바구니 상품 이름 추출 */
   async getCartProductName(): Promise<string> {
     return (await this.getText(PcLocators.main.cartProductName)).replace(/\s/g, '');
+  }
+
+  async isVisibleCartDeleteButton(): Promise<boolean> {
+    return await this.isVisible(PcLocators.main.cartDeleteButton);
   }
 
   /** 장바구니 선택 삭제 버튼 클릭 (dialog 자동 수락) */

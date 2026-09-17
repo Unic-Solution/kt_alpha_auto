@@ -41,7 +41,7 @@ export const PcLocators = {
     recommendProduct: '(//div[contains(@class,"RecommendDisplay_wrap")]//div[contains(@class,"ProductItem_box")])[1]',
     searchRecommendProduct: '(//div[contains(@class,"SearchResult_topLineBox")][2]//div[contains(@class,"ProductItem_box")])[1]',
     productSection: '//div[contains(@class,"displayWrap")][6]',
-    product: '(//div[contains(@class,"displayWrap")][6]//div[contains(@class,"ProductItem_box")])[1]',
+    product: '(//div[contains(@class,"displayWrap")][7]//div[contains(@class,"ProductItem_box")])[1]',
     tvPlusTab: '//div[contains(@class,"LiveTimeLine_liveSelect")]//button[2]',
     benefitTab: '//strong[contains(text(),"혜택/이벤트")]',
     benefitTitle: '//h1[contains(@class,"Header_title")]',
@@ -80,7 +80,7 @@ export const PcLocators = {
     productQna: '//div[contains(@class,"ProdQnaDetail_wrap")]',
     optionBox: '//div[contains(@class,"SelectBox_item")]',
     productName: '//div[contains(@class,"ProdTopInfo_title")]//strong',
-    recommendProduct: '(//div[contains(@class,"ProdDetailInfo")][3]//div[contains(@class,"ProductItem_box")])[1]',
+    recommendProduct: '(//div[contains(@class,"CombinedProductList")][3]//div[contains(@class,"ProductItem_box")])[1]',
   },
   quick: {
     onAirModalImg: '//button[contains(@class,"ModalOnAir")]//img',

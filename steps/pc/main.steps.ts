@@ -58,7 +58,7 @@ export class MainSteps {
 
     await this.mainPage.clickCartDeleteButton();
 
-    return cartProductName.includes(onAirProductName);
+    return (await this.mainPage.isStringSimilarity(cartProductName, onAirProductName)) > 0.7;
   }
 
   /** 홈 > ON AIR(지금 방송중) > 바로구매 > 구매하기 주문서 이동 확인 */

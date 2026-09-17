@@ -10,7 +10,7 @@ export class GsMainPage extends BasePage {
 
     for (let i = 0; i < count; i++) {
       await this.nthClick(PcLocators.main.navItems, i);
-      if (i === 1) await this.closeModal();
+      if (i === 2) await this.closeModal();
       const isVisible = await this.isVisible(PcLocators.main.mainArea);
       results.push({ index: i, isVisible });
     }

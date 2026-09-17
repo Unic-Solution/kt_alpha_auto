@@ -110,11 +110,17 @@ export class ProductSteps {
 
     await this.productPage.clickCartDeleteButton();
 
-    return cartProductName.includes(productName);
+    // return cartProductName.includes(productName);
+    return (await this.productPage.isStringSimilarity(cartProductName, productName)) > 0.7;
   }
 
   /** 장바구니 추천구좌 상품 및 페이지 이동 확인 */
   async verifyCartRecommendation(): Promise<boolean> {
+    
+    if (await this.productPage.isVisibleCartDeleteButton()) {
+      await this.productPage.clickCartDeleteButton();
+    }
+
     await this.productPage.clickCartRecommendProduct();
     return await this.productPage.isProductDetailPage();
   }

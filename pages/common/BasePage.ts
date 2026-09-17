@@ -1,5 +1,6 @@
 import { Page } from '@playwright/test';
 import { CommonLocators } from './common.locators';
+import stringSimilarity from 'string-similarity';
 
 export class BasePage {
   constructor(protected page: Page) {}
@@ -254,5 +255,10 @@ export class BasePage {
     ]);
     await popup.waitForLoadState();
     return popup;
+  }
+
+  /** 텍스트 유사도 반환 */
+  async isStringSimilarity(text1: string, text2: string): Promise<number> {
+    return stringSimilarity.compareTwoStrings(text1,text2);
   }
 }

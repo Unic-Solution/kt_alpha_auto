@@ -54,7 +54,8 @@
   "devDependencies": {
     "@playwright/test": "^1.60.0",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^25.7.0",
+    "@types/node": "^25.9.7",
+    "@types/string-similarity": "^4.0.2",
     "@wdio/globals": "^9.27.1",
     "allure-commandline": "^2.42.0",
     "appium": "^3.4.2",
@@ -69,6 +70,7 @@
     "webdriverio": "^9.27.1"
   },
   "dependencies": {
-    "@slack/web-api": "^7.19.0"
+    "@slack/web-api": "^7.19.0",
+    "string-similarity": "^4.0.4"
   }
 }
