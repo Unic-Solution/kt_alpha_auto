@@ -1,0 +1,16 @@
+launch_status_failed 13
+launch_status_broken 0
+launch_status_passed 23
+launch_status_skipped 0
+launch_status_unknown 0
+launch_time_duration 1200570
+launch_time_min_duration 13
+launch_time_max_duration 97412
+launch_time_sum_duration 1171261
+launch_time_start 1791340453853
+launch_time_stop 1791341654423
+launch_problems_검증_실패 2
+launch_problems_타임아웃 9
+launch_problems_브라우저_종료 2
+launch_retries_retries 0
+launch_retries_run 36
