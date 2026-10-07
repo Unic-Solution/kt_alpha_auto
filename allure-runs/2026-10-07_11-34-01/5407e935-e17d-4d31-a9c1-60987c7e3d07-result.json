@@ -1,0 +1,1 @@
+{"uuid":"5407e935-e17d-4d31-a9c1-60987c7e3d07","name":"ON AIR > 바로구매 > 선물하기 주문서 페이지 이동 확인","status":"passed","start":1791340591228,"stop":1791340684299,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20261007_11:34:07)"}],"parameters":[{"name":"ON AIR 상품명","value":"[TV상품][로디에] 26FW 뉴배럴핏 코튼 코듀로이 팬츠 1종"},{"name":"재시도","value":"1회"}]}
