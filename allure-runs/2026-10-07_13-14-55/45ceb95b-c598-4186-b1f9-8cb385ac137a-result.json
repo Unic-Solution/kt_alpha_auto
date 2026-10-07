@@ -1,0 +1,1 @@
+{"uuid":"45ceb95b-c598-4186-b1f9-8cb385ac137a","name":"일반 계정 로그인 확인","status":"passed","start":1791346507604,"stop":1791346605915,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20261007_13:15:01)"}],"parameters":[{"name":"재시도","value":"1회"}]}
