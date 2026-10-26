@@ -1,3 +1,4 @@
+import { expect } from '@playwright/test';
 import { BasePage } from '../../common/BasePage';
 import { PcLocators } from './locators';
 
@@ -5,16 +6,40 @@ export class MainPage extends BasePage {
 
   /** GNB 전체 순회 - 각 항목 클릭 후 main 영역 노출 여부 반환 */
   async isAllNavItemsVisible(): Promise<{ index: number; isVisible: boolean }[]> {
-    const count = await this.count(PcLocators.main.navItems);
+    const nav = this.page.locator(PcLocators.main.gnb);
+    const buttons = this.page.locator(PcLocators.main.gnbButtons);
     const results: { index: number; isVisible: boolean }[] = [];
+    await expect(buttons).toHaveCount(PcLocators.main.gnbMenuIds.length);
 
-    for (let i = 0; i < count; i++) {
-      await this.nthClick(PcLocators.main.navItems, i);
-      if (i === 3) await this.closeModal();
-      const isVisible = await this.isVisible(PcLocators.main.mainArea);
-      results.push({ index: i, isVisible });
+    // 최상단의 숨김 상태와 스크롤 후 실제 화면 내 노출을 구분한다.
+    await this.page.evaluate(() => window.scrollTo(0, 0));
+    await expect(nav).toBeHidden();
+    for (let index = 0; index < PcLocators.main.gnbMenuIds.length; index++) {
+      await this.page.evaluate(() => window.scrollTo(0, 1600));
+      await expect.poll(() => this.page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+      await this.page.waitForTimeout(400);
+      await this.page.evaluate(() => window.scrollBy(0, -300));
+      await expect(nav).toBeVisible();
+      await expect(nav).toBeInViewport();
+      const button = buttons.nth(index);
+      const name = (await button.innerText()).replace(/\s+/g, ' ');
+      console.log(`[GNB ${index + 1}] ${name} 클릭`);
+      await button.click();
+      await expect(this.page).toHaveURL(url => url.searchParams.get('gnbMenuId') === PcLocators.main.gnbMenuIds[index]);
+      await expect(button).toHaveClass(/Header_active/);
+      const slide = this.page.locator(PcLocators.main.gnbSlides).nth(index);
+      await expect(slide).toHaveClass(/swiper-slide-active/);
+      await expect(slide).toBeInViewport();
+      await expect(slide).not.toHaveText('');
+      await this.closeModal();
+      console.log(`[GNB ${index + 1}] 목적지·선택 상태·본문 노출 확인: ${this.page.url()}`);
+      results.push({ index, isVisible: true });
     }
-
+    // 최상단 GNB 숨김 요구사항은 홈 화면에 적용한다.
+    await this.goToHome();
+    await this.page.evaluate(() => window.scrollTo(0, 0));
+    await expect.poll(() => this.page.evaluate(() => window.scrollY)).toBe(0);
+    await expect(nav).toBeHidden();
     return results;
   }
 

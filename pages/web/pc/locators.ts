@@ -9,6 +9,12 @@ export const PcLocators = {
     giftShowPaymentOrder: 'custord/giftishowOrderSheet',
   },
   main: {
+    gnb: 'nav[class*="Header_navAlpha"]',
+    gnbButtons: 'nav[class*="Header_navAlpha"] li button',
+    gnbSlides: 'main [class*="MainTemplete_swiperWrapper"] > .swiper-slide',
+    // 기대 목적지: 편성표, TV쇼핑, 특가쇼, 홈, 월화마켓, 코리아나, 숏폼관, 랭킹, VIP라운지, 혜택/이벤트.
+    // 운영 메뉴가 변경되면 목적지를 확인한 뒤 이 목록도 갱신한다.
+    gnbMenuIds: ['G000000002', 'G000000003', 'G000000621', 'G000000004', 'G000000027', 'G000001842', 'G000001661', 'G000000021', 'G000000005', 'G000000022'],
     navItems: '//nav//li',
     mainArea: '//main',
     onAirButton: '//button[contains(@class,"FloatingBannerActions_btnOnAirLottie")]',

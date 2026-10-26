@@ -36,7 +36,8 @@
     "test:ios": "TS_NODE_PROJECT=tsconfig.mobile.json mocha -r ts-node/register tests/ios/**/*.ts",
     "allure:generate": "allure generate allure-results --clean -o allure-report && sed -i '' 's/lang=\"en\"/lang=\"kr\"/' allure-report/index.html && sed -i '' 's/sorter:`sorter.name`/sorter:`sorter.order`/' allure-report/assets/*.js",
     "allure:open": "allure open allure-report",
-    "allure:report": "npm run allure:generate && npm run allure:open"
+    "allure:report": "npm run allure:generate && npm run allure:open",
+    "test:gnb": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/gnb.test.ts tests/mw/gnb.test.ts --project=pc --project=mw --headed --workers=1 --trace=on --reporter=list,html,./utils/suite-timing-reporter.ts"
   },
   "repository": {
     "type": "git",

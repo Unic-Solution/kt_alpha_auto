@@ -17,6 +17,8 @@ export default defineConfig({
   ],
 
   use: {
+    channel: process.env.PW_CHANNEL,
+    launchOptions: { slowMo: Number(process.env.PW_SLOW_MO ?? 0) },
     actionTimeout: 10_000,
     navigationTimeout: 10_000,
     trace: 'on-first-retry',
@@ -31,7 +33,7 @@ export default defineConfig({
       testMatch: /tests\/pc\/auth\.setup\.ts/,
       use: {
         viewport: null,
-        launchOptions: { args: ['--start-maximized'] },
+        launchOptions: { args: ['--start-maximized'], slowMo: Number(process.env.PW_SLOW_MO ?? 0) },
       },
     },
 
@@ -43,7 +45,7 @@ export default defineConfig({
       use: {
         viewport: null,
         storageState: 'auth.json',
-        launchOptions: { args: ['--start-maximized'] },
+        launchOptions: { args: ['--start-maximized'], slowMo: Number(process.env.PW_SLOW_MO ?? 0) },
       },
     },
 
@@ -54,7 +56,7 @@ export default defineConfig({
       fullyParallel: false,
       use: {
         viewport: null,
-        launchOptions: { args: ['--start-maximized'] },
+        launchOptions: { args: ['--start-maximized'], slowMo: Number(process.env.PW_SLOW_MO ?? 0) },
       },
     },
 

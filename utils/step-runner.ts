@@ -21,6 +21,7 @@ function writeStepResult(
   errorMsg?: string,
   screenshot?: Buffer,
 ) {
+  mkdirSync('allure-results', { recursive: true });
   const uuid = randomUUID();
   const result: Record<string, unknown> = {
     uuid,
@@ -42,7 +43,6 @@ function writeStepResult(
     writeFileSync(join('allure-results', attachFile), screenshot);
     result['attachments'] = [{ name: 'screenshot', type: 'image/png', source: attachFile }];
   }
-  mkdirSync('allure-results', { recursive: true });
   writeFileSync(join('allure-results', `${uuid}-result.json`), JSON.stringify(result));
 }
 
