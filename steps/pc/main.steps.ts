@@ -1,3 +1,4 @@
+import { expect } from '@playwright/test';
 import { BasePage } from '../../pages/common/BasePage';
 import { MainPage } from '../../pages/web/pc/main.page';
 import { parameter } from '../../utils/step-runner';
@@ -24,7 +25,19 @@ export class MainSteps {
   /** 홈 > ON AIR(지금 방송중) 상품 노출 확인 */
   async verifyOnAirModal(): Promise<boolean> {
     await this.mainPage.goToHome();
-    return await this.mainPage.isOnAirDisplayVisible();
+    await this.mainPage.isOnAirDisplayVisible();
+    const home = await this.mainPage.getOnAirProductInfo();
+    parameter('홈 ON AIR 상품', JSON.stringify(home));
+    console.log('[ON AIR] 홈 상품명·이미지 로딩·가격·방송 표시 확인:', home);
+    const live = await this.mainPage.getLiveScheduleProductInfo(home.productId);
+    parameter('편성표 현재 방송 상품', JSON.stringify(live));
+    console.log('[ON AIR] 편성표 현재 방송 상품:', live);
+    expect(live.productId, '현재 방송 상품 코드').toBe(home.productId);
+    expect(live.name, '현재 방송 상품명').toBe(home.name);
+    expect(live.amount, '현재 방송 상품 가격').toBe(home.amount);
+    await this.mainPage.goToHome();
+    await this.mainPage.isOnAirDisplayVisible();
+    return true;
   }
 
   /** 홈 > ON AIR(지금 방송중) > 바로구매 > 선물하기 주문서 이동 확인 */
