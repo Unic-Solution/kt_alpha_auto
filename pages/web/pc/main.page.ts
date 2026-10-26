@@ -103,37 +103,58 @@ export class MainPage extends BasePage {
 
   /** 홈 > ON AIR(지금 방송중) > 바로구매 버튼 클릭 */
   async clickDirectBuyButton() {
-    await this.scrollIntoView(PcLocators.main.onAirDirectBuyButton);
-    await this.clickFirstInViewport(PcLocators.main.onAirDirectBuyButton);
+    // 초기 라우팅 완료 후 클릭해야 hydration 중 클릭이 유실되지 않는다.
+    await expect(this.page).toHaveURL(url => url.searchParams.get('gnbMenuId') === 'G000000004');
+    const button = this.page.locator(PcLocators.main.onAirDirectBuyButton);
+    await button.scrollIntoViewIfNeeded();
+    const modal = this.page.locator(PcLocators.main.purchaseModal);
+    // 초기 화면의 이벤트 연결이 늦는 경우 패널이 열리지 않았을 때만 재시도한다.
+    await expect(async () => {
+      if (!await modal.isVisible()) await button.click();
+      await expect(modal).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 15_000, intervals: [500, 1_000] });
   }
 
-  /** 홈 > ON AIR(지금 방송중) > 바로구매 > 옵션 선택 (중첩 옵션박스 대응) */
-  async selectFirstEnabledOption() {
-    let prevCount = 0;
-
-    while (true) {
-      await this.waitForElement(PcLocators.product.optionBox, 5).catch(() => {});
-      const count = await this.count(PcLocators.product.optionBox);
-      if (count === 0 || count === prevCount) return;
-      prevCount = count;
-      await this.clickFirstEnabled(PcLocators.main.onAirDirectBuyFirstOption);
-      await this.clickFirstEnabled(PcLocators.main.onAirDirectBuySecondOption);
+  /** 현재 방송 대표 상품을 선택하고 필요한 옵션을 순서대로 선택한다. */
+  async selectFirstEnabledOption(productName?: string) {
+    const modal = this.page.locator(PcLocators.main.purchaseModal);
+    const selected = modal.locator(PcLocators.main.selectedProduct);
+    for (let depth = 0; depth < 10; depth++) {
+      if (await selected.count() > 0) {
+        await expect(selected).toHaveCount(1);
+        await expect(selected).toBeVisible();
+        if (productName) await expect(selected).toHaveText(productName);
+        return;
+      }
+      const products = modal.locator(PcLocators.main.purchaseProduct).filter({ visible: true });
+      if (await products.count() > 0) {
+        const product = productName ? products.filter({ hasText: productName }) : products.first();
+        await expect(product).toHaveCount(1);
+        await product.click();
+      } else {
+        const option = modal.locator(PcLocators.main.purchaseOption).filter({ visible: true }).first();
+        await expect(option, '선택 가능한 상품 옵션이 있어야 한다').toBeVisible();
+        await option.click();
+      }
+      await expect.poll(async () => await selected.count() +
+        await modal.locator(PcLocators.main.purchaseOption).filter({ visible: true }).count()).toBeGreaterThan(0);
     }
+    throw new Error('상품 옵션 선택이 10단계 안에 완료되지 않았습니다.');
   }
 
-  /** 홈 > ON AIR(지금 방송중) > 바로구매 > 옵션 선택까지 수행 */
   async selectOnAirOption() {
     await this.goToHome();
+    const product = await this.getOnAirProductInfo();
     await this.clickDirectBuyButton();
-    await this.selectFirstEnabledOption();
+    await this.selectFirstEnabledOption(product.name);
+    return product;
   }
 
-  /** ON AIR > 선물하기 버튼 클릭 */
   async clickOnAirGiftButton() {
     await this.click(PcLocators.main.onAirGiftButton);
   }
 
-  /** 선물하기 주문서 페이지 URL 확인 */
+  /** 로그인 화면이 아닌 실제 선물하기 주문서 본문과 상품을 확인한다. */
   async isGiftOrderPage(): Promise<boolean> {
     return this.urlContains(PcLocators.urls.onAirGiftOrder);
   }
@@ -145,11 +166,11 @@ export class MainPage extends BasePage {
 
   /** ON AIR > 장바구니 버튼 클릭 (버튼 없으면 false 반환) */
   async clickOnAirCartButton(): Promise<boolean> {
-    const exists = await this.isVisible(PcLocators.main.onAirCartButton);
-
-    if (!exists) return false;
-
-    await this.click(PcLocators.main.onAirCartButton);
+    const button = this.page.locator(PcLocators.main.purchaseModal).locator(PcLocators.main.onAirCartButton);
+    await expect(button, '장바구니 버튼이 없으면 실패해야 한다').toBeVisible();
+    await expect(button).toBeEnabled();
+    await button.click();
+    await expect(this.page.getByText('장바구니에 상품이 담겼습니다.', { exact: true })).toBeVisible();
     return true;
   }
 
@@ -159,6 +180,69 @@ export class MainPage extends BasePage {
   }
 
   /** 장바구니 상품 이름 추출 */
+  async getSelectedCartOptions() {
+    const modal = this.page.locator(PcLocators.main.purchaseModal);
+    const quantity = modal.locator(PcLocators.main.selectedQuantity);
+    await expect(quantity).toHaveCount(1);
+    const count = Number(await quantity.inputValue());
+    expect(count, '선택 수량').toBeGreaterThan(0);
+    return { quantity: count, options: (await modal.locator(PcLocators.main.selectedOptions).allTextContents()).map(s => s.trim()).filter(Boolean) };
+  }
+
+  /** 화면이 빈 상태인지 목록 로딩이 끝난 상태인지 확인한 뒤 행을 읽는다. */
+  async readCartItems() {
+    const rows = this.page.locator(PcLocators.main.cartItems);
+    await expect.poll(async () => await rows.count() > 0 ||
+      await this.page.getByText(PcLocators.main.cartEmptyText, { exact: true }).isVisible(),
+    { message: '장바구니 목록 또는 빈 장바구니 안내가 표시되어야 한다' }).toBe(true);
+    const result = [];
+    for (const row of await rows.all()) {
+      const id = await row.locator('input[type="checkbox"]').getAttribute('value');
+      expect(id, '장바구니 행 식별자').toMatch(/^\d+$/);
+      const name = (await row.locator(PcLocators.main.cartItemName).innerText()).replace('[TV상품]', '').trim();
+      const options = (await row.locator(PcLocators.main.cartItemOptions).allTextContents()).map(s => s.trim());
+      const quantityText = options.find(s => /수량\s*:/.test(s));
+      expect(quantityText, '장바구니 수량 표시').toMatch(/수량\s*:\s*\d+개/);
+      result.push({ id: id!, name, quantity: Number(quantityText!.match(/:\s*(\d+)/)![1]),
+        options: options.filter(s => !/수량\s*:/.test(s)),
+        amount: Number((await row.locator(PcLocators.main.cartItemPrice).innerText()).replace(/\D/g, '')) });
+    }
+    return result;
+  }
+
+  async getCartSnapshot() {
+    const cart = await this.page.context().newPage();
+    try {
+      await cart.goto(new URL('/custord/basket', this.page.url()).href);
+      return await new MainPage(cart).readCartItems();
+    } finally { await cart.close(); }
+  }
+
+  /** 상품명 링크의 실제 목적지 상품 코드도 확인한다. */
+  async verifyCartProductId(id: string, productId: string) {
+    const row = this.page.locator(PcLocators.main.cartItems).filter({ has: this.page.locator(`input[value="${id}"]`) });
+    await row.locator(PcLocators.main.cartItemName).click();
+    await expect(this.page).toHaveURL(url => url.pathname === `/display/product/${productId}`);
+    await this.page.goBack();
+    await expect(this.page).toHaveURL(url => url.pathname === '/custord/basket');
+    await expect(row).toBeVisible();
+  }
+
+  /** 담기 전에는 없었던 행만 삭제한다. 전체 선택 삭제를 사용하지 않는다. */
+  async deleteAddedCartItem(id: string) {
+    expect(id).toMatch(/^\d+$/);
+    const row = this.page.locator(PcLocators.main.cartItems).filter({ has: this.page.locator(`input[value="${id}"]`) });
+    await expect(row).toHaveCount(1);
+    const dialog = this.page.waitForEvent('dialog').then(async confirmation => {
+      const message = confirmation.message();
+      if (message === '선택한 상품을 삭제하시겠습니까?') await confirmation.accept();
+      else await confirmation.dismiss();
+      expect(message).toBe('선택한 상품을 삭제하시겠습니까?');
+    });
+    await Promise.all([dialog, row.locator(PcLocators.main.cartItemDelete).click()]);
+    await expect(row).toHaveCount(0);
+  }
+
   async getCartProductName(): Promise<string> {
     return (await this.getText(PcLocators.main.cartProductName)).replace(/\s/g, '');
   }

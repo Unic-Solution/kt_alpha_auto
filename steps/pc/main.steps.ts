@@ -1,4 +1,4 @@
-import { expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { BasePage } from '../../pages/common/BasePage';
 import { MainPage } from '../../pages/web/pc/main.page';
 import { parameter } from '../../utils/step-runner';
@@ -49,22 +49,40 @@ export class MainSteps {
 
   /** 홈 > ON AIR(지금 방송중) > 바로구매 > 장바구니 상품 추가 확인 */
   async verifyOnAirCart(): Promise<boolean> {
-    await this.mainPage.selectOnAirOption();
-    const onAirProductName = await this.mainPage.getOnAirProductName();
-    const clicked = await this.mainPage.clickOnAirCartButton();
-    if (!clicked) {
-      await parameter('메인페이지 > ON AIR > 바로구매 > 장바구니', '장바구니 버튼 없는 케이스');
-      return true;
-    }
-
+    const product = await this.mainPage.selectOnAirOption();
+    const selected = await this.mainPage.getSelectedCartOptions();
+    const before = await this.mainPage.getCartSnapshot();
+    // 같은 상품이 합산되는 경우 기존 항목을 변경하지 않고 먼저 중단한다.
+    expect(before.some(item => item.name === product.name), '현재 방송 상품이 기존 장바구니에 없어야 한다').toBe(false);
+    parameter('선택 상품·옵션·수량', JSON.stringify({ ...product, ...selected }));
+    parameter('담기 전 장바구니', JSON.stringify(before));
+    await this.mainPage.clickOnAirCartButton();
     await this.mainPage.clickOnAirCartMoveButton();
-    const cartProductName = await this.mainPage.getCartProductName();
-    await this.mainPage.clickCartDeleteButton();
-
-    await parameter('ON AIR 상품명', onAirProductName);
-    await parameter('장바구니 상품명', cartProductName);
-
-    return cartProductName.includes(onAirProductName);
+    const page = this.mainPage.getPage();
+    await expect(page).toHaveURL(url => url.pathname === '/custord/basket');
+    const after = await this.mainPage.readCartItems();
+    const added = after.filter(item => !before.some(existing => existing.id === item.id));
+    expect(added, '이번 실행으로 추가된 행은 정확히 1개여야 한다').toHaveLength(1);
+    const item = added[0];
+    try {
+      expect(after.filter(row => row.id !== item.id), '기존 장바구니 항목 유지').toEqual(before);
+      expect(item.name, '담긴 상품명').toBe(product.name);
+      expect(item.quantity, '담긴 수량').toBe(selected.quantity);
+      expect(item.options, '담긴 상품 옵션').toEqual(selected.options);
+      expect(item.amount, '담긴 상품 금액').toBe(product.amount * selected.quantity);
+      parameter('추가된 장바구니 항목', JSON.stringify(item));
+      console.log('[장바구니] 상품·옵션·수량·금액 확인:', item);
+      const screenshot = test.info().outputPath('cart-added.png');
+      await page.screenshot({ path: screenshot });
+      await test.info().attach('장바구니 추가 검증', { path: screenshot, contentType: 'image/png' });
+      await this.mainPage.verifyCartProductId(item.id, product.productId);
+    } finally {
+      if (new URL(page.url()).pathname !== '/custord/basket') await page.goto(new URL('/custord/basket', page.url()).href);
+      await this.mainPage.deleteAddedCartItem(item.id);
+      expect(await this.mainPage.readCartItems(), '테스트 상품 삭제 후 기존 상태 복원').toEqual(before);
+      console.log('[장바구니] 추가한 항목만 삭제하고 기존 상태 복원 완료');
+    }
+    return true;
   }
 
   /** 홈 > ON AIR(지금 방송중) > 바로구매 > 구매하기 주문서 이동 확인 */
