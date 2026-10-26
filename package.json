@@ -39,7 +39,8 @@
     "allure:report": "npm run allure:generate && npm run allure:open",
     "test:gnb": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/gnb.test.ts tests/mw/gnb.test.ts --project=pc --project=mw --headed --workers=1 --trace=on --reporter=list,html,./utils/suite-timing-reporter.ts",
     "test:onair": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/onair.test.ts tests/mw/onair.test.ts --project=pc --project=mw --headed --workers=1 --trace=on --reporter=list,html,./utils/suite-timing-reporter.ts",
-    "test:onair:cart": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/onair-cart.test.ts tests/mw/onair-cart.test.ts --project=pc --project=mw --headed --workers=1 --trace=on --reporter=list,html,./utils/suite-timing-reporter.ts"
+    "test:onair:cart": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/onair-cart.test.ts tests/mw/onair-cart.test.ts --project=pc --project=mw --headed --workers=1 --trace=on --reporter=list,html,./utils/suite-timing-reporter.ts",
+    "test:onair:buy": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/onair-buy.test.ts tests/mw/onair-buy.test.ts --project=pc --project=mw --headed --workers=1 --trace=on --reporter=list,html,./utils/suite-timing-reporter.ts"
   },
   "repository": {
     "type": "git",

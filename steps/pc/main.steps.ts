@@ -87,9 +87,16 @@ export class MainSteps {
 
   /** 홈 > ON AIR(지금 방송중) > 바로구매 > 구매하기 주문서 이동 확인 */
   async verifyOnAirBuy(): Promise<boolean> {
-    await this.mainPage.selectOnAirOption();
-    await this.mainPage.clickOnAirBuyButton();
-    return await this.mainPage.isBuyOrderPage();
+    const product = await this.mainPage.selectOnAirOption(true);
+    const selected = await this.mainPage.getSelectedCartOptions();
+    parameter('상품 선택 경로', product.source);
+    parameter('선택 상품·옵션·수량', JSON.stringify({ ...product, ...selected }));
+    const route = await this.mainPage.clickOnAirBuyButton();
+    parameter('주문서 진입 경로', route);
+    const passed = await this.mainPage.isBuyOrderPage({ ...product, ...selected });
+    parameter('주문서 경로', new URL(this.mainPage.getCurrentURL()).pathname);
+    console.log('[구매하기] 주문서 본문·상품·옵션·수량·금액 확인:', route, { ...product, ...selected });
+    return passed;
   }
 
   /** 카테고리 및 필터 기능 확인 */

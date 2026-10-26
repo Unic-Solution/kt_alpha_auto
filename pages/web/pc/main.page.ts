@@ -111,8 +111,8 @@ export class MainPage extends BasePage {
     // 초기 화면의 이벤트 연결이 늦는 경우 패널이 열리지 않았을 때만 재시도한다.
     await expect(async () => {
       if (!await modal.isVisible()) await button.click();
-      await expect(modal).toBeVisible({ timeout: 2_000 });
-    }).toPass({ timeout: 15_000, intervals: [500, 1_000] });
+      await expect(modal).toBeVisible({ timeout: 10_000 });
+    }).toPass({ timeout: 30_000, intervals: [1_000] });
   }
 
   /** 현재 방송 대표 상품을 선택하고 필요한 옵션을 순서대로 선택한다. */
@@ -142,12 +142,49 @@ export class MainPage extends BasePage {
     throw new Error('상품 옵션 선택이 10단계 안에 완료되지 않았습니다.');
   }
 
-  async selectOnAirOption() {
+  async selectOnAirOption(allowScheduleFallback = false) {
     await this.goToHome();
+    const price = this.page.locator(PcLocators.main.onAirDisplay).locator(PcLocators.main.onAirPrice);
+    await expect(price).toBeVisible();
+    const canBuy = !(await price.innerText()).includes('상담') &&
+      await this.page.locator(PcLocators.main.onAirDirectBuyButton).getByText('바로구매', { exact: true }).isVisible();
+    if (allowScheduleFallback && !canBuy) return this.selectSchedulePurchaseOption();
+    expect(canBuy, '현재 ON AIR가 바로 구매 가능한 일반 상품이어야 한다').toBe(true);
     const product = await this.getOnAirProductInfo();
     await this.clickDirectBuyButton();
     await this.selectFirstEnabledOption(product.name);
-    return product;
+    return { ...product, source: '홈 ON AIR' };
+  }
+
+  /** 상담 방송 등 홈에서 구매할 수 없으면 가장 가까운 이전 일반 방송을 선택한다. */
+  async selectSchedulePurchaseOption() {
+    console.log('[구매하기] 홈 ON AIR에서 바로 구매할 수 없어 편성표로 전환합니다.');
+    await this.page.locator(PcLocators.main.onAirDisplay).locator(PcLocators.main.onAirSchedule).click();
+    await expect(this.page).toHaveURL(url => url.searchParams.get('gnbMenuId') === 'G000000002');
+    const broadcasts = this.page.locator(PcLocators.main.broadcasts);
+    await expect(broadcasts.first()).toBeAttached();
+    const states = await broadcasts.evaluateAll(nodes => nodes.map(n => n.getAttribute('data-broadcast-state')));
+    const liveIndex = states.indexOf('live');
+    expect(liveIndex, '편성표 현재 방송 위치').toBeGreaterThanOrEqual(0);
+    const indices = [...Array(liveIndex).keys()].reverse().concat(
+      Array.from({ length: states.length - liveIndex - 1 }, (_, i) => liveIndex + i + 1));
+    for (const index of indices) {
+      const broadcast = broadcasts.nth(index);
+      const buy = broadcast.getByRole('button', { name: '바로구매', exact: true }).first();
+      if (!await buy.isVisible() || !await buy.isEnabled()) continue;
+      const info = broadcast.locator(PcLocators.main.liveProduct).first();
+      const productId = await info.locator('[data-product-id]').getAttribute('data-product-id');
+      expect(productId).toMatch(/^\d+$/);
+      const name = (await info.locator(PcLocators.main.liveProductTitle).innerText()).trim();
+      const amount = Number((await info.locator(PcLocators.main.liveProductPrice).innerText()).replace(/\D/g, ''));
+      expect(amount).toBeGreaterThan(0);
+      await buy.scrollIntoViewIfNeeded();
+      await buy.click();
+      await expect(this.page.locator(PcLocators.main.purchaseModal)).toBeVisible({ timeout: 20_000 });
+      await this.selectFirstEnabledOption(name);
+      return { productId: productId!, name, amount, source: '편성표' };
+    }
+    throw new Error('편성표에 바로 구매 가능한 일반 상품이 없습니다.');
   }
 
   async clickOnAirGiftButton() {
@@ -255,12 +292,49 @@ export class MainPage extends BasePage {
 
   /** ON AIR > 구매하기 버튼 클릭 */
   async clickOnAirBuyButton() {
-    await this.click(PcLocators.main.onAirBuyButton);
+    const button = this.page.locator(PcLocators.main.purchaseModal).locator(PcLocators.main.onAirBuyButton);
+    await expect(button).toBeVisible();
+    await expect(button).toBeEnabled();
+    await button.click();
+    await expect(this.page).toHaveURL(url => ['/custord/loginPage', '/' + PcLocators.urls.onAirBuyOrder].includes(url.pathname));
+    if (new URL(this.page.url()).pathname === '/custord/loginPage') {
+      const guest = this.page.getByText('비회원 주문하기', { exact: true });
+      await expect(guest).toBeVisible();
+      await guest.click();
+      return '비회원 주문';
+    }
+    return '회원 주문';
   }
 
-  /** 구매하기 주문서 페이지 URL 확인 */
-  async isBuyOrderPage(): Promise<boolean> {
-    return this.urlContains(PcLocators.urls.onAirBuyOrder);
+  /** 주문서 URL뿐 아니라 실제 본문과 주문상품 상세를 검증한다. */
+  async isBuyOrderPage(expected?: { name: string; quantity: number; options: string[]; amount: number }): Promise<boolean> {
+    await expect(this.page).toHaveURL(url => url.pathname === '/' + PcLocators.urls.onAirBuyOrder, { timeout: 20_000 });
+    const main = this.page.locator('main');
+    await expect(main).toBeVisible();
+    for (const name of [/^주문자$/, /^배송지(?:\s|$)/, /^결제수단$/]) {
+      await expect(main.getByRole('heading', { name })).toBeVisible();
+    }
+    const items = main.locator(PcLocators.main.orderItems);
+    if (!await items.first().isVisible()) await main.locator(PcLocators.main.orderSummary).click();
+    await expect(items).toHaveCount(1);
+    await expect(items).toBeVisible();
+    await items.scrollIntoViewIfNeeded();
+    const title = items.locator(PcLocators.main.orderProductName);
+    const price = items.locator(PcLocators.main.orderProductPrice);
+    await expect(title).toBeVisible();
+    await expect(price).toBeVisible();
+    if (expected) {
+      await expect(title).toHaveText(expected.name);
+      const details = (await items.locator(PcLocators.main.orderProductOptions).allTextContents()).map(s => s.trim());
+      const quantityText = details.find(s => /\d+개$/.test(s));
+      expect(quantityText, '주문상품 수량').toBeTruthy();
+      expect(Number(quantityText!.match(/(\d+)개$/)![1]), '주문상품 수량 일치').toBe(expected.quantity);
+      const options = details.map(s => s.replace(/\s*\d+개$/, '').trim()).filter(Boolean);
+      expect(options, '주문상품 옵션 일치').toEqual(expected.options);
+      expect(Number((await price.innerText()).replace(/\D/g, '')), '주문상품 금액 일치').toBe(expected.amount * expected.quantity);
+    }
+    await expect(main.getByRole('button', { name: /결제하기$/ })).toBeVisible();
+    return true;
   }
 
   /** 카테고리 버튼 클릭 */
