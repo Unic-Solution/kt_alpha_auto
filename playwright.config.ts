@@ -33,7 +33,7 @@ export default defineConfig({
       name: 'setup',
       testMatch: /tests\/pc\/auth\.setup\.ts/,
       use: {
-        viewport: null,
+        viewport: { width: 1440, height: 900 },
         launchOptions: { args: ['--start-maximized'], slowMo: Number(process.env.PW_SLOW_MO ?? 0) },
       },
     },
@@ -44,7 +44,7 @@ export default defineConfig({
       testMatch: /tests\/pc\/(?!auth\.setup|login|integrated).*\.test\.ts/,
       fullyParallel: false,
       use: {
-        viewport: null,
+        viewport: { width: 1440, height: 900 },
         storageState: existsSync('auth.json') ? 'auth.json' : undefined,
         launchOptions: { args: ['--start-maximized'], slowMo: Number(process.env.PW_SLOW_MO ?? 0) },
       },
@@ -56,7 +56,7 @@ export default defineConfig({
       testMatch: /tests\/pc\/(login|integrated)\.test\.ts/,
       fullyParallel: false,
       use: {
-        viewport: null,
+        viewport: { width: 1440, height: 900 },
         launchOptions: { args: ['--start-maximized'], slowMo: Number(process.env.PW_SLOW_MO ?? 0) },
       },
     },

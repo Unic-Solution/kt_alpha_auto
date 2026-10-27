@@ -75,7 +75,9 @@ export const MwLocators = {
     sortOptions: '[class*="ModalSelectOption"] button',
     searchButton: '//div[contains(@class,"Header_right")]/a',
     popularWords: '//ul[contains(@class,"PopularWords")]//p',
-    searchProduct: '(//div[contains(@class,"ProductItem_box")]//a)[1]',
+    searchResults: '[class*="ProductItem_box"][data-product-id]',
+    searchProduct: 'button[class*="ProductItem_content"]',
+    searchProductTitle: '[class*="ProductItem_title"]',
   },
   quick: {
     fixedMenu: '[data-action-bar="true"]',
@@ -118,6 +120,11 @@ export const MwLocators = {
     productQna: '//div[contains(@class,"ProdQnaDetail_wrap")]',
     optionBox: '//div[contains(@class,"SelectBox_item")]',
     productName: '//div[contains(@class,"ProdTopInfo_title")]//strong',
+    productImage: 'img[alt="상품 썸네일"]',
+    productPrice: 'strong[class*="ProdPriceInfoBox_price"]',
+    productPurchaseButton: '//div[contains(@class,"ButtonPurchase")]//span[text()="구매하기"]',
+    productInfoButton: '//button[contains(.,"상품 정보 더 보기")]',
+    productLoadingSkeleton: '[class*="Skeleton"], [class*="skeleton"], .react-loading-skeleton',
   },
   my: {
     myButton: '//a[text()="마이"]',

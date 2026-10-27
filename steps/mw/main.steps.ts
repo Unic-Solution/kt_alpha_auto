@@ -148,11 +148,12 @@ export class MainSteps {
     await this.mainPage.goToHome();
     await this.mainPage.clickSearchButton();
     const popularWord = await this.mainPage.clickPopularWord();
-    await this.mainPage.clickSearchProduct();
+    const product = await this.mainPage.clickSearchProduct();
 
-    await parameter('선택한 인기 검색어', popularWord);
-    await parameter('상품 클릭 후 URL', this.mainPage.getCurrentURL());
-
-    return await this.mainPage.isProductDetailPage();
+    parameter('선택한 인기 검색어', popularWord);
+    parameter('선택한 상품', `${product.productId} ${product.name}`);
+    parameter('상품 클릭 후 URL', product.url);
+    console.log('[인기 검색어/상품 상세]', { popularWord, ...product });
+    return true;
   }
 }

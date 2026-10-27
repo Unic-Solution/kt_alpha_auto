@@ -555,19 +555,46 @@ export class MainPage extends BasePage {
     await this.click(PcLocators.main.searchButton);
   }
 
-  /** 검색 > 인기 검색어 랜덤 클릭 후 검색어 반환 */
+  /** 첫 번째 인기 검색어를 선택하고 검색 결과 이동을 확인한다. */
   async clickPopularWord(): Promise<string> {
-    const count = await this.count(PcLocators.main.popularWords);
-    const randomNum = this.getRandomIndex(count);
-    const word = await this.getIndexText(PcLocators.main.popularWords, randomNum);
-    await this.nthClick(PcLocators.main.popularWords, randomNum);
-
+    const words = this.page.locator(PcLocators.main.popularWords);
+    await expect(words.first(), '인기 검색어가 노출되어야 한다').toBeVisible();
+    expect(await words.count(), '인기 검색어 개수').toBeGreaterThan(0);
+    const word = (await words.first().innerText()).trim();
+    expect(word, '인기 검색어').not.toBe('');
+    await words.first().click();
+    await expect(this.page).toHaveURL(url => url.pathname.endsWith('/display/search/result') && url.searchParams.get('query') === word);
     return word;
   }
 
-  /** 검색 결과 첫 번째 상품 클릭 */
+  /** 검색 결과 상품을 클릭하고 동일한 상품의 상세 페이지인지 확인한다. */
   async clickSearchProduct() {
-    await this.click(PcLocators.main.searchProduct);
+    const product = this.page.locator(PcLocators.main.searchResults).filter({ visible: true }).first();
+    await expect(product, '검색 결과 상품이 노출되어야 한다').toBeVisible({ timeout: 15_000 });
+    const productId = await product.getAttribute('data-product-id');
+    expect(productId).toMatch(/^\d+$/);
+    const name = (await product.locator(PcLocators.main.searchProductTitle).innerText()).replace(/^\[TV상품\]/, '').trim();
+    expect(name, '검색 결과 상품명').not.toBe('');
+    await product.locator(PcLocators.main.searchProduct).click();
+    await expect(this.page).toHaveURL(url => url.pathname === `/display/product/${productId}`);
+    await this.closeModal();
+    await expect.poll(() => this.page.evaluate(() => document.readyState), {
+      message: '상품 상세 문서 로딩 완료', timeout: 15_000,
+    }).toBe('complete');
+    const detailName = this.page.locator(PcLocators.product.productName);
+    await expect(detailName).toContainText(name);
+    const image = this.page.locator(PcLocators.product.productImage).filter({ visible: true }).first();
+    await expect(image, '상품 대표 이미지').toBeVisible();
+    await expect.poll(() => image.evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth > 0), {
+      message: '상품 대표 이미지 로딩 완료', timeout: 15_000,
+    }).toBe(true);
+    await expect(this.page.locator(PcLocators.product.productPrice).first(), '상품 판매가').toHaveText(/[\d,]+원/);
+    await expect(this.page.locator(PcLocators.product.productPurchaseButton).filter({ visible: true }).first(), '구매하기 영역').toBeVisible();
+    await expect(this.page.locator(PcLocators.product.productInfoButton), '상품 정보 영역').toBeVisible();
+    await expect(this.page.locator(PcLocators.product.productLoadingSkeleton).filter({ visible: true }), '상품 상세 로딩 스켈레톤').toHaveCount(0, { timeout: 15_000 });
+    await detailName.scrollIntoViewIfNeeded();
+    await expect(detailName, '완전히 로딩된 상품 정보').toBeInViewport();
+    return { productId, name, url: this.page.url() };
   }
 
   /** 상품 상세 페이지 이동 확인 */

@@ -15,14 +15,12 @@ export class BasePage {
 
   /** 공통 팝업 모달 닫기 (모달이 없으면 무시) */
   async closeModal() {
-    try {
-      await this.waitForElement(CommonLocators.modal.closeBtn, 3);
-    } catch {
-      return;
-    }
-    while (await this.isVisible(CommonLocators.modal.closeBtn)) {
-      await this.click(CommonLocators.modal.closeBtn);
-      await this.wait(1);
+    const buttons = this.page.locator(CommonLocators.modal.closeBtn);
+    await buttons.first().waitFor({ state: 'visible', timeout: 750 }).catch(() => {});
+    while (await buttons.filter({ visible: true }).count()) {
+      const button = buttons.filter({ visible: true }).first();
+      await button.click();
+      await button.waitFor({ state: 'hidden', timeout: 1_000 }).catch(() => {});
     }
   }
 
