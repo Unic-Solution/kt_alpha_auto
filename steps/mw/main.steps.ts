@@ -104,6 +104,30 @@ export class MainSteps {
     return passed;
   }
 
+  /** 체크리스트 6: 이전·다음 방송 노출, 편성표 대조 및 각 상품 상세 이동 */
+  async verifyAdjacentBroadcasts(): Promise<boolean> {
+    await this.mainPage.goToHome();
+    const home = await this.mainPage.getAdjacentBroadcastCards();
+    parameter('홈 이전·다음 방송', JSON.stringify(home));
+    const page = this.mainPage.getPage();
+    const screenshot = test.info().outputPath('adjacent-broadcasts.png');
+    await page.screenshot({ path: screenshot });
+    await test.info().attach('이전·다음 방송 구좌', { path: screenshot, contentType: 'image/png' });
+    const schedule = await this.mainPage.getAdjacentScheduleProducts();
+    expect(schedule, '홈 카드가 편성표의 실제 이전·다음 방송과 일치해야 한다')
+      .toEqual(home.map(({ productId, name, time }) => ({ productId, name, time })));
+    console.log('[이전·다음 방송] 편성표 이동 및 상품 코드·상품명·시각 일치 확인:', schedule);
+    for (const card of home) {
+      await this.mainPage.verifyAdjacentProductPage(card);
+      parameter(card.direction + ' 상품 상세 경로', new URL(page.url()).pathname);
+      console.log(`[${card.direction}] 상품 상세 이동 및 본문 확인: ${card.productId} ${card.name}`);
+      const image = test.info().outputPath(`adjacent-product-${card.index}.png`);
+      await page.screenshot({ path: image });
+      await test.info().attach(card.direction + ' 상품 상세', { path: image, contentType: 'image/png' });
+    }
+    return true;
+  }
+
   /** 카테고리 및 필터 기능 확인 */
   async verifyCategory(): Promise<boolean> {
     await this.mainPage.goToHome();

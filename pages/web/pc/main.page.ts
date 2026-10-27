@@ -101,6 +101,77 @@ export class MainPage extends BasePage {
     };
   }
 
+  /** 홈의 이전·다음 방송 카드와 실제 로딩된 상품 정보를 읽는다. */
+  async getAdjacentBroadcastCards() {
+    const section = this.page.locator(PcLocators.main.onAirDisplay);
+    const cards = section.locator(PcLocators.main.adjacentCards);
+    await expect(cards, '이전·다음 방송 카드가 각각 하나씩 있어야 한다').toHaveCount(2);
+    const result = [];
+    for (let index = 0; index < 2; index++) {
+      const card = cards.nth(index);
+      await card.scrollIntoViewIfNeeded();
+      await expect(card).toBeInViewport();
+      const title = card.locator(PcLocators.main.adjacentName);
+      const time = card.locator(PcLocators.main.adjacentTime);
+      const price = card.locator(PcLocators.main.adjacentPrice);
+      const link = card.locator(PcLocators.main.adjacentLink);
+      await expect(title).toBeVisible();
+      await expect(title).toHaveText(/\S/);
+      await expect(time).toBeVisible();
+      await expect(time).toHaveText(/^(?:[01]\d|2[0-3]):[0-5]\d$/);
+      await expect(price).toBeVisible();
+      await expect(price).toHaveText(/^(?:[\d,]+원|상담(?: 신청)? 상품)$/);
+      await expect(link).toHaveAttribute('href', /^\/display\/product\/\d+(?:[?]|$)/);
+      const name = (await title.innerText()).replace(/\s+/g, ' ').trim();
+      const image = card.locator('img');
+      await expect(image).toBeVisible();
+      await expect(image).toHaveAttribute('alt', name);
+      await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0),
+        { message: '이전·다음 방송 상품 이미지 로딩', timeout: 10_000 }).toBe(true);
+      const href = (await link.getAttribute('href'))!;
+      result.push({ direction: index === 0 ? '이전 방송' : '다음 방송', index,
+        productId: href.match(/\/product\/(\d+)/)![1], name, time: (await time.innerText()).trim(),
+        price: (await price.innerText()).trim() });
+    }
+    return result;
+  }
+
+  /** 홈 편성표 버튼으로 이동하고 현재 방송 앞뒤의 대표 상품·시각을 읽는다. */
+  async getAdjacentScheduleProducts() {
+    await this.page.locator(PcLocators.main.onAirDisplay).locator(PcLocators.main.onAirSchedule).click();
+    await expect(this.page).toHaveURL(url => url.searchParams.get('gnbMenuId') === 'G000000002');
+    const broadcasts = this.page.locator(PcLocators.main.broadcasts);
+    await expect(this.page.locator(PcLocators.main.liveBroadcast)).toHaveCount(1);
+    const liveIndex = await broadcasts.evaluateAll(nodes => nodes.findIndex(n => n.getAttribute('data-broadcast-state') === 'live'));
+    expect(liveIndex, '이전 방송이 있어야 한다').toBeGreaterThan(0);
+    expect(liveIndex, '다음 방송이 있어야 한다').toBeLessThan(await broadcasts.count() - 1);
+    const result = [];
+    for (const index of [liveIndex - 1, liveIndex + 1]) {
+      const broadcast = broadcasts.nth(index);
+      const product = broadcast.locator(PcLocators.main.liveProduct).first();
+      await expect(product).toBeVisible();
+      const heading = await broadcast.locator(PcLocators.main.broadcastHeading).innerText();
+      const time = heading.match(/(\d{2}:\d{2})\s*~/)?.[1];
+      expect(time, '편성표 방송 시작 시각').toBeTruthy();
+      const productId = await product.locator('[data-product-id]').getAttribute('data-product-id');
+      expect(productId).toMatch(/^\d+$/);
+      result.push({ productId: productId!, name: (await product.locator(PcLocators.main.liveProductTitle).innerText()).replace(/\s+/g, ' ').trim(), time });
+    }
+    return result;
+  }
+
+  async verifyAdjacentProductPage(card: { index: number; productId: string; name: string; time: string }) {
+    await this.goToHome();
+    const item = this.page.locator(PcLocators.main.onAirDisplay).locator(PcLocators.main.adjacentCards).nth(card.index);
+    await expect(item.locator(PcLocators.main.adjacentName), '방송 전환 여부 확인').toHaveText(card.name);
+    await expect(item.locator(PcLocators.main.adjacentTime)).toHaveText(card.time);
+    await expect(item.locator(PcLocators.main.adjacentLink)).toHaveAttribute('href', new RegExp(`^/display/product/${card.productId}(?:[?]|$)`));
+    await item.locator(PcLocators.main.adjacentLink).click();
+    await expect(this.page).toHaveURL(url => url.pathname === `/display/product/${card.productId}`);
+    await this.closeModal();
+    await expect(this.page.locator(PcLocators.product.productName).first()).toContainText(card.name);
+  }
+
   /** 홈 > ON AIR(지금 방송중) > 바로구매 버튼 클릭 */
   async clickDirectBuyButton() {
     // 초기 라우팅 완료 후 클릭해야 hydration 중 클릭이 유실되지 않는다.

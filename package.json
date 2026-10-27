@@ -42,7 +42,8 @@
     "test:onair:gift": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/onair-gift.test.ts tests/mw/onair-gift.test.ts --project=pc --project=mw --headed --workers=1 --trace=on --reporter=list,html,./utils/suite-timing-reporter.ts",
     "test:onair:cart": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/onair-cart.test.ts tests/mw/onair-cart.test.ts --project=pc --project=mw --headed --workers=1 --trace=on --reporter=list,html,./utils/suite-timing-reporter.ts",
     "test:onair:buy": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/onair-buy.test.ts tests/mw/onair-buy.test.ts --project=pc --project=mw --headed --workers=1 --trace=on --reporter=list,html,./utils/suite-timing-reporter.ts",
-    "test:auth-flow": "tsx --test tests/auth/manual-auth.test.ts"
+    "test:auth-flow": "tsx --test tests/auth/manual-auth.test.ts",
+    "test:onair:schedule": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/onair-schedule.test.ts tests/mw/onair-schedule.test.ts --project=pc --project=mw --headed --workers=1 --trace=off --reporter=list,html,./utils/suite-timing-reporter.ts"
   },
   "repository": {
     "type": "git",
