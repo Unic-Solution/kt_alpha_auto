@@ -132,18 +132,15 @@ export class MainSteps {
   async verifyCategory(): Promise<boolean> {
     await this.mainPage.goToHome();
     await this.mainPage.clickCategoryButton();
-    await this.mainPage.clickCategoryTwoDepth();
-    await this.mainPage.clickCategoryThreeDepth();
-    const beforeQuantity = await this.mainPage.extractProductQuantity();
-    await this.mainPage.clickFirstFilterButton();
-    const afterQuantity = await this.mainPage.extractProductQuantity();
-
-    await parameter('필터 적용 전 상품 개수', `${beforeQuantity}`);
-    await parameter('필터 적용 후 상품 개수', `${afterQuantity}`);
-
-    if (beforeQuantity === false || afterQuantity === false) return false;
-
-    return beforeQuantity >= afterQuantity;
+    const result = await this.mainPage.verifyCategoryAndFilter();
+    parameter('카테고리 경로', `${result.depth1Name} > ${result.depth2Name} > ${result.depth3Name}`);
+    parameter('2depth 카테고리 ID', result.depth2Id!);
+    parameter('필터 적용 전 상품 개수', `${result.beforeQuantity}`);
+    parameter('검증한 필터', result.filters.join(', '));
+    parameter('검증한 정렬', result.sorts.join(', '));
+    parameter('최종 정렬 URL', result.url);
+    console.log('[카테고리/필터]', result);
+    return true;
   }
 
   /** 검색 후 상품 상세 페이지 이동 확인 */

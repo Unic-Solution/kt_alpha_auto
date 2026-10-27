@@ -455,6 +455,101 @@ export class MainPage extends BasePage {
     return this.extractNumber(text);
   }
 
+  /** 홈쇼핑 1·2·3depth와 전체 필터·정렬의 실제 이동·결과를 검증한다. */
+  async verifyCategoryAndFilter() {
+    const modal = this.page.locator(PcLocators.main.categoryModal);
+    await expect(modal).toBeVisible();
+    const depth1 = modal.locator(PcLocators.main.homeShoppingOneDepthButton);
+    await expect(depth1).toBeVisible();
+    await expect(depth1).toHaveClass(/Tab_selected/);
+    const depth1Name = (await depth1.innerText()).trim();
+
+    const depth2 = modal.locator(PcLocators.main.categoryTwoDepthButton).first();
+    await expect(depth2).toBeVisible();
+    const depth2Name = (await depth2.innerText()).trim();
+    const depth2Id = new URL((await depth2.getAttribute('href'))!, this.page.url()).searchParams.get('ctgrCdId');
+    expect(depth2Id).toMatch(/^\d+$/);
+    const interruptions = this.page.locator('[class*="Modal_open"]').filter({
+      hasNot: this.page.locator('[role="tab"][data-value="alpha"]'),
+    });
+    while (await interruptions.first().isVisible()) {
+      await interruptions.first().getByRole('button', { name: '닫기', exact: true }).click({ force: true });
+    }
+    await depth2.click();
+    await expect(this.page).toHaveURL(url => url.pathname.endsWith('/displayCategoryTemplate') && url.searchParams.get('ctgrCdId') === depth2Id);
+
+    const depth3 = this.page.locator(PcLocators.main.homeShoppingThreeDepthButton).first();
+    await expect(depth3).toBeVisible();
+    const depth3Name = (await depth3.innerText()).trim();
+    await depth3.click();
+    await expect(this.page).toHaveURL(url => url.pathname.endsWith('/categoryDetail') && url.searchParams.get('upperCtgrCdId') === depth2Id);
+    await expect(this.page.locator(PcLocators.main.homeShoppingThreeDepthButton).first()).toHaveText('전체');
+    await expect(this.page.locator(PcLocators.main.homeShoppingThreeDepthButton).first()).toHaveClass(/SubCategoryMenu_active/);
+    await expect.poll(async () => (await this.extractProductQuantity()) || 0, {
+      message: '필터 전 상품 목록이 로딩되어야 한다', timeout: 15_000,
+    }).toBeGreaterThan(0);
+    const beforeQuantity = await this.extractProductQuantity();
+    const detailUrl = this.page.url();
+    const products = () => this.page.locator(PcLocators.main.categoryProducts).filter({ visible: true });
+    const expectProducts = async () => {
+      await expect(products().first(), '필터·정렬 결과 상품').toBeVisible();
+      return (await products().allTextContents()).slice(0, 10).map(text => text.replace(/\s+/g, ' ').trim());
+    };
+    const goToDetail = async () => {
+      await this.page.goto(detailUrl);
+      await this.closeModal();
+      await expect(this.page.locator(PcLocators.main.firstFilterButton)).toBeVisible();
+    };
+
+    await this.page.locator(PcLocators.main.firstFilterButton).click();
+    await expect(this.page).toHaveURL(url => url.searchParams.get('onAirSale') === 'Y');
+    const tvProducts = await expectProducts();
+    expect(tvProducts.every(text => text.includes('TV상품')), 'TV쇼핑 결과').toBe(true);
+
+    const modalFilter = async (trigger: string, select: (modal: ReturnType<typeof this.page.locator>) => Promise<void>, parameter: string, value: RegExp) => {
+      await goToDetail();
+      await this.page.getByRole('button', { name: trigger, exact: true }).click();
+      const modal = this.page.locator(PcLocators.main.filterModal);
+      await expect(modal).toBeVisible();
+      await select(modal);
+      await modal.getByRole('button', { name: /개의 상품보기$/ }).click();
+      await expect(this.page).toHaveURL(url => value.test(url.searchParams.get(parameter) ?? ''));
+      return expectProducts();
+    };
+    await modalFilter('혜택', async modal => {
+      await modal.getByRole('button', { name: '무료배송', exact: true }).click();
+    }, 'benefits', /is_free_shipping/);
+    await modalFilter('가격', async modal => {
+      await modal.getByRole('button', { name: /4백원 ~ 7만원/, exact: true }).click();
+    }, 'filters', /btw%24400%2470000/);
+    await modalFilter('결과 내 재검색', async modal => {
+      await modal.locator('input').fill('원피스');
+      await modal.getByRole('button', { name: '추가', exact: true }).click();
+    }, 'oquery', /^원피스$/);
+
+    const sorts = [
+      ['인기순', null],
+      ['신상품순', 'created_at_desc'],
+      ['낮은 가격순', 'sale_price_asc'],
+      ['높은 가격순', 'sale_price_desc'],
+      ['할인율 높은순', 'user_group_price_discount_rate_desc'],
+      ['상품평순', 'review_score_desc'],
+    ] as const;
+    for (const [name, value] of sorts) {
+      await goToDetail();
+      await this.page.getByRole('button', { name: '인기순', exact: true }).click();
+      const options = this.page.locator(PcLocators.main.sortOptions);
+      for (const [optionName] of sorts) {
+        await expect(options.filter({ hasText: new RegExp(`^${optionName}$`) })).toHaveCount(1);
+      }
+      await options.filter({ hasText: new RegExp(`^${name}$`) }).click();
+      if (value) await expect(this.page).toHaveURL(url => url.searchParams.get('sort') === value);
+      else await expect(this.page.getByRole('button', { name, exact: true }).first()).toBeVisible();
+      await expectProducts();
+    }
+    return { depth1Name, depth2Name, depth3Name, depth2Id, beforeQuantity, filters: ['TV쇼핑', '혜택-무료배송', '가격-400~70,000원', '결과 내 재검색-원피스'], sorts: sorts.map(([name]) => name), url: this.page.url() };
+  }
+
   /** 검색 버튼 클릭 */
   async clickSearchButton() {
     await this.click(PcLocators.main.searchButton);
