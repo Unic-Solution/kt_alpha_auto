@@ -1,8 +1,98 @@
+import { expect } from '@playwright/test';
 import { BasePage } from '../../common/BasePage';
 import { MwLocators } from './locators';
 import { CommonLocators } from '../../common/common.locators';
 
 export class QuickPage extends BasePage {
+
+  async goToHome() {
+    const url = new URL(CommonLocators.urls.mwHomePage);
+    url.searchParams.set('currentChannel', 'alpha');
+    await this.goToUrl(url.href);
+    await this.closeModal();
+  }
+
+  private async clickFixedMenu(role: 'button' | 'link', name: string | RegExp) {
+    const item = this.page.locator(MwLocators.quick.fixedMenu).getByRole(role, { name, exact: typeof name === 'string' });
+    await expect(item).toHaveCount(1);
+    await expect(item).toBeVisible();
+    await expect(item).toBeInViewport();
+    await item.click();
+  }
+
+  /** 연속 검증 시작 전 최초 한 번만 편성표 화면을 준비한다. */
+  async prepareFixedNavigation() {
+    await this.goToUrl(new URL('/?currentChannel=alpha&gnbMenuId=G000000002', CommonLocators.urls.mwHomePage).href);
+    await this.closeModal();
+    await expect(this.page).toHaveURL(url => url.searchParams.get('gnbMenuId') === 'G000000002');
+  }
+
+  async verifyFixedHome(): Promise<boolean> {
+    await this.clickFixedMenu('link', '홈');
+    await expect(this.page).toHaveURL(url => url.pathname === '/' && url.searchParams.get('gnbMenuId') === 'G000000004');
+    await this.closeModal();
+    await expect(this.page.locator(MwLocators.main.onAirDisplay)).toBeVisible();
+    return true;
+  }
+
+  async verifyFixedCategory(): Promise<boolean> {
+    await this.clickFixedMenu('button', '카테고리');
+    const modal = this.page.locator(MwLocators.quick.categoryModal);
+    await expect(modal).toBeVisible();
+    await expect(modal.getByRole('heading', { name: '카테고리', level: 3, exact: true })).toBeVisible();
+    await expect(modal.locator(MwLocators.quick.categoryLinks).first()).toBeVisible();
+    await expect(modal.locator(MwLocators.quick.categoryLinks).first()).toHaveAttribute('href', /\/display\/display\/displayCategoryTemplate\?ctgrCdId=\d+/);
+    await modal.getByRole('button', { name: '닫기', exact: true }).click();
+    await expect(modal).toBeHidden();
+    return true;
+  }
+
+  async verifyFixedMy(): Promise<boolean> {
+    await this.clickFixedMenu('link', '마이');
+    await expect(this.page).toHaveURL(url => url.pathname === MwLocators.urls.myPage);
+    await expect(this.page.locator(MwLocators.login.logoutButton)).toBeVisible();
+    return true;
+  }
+
+  async verifyFixedGiftShow(): Promise<boolean> {
+    await this.clickFixedMenu('button', /기프티쇼/);
+    await expect(this.page).toHaveURL(url => url.pathname === '/' && url.searchParams.get('gnbMenuId') === 'G000000007');
+    await this.closeModal();
+    const home = this.page.locator(MwLocators.quick.fixedMenu).getByRole('link', { name: '홈', exact: true });
+    await expect(home).toHaveAttribute('href', /currentChannel=giftishow(?:&|$)/);
+    await expect(this.page.locator(MwLocators.main.gnbSlides + '.swiper-slide-active')).toContainText(/\S/);
+    return true;
+  }
+
+  async verifyFixedAlphaShopping(): Promise<boolean> {
+    // 직전 단계에서 도달한 기프티쇼 화면에서 바로 쇼핑 채널로 복귀한다.
+    await expect(this.page).toHaveURL(url => url.searchParams.get('gnbMenuId') === 'G000000007');
+    await this.clickFixedMenu('button', /알파\s*쇼핑/);
+    await expect(this.page).toHaveURL(url => url.pathname === '/' && url.searchParams.get('gnbMenuId') === 'G000000004');
+    await this.closeModal();
+    await expect(this.page.locator(MwLocators.quick.fixedMenu).getByRole('link', { name: '홈', exact: true }))
+      .toHaveAttribute('href', /currentChannel=alpha(?:&|$)/);
+    await expect(this.page.locator(MwLocators.main.onAirDisplay)).toBeVisible();
+    return true;
+  }
+
+  async verifyFixedTop(): Promise<boolean> {
+    await this.page.evaluate(() => window.scrollTo(0, 2000));
+    await expect.poll(() => this.page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
+    await this.page.waitForTimeout(400);
+    // 모바일 TOP은 아래로 내린 뒤 위로 조금 올렸을 때 표시된다.
+    await this.page.evaluate(() => window.scrollBy(0, -400));
+    await expect.poll(() => this.page.evaluate(() => window.scrollY)).toBeGreaterThan(500);
+    const before = this.page.url();
+    const top = this.page.locator(MwLocators.quick.topButton);
+    await expect(top).toBeVisible();
+    await expect(top).toBeInViewport();
+    await top.click();
+    await expect.poll(() => this.page.evaluate(() => window.scrollY), { message: 'TOP 클릭 후 실제 최상단 이동' }).toBe(0);
+    await expect(this.page).toHaveURL(before);
+    return true;
+  }
+
 
   /** ON AIR 버튼 클릭 */
   async clickOnAirButton() {

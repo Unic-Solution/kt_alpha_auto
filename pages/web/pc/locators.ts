@@ -105,6 +105,11 @@ export const PcLocators = {
     productName: '//div[contains(@class,"ProdTopInfo_title")]//strong',
   },
   quick: {
+    fixedMenu: '[class*="FloatingBannerActions_box"]',
+    topButton: '[class*="FloatingBannerActions_btnTop"]',
+    categoryModal: '[class*="Modal_open"]:has([role="tab"][data-value="alpha"])',
+    categoryLinks: '[class*="Category_categoryList"] a',
+
     onAirModalImg: '//button[contains(@class,"ModalOnAir")]//img',
     onAirDirectBuyButton: '//div[contains(@class,"ModalOnAir_buyBox")]//button',
     onAirProductName: '//div[contains(@class,"ModalOnAir_inner")]//em[contains(@class,"ProductItem_title")]',

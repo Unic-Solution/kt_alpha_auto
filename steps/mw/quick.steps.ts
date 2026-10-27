@@ -1,3 +1,4 @@
+import { expect, test } from '@playwright/test';
 import { BasePage } from '../../pages/common/BasePage';
 import { QuickPage } from '../../pages/web/mw/quick.page';
 import { parameter } from '../../utils/step-runner';
@@ -7,6 +8,31 @@ export class QuickSteps {
 
   constructor(basePage: BasePage) {
     this.quickPage = new QuickPage(basePage.getPage());
+  }
+
+  /** 체크리스트 7: 화면을 초기화하지 않고 고정 메뉴를 연속 클릭한다. */
+  async verifyFixedNavigation(): Promise<boolean> {
+    await this.quickPage.prepareFixedNavigation();
+    const checks = [
+      ['홈', () => this.quickPage.verifyFixedHome()],
+      ['카테고리', () => this.quickPage.verifyFixedCategory()],
+      ['마이', () => this.quickPage.verifyFixedMy()],
+      ['기프티쇼', () => this.quickPage.verifyFixedGiftShow()],
+      ['KT알파쇼핑', () => this.quickPage.verifyFixedAlphaShopping()],
+      ['TOP', () => this.quickPage.verifyFixedTop()],
+    ] as const;
+    for (const [name, check] of checks) {
+      const from = this.quickPage.getCurrentURL();
+      await test.step(`고정 메뉴 > ${name}`, async () => { expect(await check()).toBe(true); });
+      parameter('고정 메뉴 ' + name, '통과');
+      console.log(`[고정 메뉴 연속 이동] ${name}: ${from} → ${this.quickPage.getCurrentURL()}`);
+      if (name === '기프티쇼' || name === 'TOP') {
+        const file = test.info().outputPath(`fixed-menu-${name === 'TOP' ? 'top' : 'gift'}.png`);
+        await this.quickPage.getPage().screenshot({ path: file });
+        await test.info().attach('고정 메뉴 ' + name, { path: file, contentType: 'image/png' });
+      }
+    }
+    return true;
   }
 
   /** 독바 > ON AIR > 바로구매 > 선물하기 주문서 이동 확인 */

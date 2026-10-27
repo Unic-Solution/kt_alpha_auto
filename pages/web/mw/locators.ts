@@ -73,6 +73,11 @@ export const MwLocators = {
     searchProduct: '(//div[contains(@class,"ProductItem_box")]//a)[1]',
   },
   quick: {
+    fixedMenu: '[data-action-bar="true"]',
+    topButton: '[class*="FloatingButtons_wrap"] button[class*="FixedTopBtn_btn"]',
+    categoryModal: '[class*="Modal_open"]:has([role="tab"][data-value="alpha"])',
+    categoryLinks: '[class*="Category_categoryList"] a',
+
     onAirModalImg: '//button[contains(@class,"ModalOnAir")]//img',
     onAirDirectBuyButton: '//div[contains(@class,"ModalOnAir_buyBox")]//button',
     onAirProductName: '//div[contains(@class,"ModalOnAir_inner")]//em[contains(@class,"ProductItem_title")]',
