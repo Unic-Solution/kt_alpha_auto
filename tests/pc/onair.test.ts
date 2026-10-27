@@ -3,7 +3,7 @@ import { BasePage } from '../../pages/common/BasePage';
 import { MainSteps } from '../../steps/pc/main.steps';
 import { createRun } from '../../utils/step-runner';
 
-test.use({ browserName: 'chromium', video: 'on', storageState: { cookies: [], origins: [] } });
+test.use({ browserName: 'chromium', video: 'on' });
 
 test('체크리스트 2번: 홈 ON AIR 현재 방송 상품 정보 (PC)', async ({ page }, testInfo) => {
   const steps = new MainSteps(new BasePage(page));

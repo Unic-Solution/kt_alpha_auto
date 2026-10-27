@@ -188,12 +188,25 @@ export class MainPage extends BasePage {
   }
 
   async clickOnAirGiftButton() {
-    await this.click(PcLocators.main.onAirGiftButton);
+    const button = this.page.locator(PcLocators.main.purchaseModal).locator(PcLocators.main.onAirGiftButton);
+    await expect(button).toBeVisible();
+    await expect(button).toBeEnabled();
+    await button.click();
   }
 
   /** 로그인 화면이 아닌 실제 선물하기 주문서 본문과 상품을 확인한다. */
-  async isGiftOrderPage(): Promise<boolean> {
-    return this.urlContains(PcLocators.urls.onAirGiftOrder);
+  async isGiftOrderPage(productName?: string): Promise<boolean> {
+    await expect(this.page, '선물하기 주문서 URL로 이동해야 한다').toHaveURL(
+      url => url.pathname === '/' + PcLocators.urls.onAirGiftOrder,
+      { timeout: 20_000 },
+    );
+    const main = this.page.locator('main');
+    await expect(main).toBeVisible();
+    await expect(this.page.getByRole('heading', { name: '선물하기', exact: true, level: 1 })).toBeVisible();
+    await expect(main.getByRole('heading', { name: '발송정보', exact: true })).toBeVisible();
+    await expect(main.getByRole('heading', { name: '메시지 카드', exact: true })).toBeVisible();
+    if (productName) await expect(main.getByText(productName, { exact: true }).first()).toBeVisible();
+    return true;
   }
 
   /** ON AIR 상품 이름 추출 */
@@ -297,12 +310,9 @@ export class MainPage extends BasePage {
     await expect(button).toBeEnabled();
     await button.click();
     await expect(this.page).toHaveURL(url => ['/custord/loginPage', '/' + PcLocators.urls.onAirBuyOrder].includes(url.pathname));
-    if (new URL(this.page.url()).pathname === '/custord/loginPage') {
-      const guest = this.page.getByText('비회원 주문하기', { exact: true });
-      await expect(guest).toBeVisible();
-      await guest.click();
-      return '비회원 주문';
-    }
+    await expect(this.page, '로그인이 만료되었습니다. 재로그인 후 테스트를 다시 실행해 주세요.').toHaveURL(
+      url => url.pathname === '/' + PcLocators.urls.onAirBuyOrder,
+    );
     return '회원 주문';
   }
 

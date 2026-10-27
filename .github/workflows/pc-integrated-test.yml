@@ -32,6 +32,8 @@ jobs:
       - name: PC 통합 테스트 실행
         id: test
         env:
+          SLACK_NOTIFICATIONS_ENABLED: 'true'
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           LOGIN_ID: ${{ secrets.LOGIN_ID }}
           LOGIN_PW: ${{ secrets.LOGIN_PW }}
           NAME: ${{ secrets.NAME }}

@@ -3,7 +3,7 @@ import { BasePage } from '../../pages/common/BasePage';
 import { MainSteps } from '../../steps/mw/main.steps';
 import { createRun } from '../../utils/step-runner';
 
-test.use({ browserName: 'chromium', video: 'on', storageState: { cookies: [], origins: [] } });
+test.use({ browserName: 'chromium', video: 'on' });
 
 test('체크리스트 1번: GNB 스크롤 노출 및 메뉴별 이동 (MW)', async ({ page }) => {
   const steps = new MainSteps(new BasePage(page));

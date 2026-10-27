@@ -3,7 +3,7 @@ import { BasePage } from '../../pages/common/BasePage';
 import { MainSteps } from '../../steps/mw/main.steps';
 import { createRun } from '../../utils/step-runner';
 
-test.use({ browserName: 'chromium', video: 'on', storageState: { cookies: [], origins: [] } });
+test.use({ browserName: 'chromium', video: 'on' });
 
 test('체크리스트 4번: 홈 ON AIR 장바구니 상품 추가 (MW)', async ({ page }) => {
   const steps = new MainSteps(new BasePage(page));

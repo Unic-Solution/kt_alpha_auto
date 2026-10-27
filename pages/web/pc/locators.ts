@@ -36,7 +36,7 @@ export const PcLocators = {
     selectedProduct: '[class*="ModalProdOption_selectedOption"] [class*="prodOptionTitle"] strong',
     onAirDirectBuyFirstOption: '//div[contains(@class,"SelectBox_optionList")]/*[self::button or self::div]',
     onAirDirectBuySecondOption: '//button[contains(@class,"SelectBox_option")]',
-    onAirGiftButton: '//div[contains(@class,"ButtonPurchase")]//span[text()="선물하기"]',
+    onAirGiftButton: 'button[class*="ButtonPurchase_giftBtn"]',
     onAirProductName: '//div[contains(@class,"prodOptionTitle")]//strong',
     selectedQuantity: '[class*="ModalProdOption_selectedOption"] input[inputmode="numeric"]',
     selectedOptions: '[class*="ModalProdOption_selectedOption"] [class*="ProdOptionItem_option"]',

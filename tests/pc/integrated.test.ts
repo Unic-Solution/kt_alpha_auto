@@ -9,8 +9,6 @@ import { GsProductSteps } from '../../steps/pc/gs_product.steps';
 import { createRun } from '../../utils/step-runner';
 
 const ENV = {
-  id: process.env.LOGIN_ID ?? '',
-  pw: process.env.LOGIN_PW ?? '',
   name: process.env.NAME ?? '',
   year: process.env.YEAR ?? '',
   month: process.env.MONTH ?? '',
@@ -31,8 +29,7 @@ test('통합 테스트', async ({ sharedBasePage }) => {
 
   const run = createRun('PC Web', '통합 테스트', sharedBasePage.getPage());
 
-  await run('일반 계정 로그인 확인', () => loginSteps.verifyLocalLogin(ENV.id, ENV.pw));
-  await run('임의 상품 상세 > 구매하기 > 일반 계정 로그인 확인', () => loginSteps.verifyBuyAndLogin(ENV.id, ENV.pw), true);
+  await run('로그인 상태 확인', () => loginSteps.verifyLocalLogin());
 
   await run('GNB 메뉴별 화면 확인', () => mainSteps.verifyAllNavItems());
   await run('ON AIR > 현재 방송 중인 상품 정보 노출 확인', () => mainSteps.verifyOnAirModal());

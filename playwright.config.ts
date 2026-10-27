@@ -1,3 +1,4 @@
+import { existsSync } from 'fs';
 import { defineConfig, devices } from '@playwright/test';
 import 'dotenv/config';
 
@@ -44,7 +45,7 @@ export default defineConfig({
       fullyParallel: false,
       use: {
         viewport: null,
-        storageState: 'auth.json',
+        storageState: existsSync('auth.json') ? 'auth.json' : undefined,
         launchOptions: { args: ['--start-maximized'], slowMo: Number(process.env.PW_SLOW_MO ?? 0) },
       },
     },
@@ -76,7 +77,7 @@ export default defineConfig({
       fullyParallel: false,
       use: {
         ...devices['iPhone 13'],
-        storageState: 'mw-auth.json',
+        storageState: existsSync('mw-auth.json') ? 'mw-auth.json' : undefined,
       },
     },
 

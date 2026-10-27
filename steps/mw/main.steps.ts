@@ -42,9 +42,14 @@ export class MainSteps {
 
   /** 홈 > ON AIR > 바로구매 > 선물하기 주문서 이동 확인 */
   async verifyOnAirGift(): Promise<boolean> {
-    await this.mainPage.selectOnAirOption();
+    const product = await this.mainPage.selectOnAirOption();
+    parameter('홈 ON AIR 상품', JSON.stringify(product));
+    console.log('[선물하기] ON AIR 상품 및 옵션 선택 확인:', product);
     await this.mainPage.clickOnAirGiftButton();
-    return await this.mainPage.isGiftOrderPage();
+    const passed = await this.mainPage.isGiftOrderPage(product.name);
+    parameter('선물하기 주문서 URL', this.mainPage.getCurrentURL());
+    console.log('[선물하기] 주문서 본문·상품 확인 완료');
+    return passed;
   }
 
   /** 홈 > ON AIR > 바로구매 > 장바구니 상품 추가 확인 */
