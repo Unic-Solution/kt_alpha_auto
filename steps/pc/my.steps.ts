@@ -1,6 +1,7 @@
 import { BasePage } from '../../pages/common/BasePage';
 import { MyPage } from '../../pages/web/pc/my.page';
 import { parameter } from '../../utils/step-runner';
+import { notifyManualAuth } from '../../utils/manual-auth';
 
 export class MySteps {
   private myPage: MyPage;
@@ -128,6 +129,23 @@ export class MySteps {
     await this.myPage.clickMyButton();
     await this.myPage.clickBenefitTab();
     return await this.myPage.isModifyCustomerInfoContentVisible();
+  }
+
+  /** 나의 쇼핑 정보 관리 > 회원 탈퇴 본인인증 화면 이동 확인 */
+  async verifyWithdrawal(): Promise<boolean> {
+    await this.myPage.clickMyButton();
+    await this.myPage.clickWithdrawalTab();
+    if (await this.myPage.isWithdrawalContentVisible(2).catch(() => false)) {
+      await parameter('본인인증 상태', '기존 인증 유효');
+      return true;
+    }
+    const authVisible = await this.myPage.isWithdrawalAuthVisible();
+    await parameter('본인인증 화면', authVisible ? '정상 노출' : '진입 실패');
+    if (!authVisible) return false;
+    await notifyManualAuth('PC', '본인인증');
+    const contentVisible = await this.myPage.isWithdrawalContentVisible();
+    await parameter('탈퇴 안내 화면', contentVisible ? '정상 노출' : '노출 실패');
+    return contentVisible;
   }
 
   /** 나의 쇼핑 활동 > 장바구니 */

@@ -158,6 +158,26 @@ export class MyPage extends BasePage {
     await this.click(MwLocators.my.benefitTab);
   }
 
+  /** 마이 > 나의 쇼핑 정보 관리 > 회원 탈퇴 탭 클릭 */
+  async clickWithdrawalTab() {
+    await this.click(MwLocators.my.withdrawalTab);
+  }
+
+  /** 회원 탈퇴 본인인증 진입 화면이 완전히 노출됐는지 확인 */
+  async isWithdrawalAuthVisible(): Promise<boolean> {
+    await this.waitForURLContains('/custord/customer/auth/withdrawal');
+    return await this.isVisible(MwLocators.my.withdrawalTitle)
+      && await this.isVisible(MwLocators.my.withdrawalPhoneTitle);
+  }
+
+  /** 본인인증 후 회원 탈퇴 안내 화면 전체 노출을 기다려 확인 */
+  async isWithdrawalContentVisible(timeout = 300): Promise<boolean> {
+    await this.waitForElement(MwLocators.my.withdrawalGuideTitle, timeout);
+    return await this.isVisible(MwLocators.my.withdrawalReasonButton)
+      && await this.isVisible(MwLocators.my.withdrawalConsent)
+      && await this.isVisible(MwLocators.my.withdrawalSubmitButton);
+  }
+
   async clickCartTab() {
     await this.click(MwLocators.my.cartTab);
   }

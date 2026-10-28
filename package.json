@@ -46,7 +46,8 @@
     "test:onair:schedule": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/onair-schedule.test.ts tests/mw/onair-schedule.test.ts --project=pc --project=mw --headed --workers=1 --trace=off --reporter=list,html,./utils/suite-timing-reporter.ts",
     "test:navigation": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/navigation.test.ts tests/mw/navigation.test.ts --project=pc --project=mw --headed --workers=1 --trace=off --reporter=list,html,./utils/suite-timing-reporter.ts",
     "test:category": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/category.test.ts tests/mw/category.test.ts --project=pc --project=mw --headed --workers=1 --trace=off --reporter=list,html,./utils/suite-timing-reporter.ts",
-    "test:search": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/search.test.ts tests/mw/search.test.ts --project=pc --project=mw --headed --workers=1 --trace=off --reporter=list,html,./utils/suite-timing-reporter.ts"
+    "test:search": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/search.test.ts tests/mw/search.test.ts --project=pc --project=mw --headed --workers=1 --trace=off --reporter=list,html,./utils/suite-timing-reporter.ts",
+    "test:withdrawal": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/withdrawal.test.ts tests/mw/withdrawal.test.ts --project=pc --project=mw --headed --workers=1 --trace=off --reporter=list,html,./utils/suite-timing-reporter.ts"
   },
   "repository": {
     "type": "git",

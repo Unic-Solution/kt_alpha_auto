@@ -9,6 +9,7 @@ export class LoginPage extends BasePage {
   /** 세션을 재사용하고, 자동 로그인 실패 시 사용자 입력을 기다린다. */
   async ensureLoggedIn() {
     await this.goToUrl(new URL(MwLocators.urls.myPage, CommonLocators.urls.mwHomePage).href);
+    await this.closeModal();
     const login = this.page.locator(MwLocators.login.loginButton);
     const logout = this.page.locator(MwLocators.login.logoutButton);
     const certification = this.page.locator(MwLocators.login.certificationRequestButton);
@@ -43,7 +44,8 @@ export class LoginPage extends BasePage {
 
   /** 로그인 버튼 클릭 */
   async clickLoginButton() {
-    await this.click(MwLocators.login.loginButton);
+    const href = await this.page.locator(MwLocators.login.loginButton).getAttribute('href');
+    await this.goToUrl(new URL(href!, CommonLocators.urls.mwHomePage).href);
   }
 
   /** 아이디 입력 */
