@@ -125,4 +125,55 @@ export class GsProductPage extends BasePage {
   async selectAndVerifyGiftCard(): Promise<boolean> {
     return this.selectAndApplyGiftImage(1, 2);
   }
+
+  /** 선물 메시지 직접 입력 후 입력값 확인 */
+  async fillAndVerifyGiftMessage(message: string): Promise<boolean> {
+    const input = this.visibleGiftMessageInput();
+    await input.clear();
+    await input.pressSequentially(message);
+    return await input.inputValue() === message;
+  }
+
+  /** 추천 메시지 선택 후 입력란 반영 확인 */
+  async selectAndVerifyRecommendedMessage(): Promise<boolean> {
+    await this.page.locator(MwLocators.giftShowProduct.recommendMessageButton).filter({ visible: true }).click();
+    const modal = this.page.locator(MwLocators.giftShowProduct.messageModal).filter({ visible: true });
+    await modal.waitFor({ state: 'visible' });
+    await this.page.locator(MwLocators.giftShowProduct.recommendMessageCategory).filter({ visible: true }).click();
+    const item = this.page.locator(MwLocators.giftShowProduct.recommendMessageItems).filter({ visible: true }).first();
+    await item.waitFor({ state: 'visible' });
+    const message = (await item.innerText()).trim();
+    if (!message) return false;
+    await item.click();
+    await this.page.locator(MwLocators.giftShowProduct.recommendMessageApplyButton).filter({ visible: true }).click();
+    await modal.waitFor({ state: 'hidden' });
+    const input = this.visibleGiftMessageInput();
+    const applied = (await input.inputValue()).trim() === message;
+    if (applied) {
+      await input.scrollIntoViewIfNeeded();
+      await this.page.waitForTimeout(1_500);
+    }
+    return applied;
+  }
+
+  /** 특수문자 선택 후 기존 메시지에 추가됐는지 확인 */
+  async selectAndVerifySpecialCharacter(): Promise<boolean> {
+    const input = this.visibleGiftMessageInput();
+    const before = await input.inputValue();
+    await this.page.locator(MwLocators.giftShowProduct.specialCharacterButton).filter({ visible: true }).click();
+    const character = this.page.locator(MwLocators.giftShowProduct.specialCharacterOption).filter({ visible: true });
+    await character.waitFor({ state: 'visible' });
+    await character.click();
+    const after = await input.inputValue();
+    const applied = after === `${before}~`;
+    if (applied) {
+      await input.scrollIntoViewIfNeeded();
+      await this.page.waitForTimeout(1_500);
+    }
+    return applied;
+  }
+
+  private visibleGiftMessageInput() {
+    return this.page.locator(MwLocators.giftShowProduct.giftMessageInput).filter({ visible: true }).first();
+  }
 }

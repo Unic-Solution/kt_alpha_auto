@@ -13,7 +13,8 @@ export class LoginPage extends BasePage {
     const login = this.page.locator(MwLocators.login.loginButton);
     const logout = this.page.locator(MwLocators.login.logoutButton);
     const certification = this.page.locator(MwLocators.login.certificationRequestButton);
-    await expect(login.or(logout).first(), '로그인 상태 확인').toBeVisible({ timeout: 20_000 });
+    await expect.poll(async () => await login.filter({ visible: true }).count() > 0 || await logout.isVisible(),
+      { timeout: 20_000, message: '로그인 상태 확인' }).toBe(true);
     if (await logout.isVisible()) return;
     await this.clickLoginButton();
     let manualLoginRequired = true;
@@ -44,7 +45,7 @@ export class LoginPage extends BasePage {
 
   /** 로그인 버튼 클릭 */
   async clickLoginButton() {
-    const href = await this.page.locator(MwLocators.login.loginButton).getAttribute('href');
+    const href = await this.page.locator(MwLocators.login.loginButton).filter({ visible: true }).first().getAttribute('href');
     await this.goToUrl(new URL(href!, CommonLocators.urls.mwHomePage).href);
   }
 

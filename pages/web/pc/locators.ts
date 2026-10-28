@@ -80,7 +80,7 @@ export const PcLocators = {
     searchProductTitle: '[class*="ProductItem_title"]',
   },
   login: {
-    loginButton: '//a[text()="로그인/회원 가입"]',
+    loginButton: '//a[normalize-space()="로그인/회원 가입" or normalize-space()="로그인"]',
     idInput: '//input[@placeholder="아이디"]',
     pwInput: '//input[@placeholder="비밀번호"]',
     loginSubmitButton: '//span[text()="로그인"]',
@@ -207,5 +207,13 @@ export const PcLocators = {
     paymentButton: '(//div[contains(@class,"ButtonPurchase_inner")])[1]',
     giftBannerItems: '[class*="GiftDecoration_banner"] button[class*="GiftDecoration_imageItem"]',
     giftCardItems: '[class*="GiftDecoration_card"] button[class*="GiftDecoration_imageItem"]',
+    giftMessageInput: 'textarea',
+    recommendMessageButton: 'button:has-text("추천 메시지")',
+    specialCharacterButton: 'button:has-text("특수문자")',
+    specialCharacterOption: 'button:text-is("~")',
+    messageModal: '[class*="Modal_open"]',
+    recommendMessageCategory: '[class*="Modal_open"] [role="tab"]:has-text("감사")',
+    recommendMessageItems: '[class*="Modal_open"] button[class*="messageItem"]',
+    recommendMessageApplyButton: '[class*="Modal_open"] button:has-text("추천 메시지 선택하기")',
   }
 };

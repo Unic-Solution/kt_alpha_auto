@@ -100,4 +100,18 @@ export class GsProductSteps {
     await parameter('카드 이미지 선택·적용', `${card}`);
     return banner && card;
   }
+
+  /** 기프티쇼 > 선물 메시지 직접 입력·추천·특수문자·수정 확인 */
+  async gsVerifyGiftMessage(message: string): Promise<boolean> {
+    await this.gsProductPage.clickProduct();
+    await this.gsProductPage.clickProductGift();
+    if (!await this.gsProductPage.isGiftOrderPage()) return false;
+    const recommended = await this.gsProductPage.selectAndVerifyRecommendedMessage();
+    const direct = await this.gsProductPage.fillAndVerifyGiftMessage(message);
+    const specialCharacter = await this.gsProductPage.selectAndVerifySpecialCharacter();
+    await parameter('추천 메시지 선택·반영', `${recommended}`);
+    await parameter('전체 삭제 후 직접 입력', `${direct} (${message})`);
+    await parameter('특수문자 선택·추가', `${specialCharacter}`);
+    return recommended && direct && specialCharacter;
+  }
 }

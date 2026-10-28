@@ -211,5 +211,13 @@ export const MwLocators = {
     giftDecorationModal: '[class*="Modal_open"]',
     giftDecorationChoices: '[class*="Modal_open"] button[class*="cardBtn"]',
     giftDecorationApplyButton: '[class*="Modal_open"] button:has-text("적용하기")',
+    giftMessageInput: 'textarea',
+    recommendMessageButton: 'button:has-text("추천 메시지")',
+    specialCharacterButton: 'button:has-text("특수문자")',
+    specialCharacterOption: 'button:text-is("~")',
+    messageModal: '[class*="Modal_open"]',
+    recommendMessageCategory: '[class*="Modal_open"] [role="tab"]:has-text("감사")',
+    recommendMessageItems: '[class*="Modal_open"] button[class*="messageItem"]',
+    recommendMessageApplyButton: '[class*="Modal_open"] button:has-text("추천 메시지 선택하기")',
   },
 };

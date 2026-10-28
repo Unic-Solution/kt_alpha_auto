@@ -148,4 +148,56 @@ export class GsProductPage extends BasePage {
   async selectAndVerifyGiftCard(): Promise<boolean> {
     return this.selectAndVerifyGiftImage(PcLocators.giftShowProduct.giftCardItems);
   }
+
+  /** 선물 메시지 직접 입력 후 입력값 확인 */
+  async fillAndVerifyGiftMessage(message: string): Promise<boolean> {
+    const input = this.page.locator(PcLocators.giftShowProduct.giftMessageInput).filter({ visible: true }).first();
+    await input.clear();
+    await input.pressSequentially(message);
+    return await input.inputValue() === message;
+  }
+
+  /** 추천 메시지 선택 후 입력란 반영 확인 */
+  async selectAndVerifyRecommendedMessage(): Promise<boolean> {
+    await this.page.locator(PcLocators.giftShowProduct.recommendMessageButton).filter({ visible: true }).click();
+    const modal = this.page.locator(PcLocators.giftShowProduct.messageModal).filter({ visible: true });
+    await modal.waitFor({ state: 'visible' });
+    await this.page.locator(PcLocators.giftShowProduct.recommendMessageCategory).filter({ visible: true }).click();
+    const item = this.page.locator(PcLocators.giftShowProduct.recommendMessageItems).filter({ visible: true }).first();
+    await item.waitFor({ state: 'visible' });
+    const message = (await item.innerText()).trim();
+    if (!message) return false;
+    await item.click();
+    await this.page.locator(PcLocators.giftShowProduct.recommendMessageApplyButton).filter({ visible: true }).click();
+    await modal.waitFor({ state: 'hidden' });
+    const input = this.visibleGiftMessageInput();
+    const applied = (await input.inputValue()).trim() === message;
+    if (applied) {
+      await input.scrollIntoViewIfNeeded();
+      await this.page.waitForTimeout(1_500);
+    }
+    return applied;
+  }
+
+  /** 특수문자 선택 후 기존 메시지에 추가됐는지 확인 */
+  async selectAndVerifySpecialCharacter(): Promise<boolean> {
+    const input = this.visibleGiftMessageInput();
+    const before = await input.inputValue();
+    await this.page.locator(PcLocators.giftShowProduct.specialCharacterButton).filter({ visible: true }).click();
+    const character = this.page.locator(PcLocators.giftShowProduct.specialCharacterOption).filter({ visible: true });
+    await character.waitFor({ state: 'visible' });
+    await character.click();
+    const after = await input.inputValue();
+    const applied = after === `${before}~`;
+    if (applied) {
+      await input.scrollIntoViewIfNeeded();
+      await this.page.waitForTimeout(1_500);
+    }
+    return applied;
+  }
+
+  private visibleGiftMessageInput() {
+    return this.page.locator(PcLocators.giftShowProduct.giftMessageInput).filter({ visible: true }).first();
+  }
+
 }
