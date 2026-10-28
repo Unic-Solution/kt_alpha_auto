@@ -1,0 +1,1 @@
+{"uuid":"66af87af-dc32-406b-ae0b-c0294480c62d","name":"상품 > 좋아요 추가 및 삭제 확인","status":"passed","start":1793172855623,"stop":1793172871118,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20261028_16:21:34)"}],"parameters":[{"name":"마이페이지 > 좋아요 > 좋아요 버튼(클릭 전)","value":"true"},{"name":"마이페이지 > 좋아요 > 좋아요 버튼(클릭 후)","value":"false"}]}
