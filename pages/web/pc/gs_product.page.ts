@@ -52,7 +52,7 @@ export class GsProductPage extends BasePage {
 
   /** 상품 > 선물하기 버튼 클릭 */
   async clickProductGift() {
-    await this.click(PcLocators.main.onAirGiftButton);
+    await this.click(PcLocators.giftShowProduct.giftButton);
   }
 
   /** 선물하기 주문서 페이지 URL 확인 */
@@ -121,5 +121,31 @@ export class GsProductPage extends BasePage {
   /** 상품 결제 주문서 페이지 URL 확인 */
   async isPaymentPage(): Promise<boolean> {
     return this.urlContains(PcLocators.urls.giftShowPaymentOrder);
+  }
+
+  /** 선물 꾸미기 이미지 선택 후 선택 이미지가 활성 상태로 적용됐는지 확인 */
+  private async selectAndVerifyGiftImage(selector: string): Promise<boolean> {
+    const items = this.page.locator(selector).filter({ visible: true });
+    await items.nth(1).waitFor({ state: 'visible' });
+    if (await items.count() < 2) return false;
+    const selected = items.nth(1);
+    const selectedSrc = await selected.locator('img').getAttribute('src');
+    await selected.scrollIntoViewIfNeeded();
+    await selected.click();
+    const active = items.and(this.page.locator('[class*="GiftDecoration_active"]'));
+    await active.locator('img').evaluate(image => (image as HTMLImageElement).decode());
+    return await active.count() === 1
+      && await active.locator('img').getAttribute('src') === selectedSrc
+      && await active.locator('img').evaluate(image => (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth > 0);
+  }
+
+  /** 선물 꾸미기 배너 이미지 선택·적용 확인 */
+  async selectAndVerifyGiftBanner(): Promise<boolean> {
+    return this.selectAndVerifyGiftImage(PcLocators.giftShowProduct.giftBannerItems);
+  }
+
+  /** 선물 꾸미기 카드 이미지 선택·적용 확인 */
+  async selectAndVerifyGiftCard(): Promise<boolean> {
+    return this.selectAndVerifyGiftImage(PcLocators.giftShowProduct.giftCardItems);
   }
 }

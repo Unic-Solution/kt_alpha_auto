@@ -88,4 +88,16 @@ export class GsProductSteps {
     await this.gsProductPage.reClickSendToMeButton();
     return await this.gsProductPage.isPaymentPage();
   }
+
+  /** 기프티쇼 > 선물 꾸미기 > 배너·카드 이미지 선택 및 적용 확인 */
+  async gsVerifyGiftDecoration(): Promise<boolean> {
+    await this.gsProductPage.clickProduct();
+    await this.gsProductPage.clickProductGift();
+    if (!await this.gsProductPage.isGiftOrderPage()) return false;
+    const banner = await this.gsProductPage.selectAndVerifyGiftBanner();
+    const card = await this.gsProductPage.selectAndVerifyGiftCard();
+    await parameter('배너 이미지 선택·적용', `${banner}`);
+    await parameter('카드 이미지 선택·적용', `${card}`);
+    return banner && card;
+  }
 }

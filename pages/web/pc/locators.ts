@@ -196,6 +196,7 @@ export const PcLocators = {
   },
   giftShowProduct: {
     giftProduct: '(//div[contains(@class,"ProductItem_item")])[1]',
+    giftButton: '//button[.//span[normalize-space()="선물하기"]]',
     sendToMeButton: '//div[contains(@class,"ButtonPurchase_inner")]//span[text()="나에게 보내기"]',
     giftShowMainPhoneNumberButton: '(//div[contains(@class,"OrderSheetGiftshow_inner")])[1]//label[2]',
     senderInput: '//div[contains(@class,"OrderSheetGiftshow_sender")]//input',
@@ -204,5 +205,7 @@ export const PcLocators = {
     recipientNameInput: '((//div[contains(@class,"GiftshowAddContact_recipientItem")]/div)[1]//input)[2]',
     totalRecipients: '//ul[contains(@class,"totalPriceList")]/li[1]/strong',
     paymentButton: '(//div[contains(@class,"ButtonPurchase_inner")])[1]',
+    giftBannerItems: '[class*="GiftDecoration_banner"] button[class*="GiftDecoration_imageItem"]',
+    giftCardItems: '[class*="GiftDecoration_card"] button[class*="GiftDecoration_imageItem"]',
   }
 };

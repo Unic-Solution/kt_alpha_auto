@@ -42,7 +42,7 @@ export class GsProductPage extends BasePage {
   }
 
   async clickProductGift() {
-    await this.click(MwLocators.main.onAirGiftButton);
+    await this.click(MwLocators.giftShowProduct.giftButton);
   }
 
   async isGiftOrderPage(): Promise<boolean> {
@@ -98,5 +98,31 @@ export class GsProductPage extends BasePage {
 
   async isPaymentPage(): Promise<boolean> {
     return this.urlContains(MwLocators.urls.giftShowPaymentOrder);
+  }
+
+  /** 모바일 이미지 변경 모달에서 선택 후 주문서 미리보기 적용 확인 */
+  private async selectAndApplyGiftImage(changeIndex: number, previewIndex: number): Promise<boolean> {
+    const preview = this.page.locator(MwLocators.giftShowProduct.giftPreviewImages).nth(previewIndex);
+    await this.page.locator(MwLocators.giftShowProduct.giftChangeButtons).nth(changeIndex).click();
+    const modal = this.page.locator(MwLocators.giftShowProduct.giftDecorationModal);
+    await modal.waitFor({ state: 'visible' });
+    const selected = this.page.locator(MwLocators.giftShowProduct.giftDecorationChoices).nth(1);
+    const selectedSrc = await selected.locator('img').getAttribute('src');
+    await selected.click();
+    await this.page.locator(MwLocators.giftShowProduct.giftDecorationApplyButton).click();
+    await modal.waitFor({ state: 'hidden' });
+    await preview.evaluate(image => (image as HTMLImageElement).decode());
+    const appliedSrc = await preview.getAttribute('src');
+    return selectedSrc?.split('/dims/')[0] === appliedSrc?.split('/dims/')[0];
+  }
+
+  /** 선물 꾸미기 배너 이미지 선택·적용 확인 */
+  async selectAndVerifyGiftBanner(): Promise<boolean> {
+    return this.selectAndApplyGiftImage(0, 0);
+  }
+
+  /** 선물 꾸미기 카드 이미지 선택·적용 확인 */
+  async selectAndVerifyGiftCard(): Promise<boolean> {
+    return this.selectAndApplyGiftImage(1, 2);
   }
 }

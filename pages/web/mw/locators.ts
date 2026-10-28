@@ -197,6 +197,7 @@ export const MwLocators = {
   },
   giftShowProduct: {
     giftProduct: '(//div[contains(@class,"ProductItem_item")])[1]',
+    giftButton: '//button[.//span[normalize-space()="선물하기"]]',
     sendToMeButton: '//div[contains(@class,"ButtonPurchase_inner")]//span[text()="나에게 보내기"]',
     giftShowMainPhoneNumberButton: '(//div[contains(@class,"OrderSheetGiftshow_inner")])[1]//label[2]',
     senderInput: '//div[contains(@class,"OrderSheetGiftshow_sender")]//input',
@@ -205,5 +206,10 @@ export const MwLocators = {
     recipientNameInput: '((//div[contains(@class,"GiftshowAddContact_recipientItem")]/div)[1]//input)[2]',
     totalRecipients: '//ul[contains(@class,"totalPriceList")]/li[1]/strong',
     paymentButton: '(//div[contains(@class,"ButtonPurchase_inner")])[1]',
+    giftChangeButtons: '[class*="MessageCardChange_cardThumb"] button:has-text("변경")',
+    giftPreviewImages: '[class*="MessageCardChange_cardThumb"] img',
+    giftDecorationModal: '[class*="Modal_open"]',
+    giftDecorationChoices: '[class*="Modal_open"] button[class*="cardBtn"]',
+    giftDecorationApplyButton: '[class*="Modal_open"] button:has-text("적용하기")',
   },
 };
