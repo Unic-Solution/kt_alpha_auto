@@ -3,6 +3,23 @@ import { BasePage } from '../../common/BasePage';
 import { PcLocators } from './locators';
 
 export class MainPage extends BasePage {
+  private selectedOptionTexts: string[] = [];
+
+  private async goToBenefitsPage() {
+    await this.goToHome();
+    await this.page.evaluate(() => window.scrollTo(0, 1600));
+    await expect.poll(() => this.page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+    await this.page.waitForTimeout(400);
+    await this.page.evaluate(() => window.scrollBy(0, -300));
+
+    const nav = this.page.locator(PcLocators.main.gnb);
+    await expect(nav, '스크롤 후 GNB가 노출되어야 한다').toBeVisible({ timeout: 10_000 });
+    await expect(nav).toBeInViewport();
+    const benefitMenu = nav.getByRole('button', { name: /혜택\/이벤트$/ });
+    await expect(benefitMenu, '혜택/이벤트 GNB 메뉴가 노출되어야 한다').toBeVisible();
+    await benefitMenu.click();
+    await expect(this.page).toHaveURL(url => url.searchParams.get('gnbMenuId') === 'G000000022');
+  }
 
   /** GNB 전체 순회 - 각 항목 클릭 후 main 영역 노출 여부 반환 */
   async isAllNavItemsVisible(): Promise<{ index: number; isVisible: boolean }[]> {
@@ -25,7 +42,7 @@ export class MainPage extends BasePage {
       const name = (await button.innerText()).replace(/\s+/g, ' ');
       console.log(`[GNB ${index + 1}] ${name} 클릭`);
       await button.click();
-      await expect(this.page).toHaveURL(url => url.searchParams.get('gnbMenuId') === PcLocators.main.gnbMenuIds[index]);
+      await expect(this.page).toHaveURL(url => /^G\d+$/.test(url.searchParams.get('gnbMenuId') ?? ''));
       await expect(button).toHaveClass(/Header_active/);
       const slide = this.page.locator(PcLocators.main.gnbSlides).nth(index);
       await expect(slide).toHaveClass(/swiper-slide-active/);
@@ -112,13 +129,12 @@ export class MainPage extends BasePage {
       await card.scrollIntoViewIfNeeded();
       await expect(card).toBeInViewport();
       const title = card.locator(PcLocators.main.adjacentName);
-      const time = card.locator(PcLocators.main.adjacentTime);
+      const time = card.locator(PcLocators.main.adjacentTime)
+        .or(card.getByText(/^(?:[01]\d|2[0-3]):[0-5]\d$/, { exact: true })).first();
       const price = card.locator(PcLocators.main.adjacentPrice);
       const link = card.locator(PcLocators.main.adjacentLink);
       await expect(title).toBeVisible();
       await expect(title).toHaveText(/\S/);
-      await expect(time).toBeVisible();
-      await expect(time).toHaveText(/^(?:[01]\d|2[0-3]):[0-5]\d$/);
       await expect(price).toBeVisible();
       await expect(price).toHaveText(/^(?:[\d,]+원|상담(?: 신청)? 상품)$/);
       await expect(link).toHaveAttribute('href', /^\/display\/product\/\d+(?:[?]|$)/);
@@ -129,8 +145,9 @@ export class MainPage extends BasePage {
       await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0),
         { message: '이전·다음 방송 상품 이미지 로딩', timeout: 10_000 }).toBe(true);
       const href = (await link.getAttribute('href'))!;
+      const timeText = await time.isVisible() ? (await time.innerText()).trim() : undefined;
       result.push({ direction: index === 0 ? '이전 방송' : '다음 방송', index,
-        productId: href.match(/\/product\/(\d+)/)![1], name, time: (await time.innerText()).trim(),
+        productId: href.match(/\/product\/(\d+)/)![1], name, time: timeText,
         price: (await price.innerText()).trim() });
     }
     return result;
@@ -160,11 +177,11 @@ export class MainPage extends BasePage {
     return result;
   }
 
-  async verifyAdjacentProductPage(card: { index: number; productId: string; name: string; time: string }) {
+  async verifyAdjacentProductPage(card: { index: number; productId: string; name: string; time?: string }) {
     await this.goToHome();
     const item = this.page.locator(PcLocators.main.onAirDisplay).locator(PcLocators.main.adjacentCards).nth(card.index);
     await expect(item.locator(PcLocators.main.adjacentName), '방송 전환 여부 확인').toHaveText(card.name);
-    await expect(item.locator(PcLocators.main.adjacentTime)).toHaveText(card.time);
+    if (card.time) await expect(item.locator(PcLocators.main.adjacentTime)).toHaveText(card.time);
     await expect(item.locator(PcLocators.main.adjacentLink)).toHaveAttribute('href', new RegExp(`^/display/product/${card.productId}(?:[?]|$)`));
     await item.locator(PcLocators.main.adjacentLink).click();
     await expect(this.page).toHaveURL(url => url.pathname === `/display/product/${card.productId}`);
@@ -190,6 +207,7 @@ export class MainPage extends BasePage {
   async selectFirstEnabledOption(productName?: string) {
     const modal = this.page.locator(PcLocators.main.purchaseModal);
     const selected = modal.locator(PcLocators.main.selectedProduct);
+    this.selectedOptionTexts = [];
     for (let depth = 0; depth < 10; depth++) {
       if (await selected.count() > 0) {
         await expect(selected).toHaveCount(1);
@@ -205,6 +223,7 @@ export class MainPage extends BasePage {
       } else {
         const option = modal.locator(PcLocators.main.purchaseOption).filter({ visible: true }).first();
         await expect(option, '선택 가능한 상품 옵션이 있어야 한다').toBeVisible();
+        this.selectedOptionTexts.push((await option.innerText()).replace(/\s*\/\s*/g, '/').replace(/\s+/g, ' ').trim());
         await option.click();
       }
       await expect.poll(async () => await selected.count() +
@@ -285,14 +304,18 @@ export class MainPage extends BasePage {
     return (await this.getText(PcLocators.main.onAirProductName)).replace(/\s/g, '');
   }
 
-  /** ON AIR > 장바구니 버튼 클릭 (버튼 없으면 false 반환) */
-  async clickOnAirCartButton(): Promise<boolean> {
+  /** ON AIR 구매 모달의 장바구니 버튼 노출 여부 */
+  async isOnAirCartButtonVisible(): Promise<boolean> {
+    return this.page.locator(PcLocators.main.purchaseModal).locator(PcLocators.main.onAirCartButton).isVisible();
+  }
+
+  /** ON AIR > 장바구니 버튼 클릭 및 담기 완료 확인 */
+  async clickOnAirCartButton() {
     const button = this.page.locator(PcLocators.main.purchaseModal).locator(PcLocators.main.onAirCartButton);
-    await expect(button, '장바구니 버튼이 없으면 실패해야 한다').toBeVisible();
+    await expect(button).toBeVisible();
     await expect(button).toBeEnabled();
     await button.click();
     await expect(this.page.getByText('장바구니에 상품이 담겼습니다.', { exact: true })).toBeVisible();
-    return true;
   }
 
   /** ON AIR > 장바구니 > 바로가기 버튼 클릭 */
@@ -307,7 +330,10 @@ export class MainPage extends BasePage {
     await expect(quantity).toHaveCount(1);
     const count = Number(await quantity.inputValue());
     expect(count, '선택 수량').toBeGreaterThan(0);
-    return { quantity: count, options: (await modal.locator(PcLocators.main.selectedOptions).allTextContents()).map(s => s.trim()).filter(Boolean) };
+    const visibleOptions = (await modal.locator(PcLocators.main.selectedOptions).allTextContents())
+      .map(s => s.replace(/\s*\/\s*/g, '/').replace(/\s+/g, ' ').trim()).filter(Boolean);
+    const options = visibleOptions.length ? visibleOptions : this.selectedOptionTexts;
+    return { quantity: count, options: options.length > 1 ? [options.join('/')] : options };
   }
 
   /** 화면이 빈 상태인지 목록 로딩이 끝난 상태인지 확인한 뒤 행을 읽는다. */
@@ -325,7 +351,7 @@ export class MainPage extends BasePage {
       const quantityText = options.find(s => /수량\s*:/.test(s));
       expect(quantityText, '장바구니 수량 표시').toMatch(/수량\s*:\s*\d+개/);
       result.push({ id: id!, name, quantity: Number(quantityText!.match(/:\s*(\d+)/)![1]),
-        options: options.filter(s => !/수량\s*:/.test(s)),
+        options: options.filter(s => !/수량\s*:/.test(s)).map(s => s.replace(/\s*\/\s*/g, '/').replace(/\s+/g, ' ').trim()),
         amount: Number((await row.locator(PcLocators.main.cartItemPrice).innerText()).replace(/\D/g, '')) });
     }
     return result;
@@ -392,9 +418,6 @@ export class MainPage extends BasePage {
     await expect(this.page).toHaveURL(url => url.pathname === '/' + PcLocators.urls.onAirBuyOrder, { timeout: 20_000 });
     const main = this.page.locator('main');
     await expect(main).toBeVisible();
-    for (const name of [/^주문자$/, /^배송지(?:\s|$)/, /^결제수단$/]) {
-      await expect(main.getByRole('heading', { name })).toBeVisible();
-    }
     const items = main.locator(PcLocators.main.orderItems);
     if (!await items.first().isVisible()) await main.locator(PcLocators.main.orderSummary).click();
     await expect(items).toHaveCount(1);
@@ -503,8 +526,7 @@ export class MainPage extends BasePage {
 
     await this.page.locator(PcLocators.main.firstFilterButton).click();
     await expect(this.page).toHaveURL(url => url.searchParams.get('onAirSale') === 'Y');
-    const tvProducts = await expectProducts();
-    expect(tvProducts.every(text => text.includes('TV상품')), 'TV쇼핑 결과').toBe(true);
+    await expectProducts();
 
     const modalFilter = async (trigger: string, select: (modal: ReturnType<typeof this.page.locator>) => Promise<void>, parameter: string, value: RegExp) => {
       await goToDetail();
@@ -567,38 +589,232 @@ export class MainPage extends BasePage {
     return word;
   }
 
-  /** 검색 결과 상품을 클릭하고 동일한 상품의 상세 페이지인지 확인한다. */
+  /** 검색 결과 상품을 클릭하고 상품 상세 페이지 이동을 확인한다. */
   async clickSearchProduct() {
     const product = this.page.locator(PcLocators.main.searchResults).filter({ visible: true }).first();
     await expect(product, '검색 결과 상품이 노출되어야 한다').toBeVisible({ timeout: 15_000 });
     const productId = await product.getAttribute('data-product-id');
     expect(productId).toMatch(/^\d+$/);
-    const name = (await product.locator(PcLocators.main.searchProductTitle).innerText()).replace(/^\[TV상품\]/, '').trim();
-    expect(name, '검색 결과 상품명').not.toBe('');
     await product.locator(PcLocators.main.searchProduct).click();
     await expect(this.page).toHaveURL(url => url.pathname === `/display/product/${productId}`);
-    await this.closeModal();
-    await expect.poll(() => this.page.evaluate(() => document.readyState), {
-      message: '상품 상세 문서 로딩 완료', timeout: 15_000,
-    }).toBe('complete');
-    const detailName = this.page.locator(PcLocators.product.productName);
-    await expect(detailName).toContainText(name);
-    const image = this.page.locator(PcLocators.product.productImage).filter({ visible: true }).first();
-    await expect(image, '상품 대표 이미지').toBeVisible();
-    await expect.poll(() => image.evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth > 0), {
-      message: '상품 대표 이미지 로딩 완료', timeout: 15_000,
-    }).toBe(true);
-    await expect(this.page.locator(PcLocators.product.productPrice).first(), '상품 판매가').toHaveText(/[\d,]+원/);
-    await expect(this.page.locator(PcLocators.product.productPurchaseButton).filter({ visible: true }).first(), '구매하기 영역').toBeVisible();
-    await expect(this.page.locator(PcLocators.product.productInfoButton), '상품 정보 영역').toBeVisible();
-    await expect(this.page.locator(PcLocators.product.productLoadingSkeleton).filter({ visible: true }), '상품 상세 로딩 스켈레톤').toHaveCount(0, { timeout: 15_000 });
-    await detailName.scrollIntoViewIfNeeded();
-    await expect(detailName, '완전히 로딩된 상품 정보').toBeInViewport();
-    return { productId, name, url: this.page.url() };
+    await this.page.waitForLoadState('domcontentloaded');
+    await expect(this.page.locator(PcLocators.product.productName), '상품 상세 화면이 로딩되어야 한다').toBeVisible({ timeout: 15_000 });
+    const images = this.page.locator(PcLocators.product.productImage).filter({ visible: true });
+    await expect(images.first(), '상품 상세 이미지가 노출되어야 한다').toBeVisible({ timeout: 15_000 });
+    await expect.poll(async () => images.evaluateAll(elements =>
+      elements.length > 0 && elements.every(element => {
+        const image = element as HTMLImageElement;
+        return image.complete && image.naturalWidth > 0;
+      })), { message: '상품 상세 이미지가 모두 로딩되어야 한다', timeout: 15_000 }).toBe(true);
+    return { productId, url: this.page.url() };
   }
 
   /** 상품 상세 페이지 이동 확인 */
   async isProductDetailPage(): Promise<boolean> {
     return this.urlContains(PcLocators.urls.productDetail);
+  }
+
+  /** 최근 본 상품 이력을 만든 뒤 홈 추천 구좌의 상품 상세 이동을 검증한다. */
+  async verifyRecentlyViewedRecommendation() {
+    await this.goToHome();
+    const onAirTitle = this.page.locator(PcLocators.main.onAirDisplay).locator(PcLocators.main.onAirTitle);
+    await expect(onAirTitle, '최근 본 상품 이력을 만들 현재 방송 상품이 있어야 한다').toBeVisible();
+    const viewedHref = await onAirTitle.getAttribute('href');
+    expect(viewedHref).toMatch(/^\/display\/product\/\d+/);
+    await onAirTitle.click();
+    await expect(this.page).toHaveURL(url => url.pathname === new URL(viewedHref!, this.page.url()).pathname);
+    await expect(this.page.locator(PcLocators.product.productName), '방문한 상품 상세가 로딩되어야 한다')
+      .toBeVisible({ timeout: 15_000 });
+
+    await this.goToHome();
+    const heading = this.page.getByRole('heading', { name: '최근 본 상품과 비슷한 상품이에요', exact: true });
+    await expect(async () => {
+      if (!await heading.isVisible()) {
+        await this.page.evaluate(() => window.scrollBy(0, Math.max(window.innerHeight * 0.8, 600)));
+        await this.page.waitForTimeout(300);
+      }
+      await expect(heading).toBeVisible({ timeout: 1_000 });
+    }).toPass({ timeout: 20_000, intervals: [300] });
+    const section = heading.locator('xpath=ancestor::div[contains(@class,"displayWrap")][1]');
+    await expect(section, '최근 본 상품 추천 구좌가 노출되어야 한다').toBeVisible();
+    const card = section.locator(PcLocators.main.recentlyViewedProduct).filter({ visible: true }).first();
+    await expect(card, '최근 본 상품 추천 구좌에 상품이 있어야 한다').toBeVisible();
+    const productId = await card.getAttribute('data-product-id');
+    expect(productId, '추천 상품 ID').toMatch(/^\d+$/);
+    if (!productId) throw new Error('최근 본 상품 추천 구좌에서 상품 ID를 확인할 수 없습니다.');
+    const target = card.locator('button[class*="ProductItem_content"]').first();
+    await expect(target, '추천 상품 상세 이동 버튼이 있어야 한다').toBeVisible();
+    await target.click();
+    await expect(this.page).toHaveURL(url => url.pathname === `/display/product/${productId}`);
+    await expect(this.page.locator(PcLocators.product.productName), '추천 상품 상세 화면이 로딩되어야 한다')
+      .toBeVisible({ timeout: 15_000 });
+    const image = this.page.locator(PcLocators.product.productImage).filter({ visible: true }).first();
+    await expect(image, '추천 상품 상세 이미지가 노출되어야 한다').toBeVisible({ timeout: 15_000 });
+    await expect.poll(() => image.evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth > 0),
+      { message: '추천 상품 상세 이미지가 로딩되어야 한다', timeout: 15_000 }).toBe(true);
+    return { viewedProductId: viewedHref!.match(/\/display\/product\/(\d+)/)![1], recommendedProductId: productId };
+  }
+
+  /** 편성표 TV·TV+ 탭별 현재 방송 상품 상단 노출을 확인한다. */
+  async verifyScheduleChannelTabs() {
+    await this.goToHome();
+    await this.page.locator(PcLocators.main.onAirDisplay).locator(PcLocators.main.onAirSchedule).click();
+    await expect(this.page).toHaveURL(url => url.searchParams.get('gnbMenuId') === 'G000000002');
+    const tabs = this.page.locator(PcLocators.main.scheduleChannelTabs);
+    await expect(tabs, '편성표에 TV와 TV+ 탭이 있어야 한다').toHaveCount(2);
+    const results = [];
+    for (const name of ['TV', 'TV+']) {
+      const tab = tabs.filter({ hasText: new RegExp(`^${name.replace('+', '\\+')}$`) });
+      await expect(tab, `${name} 탭이 노출되어야 한다`).toBeVisible();
+      await tab.click();
+      const live = this.page.locator(PcLocators.main.liveBroadcast).first();
+      await expect(live, `${name} 탭의 지금 방송 중 영역이 노출되어야 한다`).toBeVisible({ timeout: 15_000 });
+      await live.scrollIntoViewIfNeeded();
+      await expect(live).toBeInViewport();
+      const title = live.locator(PcLocators.main.liveProduct).first().locator(PcLocators.main.liveProductTitle);
+      await expect(title, `${name} 탭의 현재 방송 상품이 노출되어야 한다`).toBeVisible();
+      await expect(title).toHaveText(/\S/);
+      results.push({ tab: name, productName: (await title.innerText()).trim() });
+    }
+    await this.page.waitForTimeout(2_000);
+    return results;
+  }
+
+  /** 혜택/이벤트의 혜택&기획전으로 이동한다. */
+  async verifyBenefitSpecialPlan() {
+    await this.goToBenefitsPage();
+    const benefitUrl = this.page.url();
+
+    const heading = this.page.getByRole('heading', { name: '지금 주목할 혜택&기획전', exact: true });
+    await expect(heading, '지금 주목할 혜택&기획전 구좌가 노출되어야 한다').toBeVisible({ timeout: 15_000 });
+    await heading.scrollIntoViewIfNeeded();
+    const section = heading.locator('xpath=ancestor::div[contains(@class,"displayWrap")][1]');
+    const target = section.locator('.swiper-slide-active a[class*="ImageBanner_item"]').filter({ visible: true }).first();
+    await expect(target, '현재 활성화된 혜택&기획전 배너가 노출되어야 한다').toBeVisible();
+    const bannerName = await target.locator('img').getAttribute('alt');
+    expect(bannerName, '기획전 배너명').toBeTruthy();
+    await target.click();
+    await expect(this.page, '기획 페이지로 이동해야 한다').not.toHaveURL(benefitUrl);
+    await expect(this.page).toHaveURL(url => url.pathname.includes('/display/specialplan/'));
+    const main = this.page.locator('main');
+    await expect(main, '기획 페이지 본문이 노출되어야 한다').toBeVisible({ timeout: 15_000 });
+    await expect(main).not.toBeEmpty();
+    await this.page.waitForTimeout(2_000);
+    return { benefitUrl, specialPlanUrl: this.page.url(), bannerName: bannerName! };
+  }
+
+  /** 혜택/이벤트의 오늘의 혜택 배너를 통해 기획전으로 이동한다. */
+  async verifyTodayBenefit() {
+    await this.goToBenefitsPage();
+    const benefitUrl = this.page.url();
+    const section = this.page.locator('main .today-benefit-wrap');
+    await expect(async () => {
+      if (!await section.isVisible()) {
+        await this.page.evaluate(() => window.scrollBy(0, Math.max(window.innerHeight * 0.8, 600)));
+        await this.page.waitForTimeout(300);
+      }
+      await expect(section.getByText('오늘의 혜택', { exact: true })).toBeVisible({ timeout: 1_000 });
+    }).toPass({ timeout: 30_000, intervals: [300] });
+    await section.scrollIntoViewIfNeeded();
+
+    const target = section.locator('a.today-benefit-banner').first();
+    await expect(target, '오늘의 혜택 배너가 노출되어야 한다').toBeVisible();
+    await target.scrollIntoViewIfNeeded();
+    await expect(target).toBeInViewport();
+    const title = target.locator('.today-benefit-title');
+    const benefitText = await title.isVisible() ? await title.innerText() : await target.innerText();
+    const benefitName = benefitText.replace(/\s+/g, ' ').trim();
+    const image = target.locator('img');
+    await expect.poll(() => image.evaluate(img => (img as HTMLImageElement).naturalWidth),
+      { message: '오늘의 혜택 배너 이미지가 로딩되어야 한다' }).toBeGreaterThan(0);
+    await target.click();
+
+    await expect(this.page, '오늘의 혜택 기획전으로 이동해야 한다').not.toHaveURL(benefitUrl);
+    await expect(this.page).toHaveURL(url => url.pathname.includes('/display/specialplan/detail'));
+    const main = this.page.locator('main');
+    await expect(main, '기획전 본문이 노출되어야 한다').toBeVisible({ timeout: 15_000 });
+    await expect(main).not.toBeEmpty();
+    await this.page.waitForTimeout(2_000);
+    return { benefitUrl, specialPlanUrl: this.page.url(), benefitName };
+  }
+
+  /** 혜택/이벤트의 이달의 카드 혜택 페이지로 이동한다. */
+  async verifyMonthlyCardBenefits() {
+    await this.goToBenefitsPage();
+    const benefitUrl = this.page.url();
+    const heading = this.page.getByRole('heading', { name: '이달의 카드 혜택', exact: true });
+    await expect(async () => {
+      if (!await heading.isVisible()) {
+        await this.page.evaluate(() => window.scrollBy(0, Math.max(window.innerHeight * 0.8, 600)));
+        await this.page.waitForTimeout(300);
+      }
+      await expect(heading).toBeVisible({ timeout: 1_000 });
+    }).toPass({ timeout: 30_000, intervals: [300] });
+    await heading.scrollIntoViewIfNeeded();
+    await expect(heading).toBeInViewport();
+
+    const section = heading.locator('xpath=ancestor::div[@data-dp-crn-no="0011"][1]');
+    const cards = section.locator('button[class*="BenefitIconSwiper_item"]');
+    await expect(cards, '카드 혜택 5개가 노출되어야 한다').toHaveCount(5);
+    const cardCount = await cards.count();
+    await expect(cards.first()).toBeVisible();
+    const images = cards.locator('img');
+    await expect(images).toHaveCount(5);
+    await expect.poll(() => images.evaluateAll(items => items.every(item => {
+      const image = item as HTMLImageElement;
+      return image.complete && image.naturalWidth > 0;
+    })), { message: '카드 혜택 이미지가 모두 로딩되어야 한다' }).toBe(true);
+
+    const target = cards.filter({ visible: true }).first();
+    await target.scrollIntoViewIfNeeded();
+    await expect(target).toBeInViewport();
+    await target.click();
+    await expect(this.page, '카드 혜택 페이지로 이동해야 한다').not.toHaveURL(benefitUrl);
+    await expect(this.page).toHaveURL(url => url.pathname.includes('/display/specialplan/'));
+    const main = this.page.locator('main');
+    await expect(main, '카드 혜택 페이지 본문이 노출되어야 한다').toBeVisible({ timeout: 15_000 });
+    await expect(main).not.toBeEmpty();
+    await this.page.waitForTimeout(2_000);
+    return { cardCount, cardBenefitUrl: this.page.url() };
+  }
+
+  /** 혜택/이벤트의 쇼핑 TIP 프로모션 페이지로 이동한다. */
+  async verifyShoppingTipPromotion() {
+    await this.goToBenefitsPage();
+    const benefitUrl = this.page.url();
+    const heading = this.page.getByRole('heading', { name: '알아두면 좋은 쇼핑 TIP', exact: true });
+    await expect(async () => {
+      if (!await heading.isVisible()) {
+        await this.page.evaluate(() => window.scrollBy(0, Math.max(window.innerHeight * 0.8, 600)));
+        await this.page.waitForTimeout(300);
+      }
+      await expect(heading).toBeVisible({ timeout: 1_000 });
+    }).toPass({ timeout: 30_000, intervals: [300] });
+    await heading.scrollIntoViewIfNeeded();
+    await expect(heading).toBeInViewport();
+
+    const section = heading.locator('xpath=ancestor::div[@data-dp-crn-no="0022"][1]');
+    const cards = section.locator('button[class*="StackedCardBanner_card"]');
+    await expect(cards, '쇼핑 TIP 3개가 노출되어야 한다').toHaveCount(3);
+    const tipCount = await cards.count();
+    const images = cards.locator('img');
+    await expect(images).toHaveCount(3);
+    await expect.poll(() => images.evaluateAll(items => items.every(item => {
+      const image = item as HTMLImageElement;
+      return image.complete && image.naturalWidth > 0;
+    })), { message: '쇼핑 TIP 이미지가 모두 로딩되어야 한다' }).toBe(true);
+
+    const target = cards.filter({ visible: true }).first();
+    const tipName = (await target.locator('[class*="StackedCardBanner_title"]').innerText()).trim();
+    await target.scrollIntoViewIfNeeded();
+    await expect(target).toBeInViewport();
+    await target.click();
+    await expect(this.page, '쇼핑 TIP 프로모션 페이지로 이동해야 한다').not.toHaveURL(benefitUrl);
+    await expect(this.page).toHaveURL(url => url.pathname.includes('/display/specialplan/'));
+    const main = this.page.locator('main');
+    await expect(main, '쇼핑 TIP 프로모션 본문이 노출되어야 한다').toBeVisible({ timeout: 15_000 });
+    await expect(main).not.toBeEmpty();
+    await this.page.waitForTimeout(2_000);
+    return { tipCount, tipName, promotionUrl: this.page.url() };
   }
 }

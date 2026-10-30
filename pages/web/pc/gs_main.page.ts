@@ -1,16 +1,20 @@
 import { BasePage } from '../../common/BasePage';
 import { PcLocators } from './locators';
+import { MainPage } from './main.page';
 
 export class GsMainPage extends BasePage {
 
   /** GNB 전체 순회 - 각 항목 클릭 후 main 영역 노출 여부 반환 */
   async isAllNavItemsVisible(): Promise<{ index: number; isVisible: boolean }[]> {
-    const count = await this.count(PcLocators.main.navItems);
+    await this.closeModal();
+    const buttons = this.page.locator('//nav//li//button').filter({ visible: true });
+    const count = await buttons.count();
+    if (count === 0) return [];
     const results: { index: number; isVisible: boolean }[] = [];
 
     for (let i = 0; i < count; i++) {
-      await this.nthClick(PcLocators.main.navItems, i);
-      if (i === 1) await this.closeModal();
+      await this.closeModal();
+      await buttons.nth(i).click();
       const isVisible = await this.isVisible(PcLocators.main.mainArea);
       results.push({ index: i, isVisible });
     }
@@ -70,19 +74,14 @@ export class GsMainPage extends BasePage {
     await this.click(PcLocators.main.searchButton);
   }
 
-  /** 검색 > 인기 검색어 랜덤 클릭 후 검색어 반환 */
+  /** 검색 > 첫 번째 인기 검색어 클릭 후 검색어 반환 */
   async clickPopularWord(): Promise<string> {
-    const count = await this.count(PcLocators.main.popularWords);
-    const randomNum = this.getRandomIndex(count);
-    const word = await this.getIndexText(PcLocators.main.popularWords, randomNum);
-    await this.nthClick(PcLocators.main.popularWords, randomNum);
-
-    return word;
+    return new MainPage(this.page).clickPopularWord();
   }
 
   /** 검색 결과 첫 번째 상품 클릭 */
   async clickSearchProduct() {
-    await this.click(PcLocators.main.searchProduct);
+    await new MainPage(this.page).clickSearchProduct();
   }
 
   /** 상품 상세 페이지 이동 확인 */

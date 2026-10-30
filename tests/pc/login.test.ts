@@ -7,5 +7,5 @@ test('로그인', async ({ sharedBasePage: basePage }) => {
   const loginSteps = new LoginSteps(basePage);
   const run = createRun('PC Web', '로그인', basePage.getPage());
 
-  await run('로그인 상태 확인', () => loginSteps.verifyLocalLogin());
+  await run('[테스트케이스 10번] 로그인 상태 확인', () => loginSteps.verifyLocalLogin());
 });

@@ -6,9 +6,25 @@ import { PcLocators } from './locators';
 
 export class LoginPage extends BasePage {
 
-  /** 세션을 재사용하고, 자동 로그인 실패 시 사용자 입력을 기다린다. */
-  async ensureLoggedIn() {
+  /** 로그인 상태라면 로그아웃해 로그인 테스트의 시작 상태를 맞춘다. */
+  async ensureLoggedOut(): Promise<boolean> {
     await this.goToUrl(new URL(PcLocators.urls.myPage, CommonLocators.urls.homePage).href);
+    await this.closeModal();
+    const logout = this.page.locator(PcLocators.login.logoutButton).filter({ visible: true }).first();
+    if (!await logout.isVisible()) return false;
+    await logout.click();
+    await expect.poll(() => logout.isVisible(), { message: '로그아웃 완료 확인' }).toBe(false);
+    return true;
+  }
+
+  /** 세션을 재사용하고, 자동 로그인 실패 시 사용자 입력을 기다린다. */
+  async ensureLoggedIn(fromHome = false) {
+    if (fromHome) {
+      await this.goToHome();
+      await this.clickMyButton();
+    } else {
+      await this.goToUrl(new URL(PcLocators.urls.myPage, CommonLocators.urls.homePage).href);
+    }
     await this.closeModal();
     const login = this.page.locator(PcLocators.login.loginButton);
     const logout = this.page.locator(PcLocators.login.logoutButton);
@@ -17,6 +33,15 @@ export class LoginPage extends BasePage {
       { timeout: 20_000, message: '로그인 상태 확인' }).toBe(true);
     if (await logout.isVisible()) return;
     await this.clickLoginButton();
+    await this.completeLoginFromCurrentScreen();
+  }
+
+  /** 구매하기 등에서 이미 열린 로그인 화면의 인증을 완료한다. */
+  async completeLoginFromCurrentScreen(successUrl?: string) {
+    const logout = this.page.locator(PcLocators.login.logoutButton);
+    const certification = this.page.locator(PcLocators.login.certificationRequestButton);
+    const loginCompleted = async () => await logout.isVisible() || Boolean(successUrl && this.page.url().includes(successUrl));
+    await expect(this.page.locator(PcLocators.login.idInput)).toBeVisible({ timeout: 20_000 });
     let manualLoginRequired = true;
     const id = process.env.LOGIN_ID;
     const pw = process.env.LOGIN_PW;
@@ -25,17 +50,31 @@ export class LoginPage extends BasePage {
         await this.fillId(id);
         await this.fillPw(pw);
         await this.submitLogin();
-        await expect.poll(async () => await logout.isVisible() || await certification.isVisible() ||
+        await expect.poll(async () => await loginCompleted() || await certification.isVisible() ||
           await this.page.getByText(/아이디 또는 비밀번호가 일치하지 않습니다/).isVisible(),
         { timeout: 20_000, message: '자동 로그인 결과 확인' }).toBe(true);
-        manualLoginRequired = !await logout.isVisible() && !await certification.isVisible();
+        manualLoginRequired = !await loginCompleted() && !await certification.isVisible();
       } catch (error) {
         if (this.page.isClosed()) throw error;
         console.log('[PC] 자동 로그인이 완료되지 않아 사용자 직접 입력으로 전환합니다.');
       }
     }
-    await waitForManualAuthentication(this.page, logout, certification, 'PC', manualLoginRequired);
+    if (manualLoginRequired) await this.ensureManualLoginScreen(logout, certification);
+    await waitForManualAuthentication(this.page, logout, certification, 'PC', manualLoginRequired, 300_000, loginCompleted);
     await this.saveStorageState('auth.json');
+  }
+
+  /** 상품 구매 로그인 완료 후 주문서 도착까지 확인한다. */
+  async completeProductPurchaseLogin() {
+    await this.completeLoginFromCurrentScreen(PcLocators.urls.onAirBuyOrder);
+  }
+
+  /** 직접 입력을 기다리기 전에 사용자가 실제 로그인 폼을 볼 수 있게 한다. */
+  private async ensureManualLoginScreen(logout: ReturnType<LoginPage['page']['locator']>, certification: ReturnType<LoginPage['page']['locator']>) {
+    if (await logout.isVisible() || await certification.isVisible() || await this.page.locator(PcLocators.login.idInput).isVisible()) return;
+    await this.goToUrl(new URL(PcLocators.urls.myPage, CommonLocators.urls.homePage).href);
+    await this.closeModal();
+    await this.clickLoginButton();
   }
 
   /** 마이 버튼 클릭 */
@@ -45,8 +84,17 @@ export class LoginPage extends BasePage {
 
   /** 로그인 버튼 클릭 */
   async clickLoginButton() {
-    const href = await this.page.locator(PcLocators.login.loginButton).filter({ visible: true }).first().getAttribute('href');
-    await this.goToUrl(new URL(href!, CommonLocators.urls.homePage).href);
+    const button = this.page.locator(PcLocators.login.loginButton).filter({ visible: true }).first();
+    const idInput = this.page.locator(PcLocators.login.idInput);
+    const pwInput = this.page.locator(PcLocators.login.pwInput);
+    await expect(async () => {
+      if (!await idInput.isVisible()) {
+        await this.closeModal();
+        await button.click();
+      }
+      await expect(idInput).toBeVisible({ timeout: 3_000 });
+      await expect(pwInput).toBeVisible({ timeout: 3_000 });
+    }).toPass({ timeout: 15_000, intervals: [1_000] });
   }
 
   /** 아이디 입력 */
@@ -100,6 +148,23 @@ export class LoginPage extends BasePage {
   async clickProduct() {
     await this.scrollToProduct();
     await this.click(PcLocators.product.mdsPickProduct, true);
+  }
+
+  /** 상품 상세의 실제 구매 버튼과 옵션 모달을 거쳐 로그인 화면으로 이동 */
+  async clickProductBuyForLogin() {
+    const modal = this.page.locator(PcLocators.main.purchaseModal);
+    const buyButton = this.page.locator('main [class*="ButtonPurchase_wrap"]')
+      .getByRole('button', { name: /구매하기$/ }).filter({ visible: true }).first();
+    await expect(async () => {
+      if (!await modal.isVisible()) await buyButton.click();
+      await expect(modal, '구매 옵션 모달이 열려야 한다').toBeVisible({ timeout: 3_000 });
+    }).toPass({ timeout: 15_000, intervals: [1_000] });
+    await this.clickFirstEnabled(PcLocators.main.onAirDirectBuyFirstOption);
+    const confirm = modal.getByRole('button', { name: /구매하기$/ }).filter({ visible: true }).last();
+    await expect(confirm).toBeEnabled();
+    await confirm.click();
+    await expect(this.page.locator(PcLocators.login.idInput), '구매하기 후 로그인 화면이 열려야 한다')
+      .toBeVisible({ timeout: 20_000 });
   }
 
   /** 구매하기 버튼 클릭 (옵션 선택 전) */

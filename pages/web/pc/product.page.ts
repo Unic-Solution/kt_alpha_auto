@@ -1,41 +1,113 @@
+import { expect } from '@playwright/test';
 import { BasePage } from '../../common/BasePage';
 import { PcLocators } from './locators';
+import { MainPage } from './main.page';
 
 export class ProductPage extends BasePage {
 
+  /** 홈의 지금 방송중 상품 상세로 이동하고 상품명을 반환한다. */
+  async openCurrentOnAirProduct(): Promise<string> {
+    await this.goToHome();
+    const section = this.page.locator(PcLocators.main.onAirDisplay);
+    const title = section.locator(PcLocators.main.onAirTitle);
+    await section.scrollIntoViewIfNeeded();
+    await expect(title, '현재 방송 상품 링크가 노출되어야 한다').toBeVisible();
+    const productName = (await title.innerText()).trim();
+    const href = await title.getAttribute('href');
+    expect(href, '현재 방송 상품 상세 경로').toMatch(/^\/display\/product\/\d+/);
+    await title.click();
+    await expect(this.page).toHaveURL(url => url.pathname === new URL(href!, this.page.url()).pathname);
+    await this.closeModal();
+    await expect(this.page.locator(PcLocators.product.productName), '현재 방송 상품 상세가 로딩되어야 한다')
+      .toContainText(productName, { timeout: 15_000 });
+    return productName;
+  }
+
+  /** 통합 테스트에서 처음 선택한 상품 상세로 다시 돌아온다. */
+  async reopenProductDetail(url: string, productName: string) {
+    const current = new URL(this.page.url());
+    const target = new URL(url);
+    if (current.pathname !== target.pathname || current.search !== target.search) await this.goToUrl(url);
+    await this.closeModal();
+    await expect(this.page.locator(PcLocators.product.productName), '14번에서 선택한 상품 상세가 로딩되어야 한다')
+      .toContainText(productName, { timeout: 15_000 });
+  }
+
   /** ON AIR 버튼 클릭 */
   async clickOnAirButton() {
-    await this.click(PcLocators.main.onAirButton);
+    const button = this.page.locator(PcLocators.main.onAirButton).filter({ visible: true });
+    if (await button.count()) await button.first().click();
+    else await this.page.locator(PcLocators.main.onAirDisplay).scrollIntoViewIfNeeded();
   }
 
   /** ON AIR > 비디오 재생 */
   async playVideo() {
-    await this.click(PcLocators.product.onAirVideoPoster);
+    const video = this.page.locator(`main video, ${PcLocators.product.onAirVideo}`).filter({ visible: true }).first();
+    if (await video.count() && await video.evaluate(element => (element as HTMLVideoElement).paused)) {
+      await video.evaluate(element => (element as HTMLVideoElement).play());
+    }
     await this.wait(2);
   }
 
   /** 비디오 재생 여부 반환 (autoplay 속성 존재 여부) */
   async isVideoPlaying(): Promise<boolean> {
-    return await this.getAttribute(PcLocators.product.onAirVideo, 'autoplay') !== null;
+    const video = this.page.locator(`main video, ${PcLocators.product.onAirVideo}`).filter({ visible: true }).first();
+    await video.waitFor({ state: 'visible' });
+    return await video.evaluate(element => {
+      const media = element as HTMLVideoElement;
+      return !media.paused || media.autoplay;
+    });
   }
 
   /** 편성표 탭 클릭 */
   async clickBroadcastSchedule() {
-    await this.click(PcLocators.main.navItems);
+    const schedule = this.page.locator(PcLocators.main.onAirDisplay).locator(PcLocators.main.onAirSchedule);
+    await schedule.scrollIntoViewIfNeeded();
+    await schedule.click();
   }
 
-  /** 방송알림 버튼 클릭 */
-  async clickAlarmButton() {
-    await this.lastClick(PcLocators.product.alarmButton);
-  }
-
-  /** 광고성 SMS 수신 동의 체크박스 클릭 (없으면 스킵) */
-  async clickSmsConsentCheckbox() {
-    try {
-      await this.click(PcLocators.product.smsConsentCheckbox);
-    } catch {
-      // 체크박스 없으면 스킵
+  /** 방송알림 대상 상품명을 저장하고 알림 버튼 클릭 */
+  async clickAlarmButton(expectedProductName?: string): Promise<string> {
+    const buttons = this.page.locator(PcLocators.product.alarmButton);
+    let button = buttons.last();
+    if (expectedProductName) {
+      const live = this.page.locator(PcLocators.main.liveBroadcast);
+      const matchingProduct = live.locator(PcLocators.main.liveProduct).filter({
+        has: this.page.getByRole('link', { name: expectedProductName, exact: true }),
+      });
+      await expect(matchingProduct, '현재 방송 상품이 편성표에 있어야 한다').toHaveCount(1);
+      button = matchingProduct.locator(PcLocators.product.alarmButton);
     }
+    const item = button.locator('xpath=ancestor::*[.//a[contains(@class,"OnAirProgram_title")]][1]');
+    const productName = (await item.locator(PcLocators.main.liveProductTitle).innerText()).trim();
+    await button.click();
+    return productName;
+  }
+
+  /** 신규 방송알림 등록 팝업 노출 여부 */
+  async isBroadcastNotificationModalVisible(): Promise<boolean> {
+    const heading = this.page.getByRole('heading', { name: '방송 알림 등록', exact: true });
+    await heading.waitFor({ state: 'visible', timeout: 2_000 }).catch(() => {});
+    return heading.isVisible();
+  }
+
+  /** 광고성 SMS 수신 동의 스위치가 있으면 활성화 */
+  async clickSmsConsentCheckbox() {
+    const name = '(필수) 광고성 SMS 수신 동의';
+    await expect(this.page.locator(PcLocators.product.broadcastNotificationRegisterButton)).toBeVisible();
+    const checkbox = this.page.getByRole('checkbox', { name, exact: true });
+    if (!await checkbox.count()) return;
+    await expect(checkbox).toBeVisible();
+    if (!await checkbox.isChecked()) await checkbox.locator('xpath=..').click();
+    await expect(checkbox).toBeChecked();
+  }
+
+  /** 상품 알림만 검증하도록 함께 알림등록을 해제 */
+  async disableTogetherNotification() {
+    const checkbox = this.page.getByRole('checkbox', { name: '함께 알림등록', exact: true });
+    if (!await checkbox.count() || !await checkbox.isChecked()) return;
+    await checkbox.locator('xpath=..').click();
+    await expect(checkbox).not.toBeChecked();
   }
 
   /** 방송 알림 등록하기 버튼 클릭 */
@@ -43,19 +115,35 @@ export class ProductPage extends BasePage {
     await this.click(PcLocators.product.broadcastNotificationRegisterButton);
   }
 
+  /** 방송알림 등록 결과 안내가 있으면 확인 */
+  async confirmBroadcastNotificationIfVisible() {
+    const confirm = this.page.getByText('확인', { exact: true }).filter({ visible: true }).last();
+    await confirm.waitFor({ state: 'visible', timeout: 3_000 }).catch(() => {});
+    if (await confirm.isVisible()) await confirm.click();
+  }
+
   /** 방송 알림 등록 후 내 방송알림보기 버튼 클릭 */
   async clickMyBroadcastNotificationButton() {
-    await this.click(PcLocators.product.myBroadcastNotificationButton);
+    const button = this.page.locator(PcLocators.product.myBroadcastNotificationButton);
+    if (await button.isVisible()) {
+      await button.click();
+      return;
+    }
+    await this.goToUrl(new URL(PcLocators.urls.myPage, this.page.url()).href);
+    const link = this.page.getByRole('link', { name: '방송 알림 설정', exact: true });
+    const heading = this.page.getByRole('heading', { name: '방송알림', exact: true, level: 1 });
+    await expect(async () => {
+      if (!await heading.isVisible()) await link.click();
+      await expect(heading).toBeVisible({ timeout: 3_000 });
+    }).toPass({ timeout: 15_000, intervals: [1_000] });
   }
 
-  /** 알림 해제 버튼 노출 여부 반환 */
-  async isDisableNotificationButtonVisible(): Promise<boolean> {
-    return await this.isVisible(PcLocators.product.disableNotificationButton);
-  }
-
-  /** 알림 해제 버튼 클릭 */
-  async clickDisableNotificationButton() {
-    await this.click(PcLocators.product.disableNotificationButton);
+  /** 마이페이지 방송알림 목록에서 등록 상품명 확인 */
+  async getRegisteredBroadcastNotification(productName: string): Promise<string | null> {
+    const normalize = (name: string) => name.replace(/^(?:\[[^\]]+\]\s*)+/, '').trim();
+    const expected = normalize(productName);
+    const names = await this.page.locator('main strong').allTextContents();
+    return names.find(name => normalize(name) === expected) ?? null;
   }
 
   /** MD's Pick 상품 영역으로 스크롤 */
@@ -190,13 +278,24 @@ export class ProductPage extends BasePage {
 
   /** 상품 > 구매하기 버튼 클릭 (옵션 선택 포함) */
   async clickProductBuy() {
-    await this.click(PcLocators.main.onAirBuyButton);
+    const modal = this.page.locator(PcLocators.main.purchaseModal);
+    const button = this.page.locator('main [class*="ButtonPurchase_wrap"]').getByRole('button', { name: /구매하기$/ }).first();
+    await expect(async () => {
+      if (!await modal.isVisible()) await button.click();
+      await expect(modal, '구매 옵션 모달이 열려야 한다').toBeVisible({ timeout: 3_000 });
+    }).toPass({ timeout: 15_000, intervals: [1_000] });
     await this.selectFirstEnabledOption();
-    await this.lastClick(PcLocators.main.onAirBuyButton);
+    const confirm = modal.getByRole('button', { name: /구매하기$/ }).last();
+    await expect(confirm).toBeVisible();
+    await expect(confirm).toBeEnabled();
+    await confirm.click();
+    await this.page.waitForURL(url => url.pathname === '/' + PcLocators.urls.onAirBuyOrder, { timeout: 20_000, waitUntil: 'domcontentloaded' });
   }
 
   /** 구매하기 주문서 페이지 URL 확인 */
   async isBuyOrderPage(): Promise<boolean> {
-    return this.urlContains(PcLocators.urls.onAirBuyOrder);
+    const loaded = await new MainPage(this.page).isBuyOrderPage();
+    await this.wait(2);
+    return loaded;
   }
 }

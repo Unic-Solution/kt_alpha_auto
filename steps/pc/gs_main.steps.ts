@@ -18,7 +18,7 @@ export class GsMainSteps {
       await parameter(`nav[${index}]`, isVisible ? 'visible' : 'not visible');
     }
 
-    return results.every(({ isVisible }) => isVisible);
+    return results.length > 0 && results.every(({ isVisible }) => isVisible);
   }
 
   /** 기프티쇼 카테고리 및 필터 기능 확인 */

@@ -1,3 +1,4 @@
+import { expect } from '@playwright/test';
 import { BasePage } from '../../common/BasePage';
 import { PcLocators } from './locators';
 
@@ -57,7 +58,20 @@ export class GsProductPage extends BasePage {
 
   /** 선물하기 주문서 페이지 URL 확인 */
   async isGiftOrderPage(): Promise<boolean> {
-    return this.urlContains(PcLocators.urls.giftShowGiftOrder);
+    await expect(this.page).toHaveURL(
+      url => url.pathname === '/' + PcLocators.urls.giftShowGiftOrder,
+      { timeout: 20_000 },
+    );
+    const main = this.page.locator('main');
+    await expect(main, '기프티쇼 선물 주문서 본문이 노출되어야 한다').toBeVisible();
+    await expect(main).not.toBeEmpty();
+    await expect(this.page.locator(PcLocators.giftShowProduct.senderInput), '보내는 사람 입력 영역이 노출되어야 한다')
+      .toBeVisible({ timeout: 15_000 });
+    await expect(this.page.locator(PcLocators.giftShowProduct.paymentButton), '결제 진행 버튼 영역이 노출되어야 한다')
+      .toBeVisible();
+    await this.page.evaluate(() => window.scrollTo(0, 0));
+    await this.page.waitForTimeout(2_000);
+    return true;
   }
 
   /** 선물하기 > 기프티쇼 대표 번호 버튼 클릭 */
@@ -93,6 +107,14 @@ export class GsProductPage extends BasePage {
     return this.extractNumber(text);
   }
 
+  /** 상단 받는 사람 인원 수가 기대값으로 갱신되는지 확인 */
+  async waitForTotalRecipients(expected: number) {
+    const total = this.page.locator(PcLocators.giftShowProduct.totalRecipients);
+    await expect(total).toHaveText(`총 ${expected}명`, { timeout: 10_000 });
+    await total.scrollIntoViewIfNeeded();
+    await this.page.waitForTimeout(2_000);
+  }
+
   /** 선물하기 > 결제 진행 버튼 클릭 */
   async clickPaymentButton() {
     await this.click(PcLocators.giftShowProduct.paymentButton);
@@ -120,7 +142,18 @@ export class GsProductPage extends BasePage {
 
   /** 상품 결제 주문서 페이지 URL 확인 */
   async isPaymentPage(): Promise<boolean> {
-    return this.urlContains(PcLocators.urls.giftShowPaymentOrder);
+    await expect(this.page).toHaveURL(
+      url => url.pathname === '/' + PcLocators.urls.giftShowPaymentOrder,
+      { timeout: 20_000 },
+    );
+    const main = this.page.locator('main');
+    await expect(main, '기프티쇼 상품 결제 본문이 노출되어야 한다').toBeVisible();
+    await expect(main).not.toBeEmpty();
+    await expect(main.getByRole('button', { name: /결제하기$/ }), '결제하기 버튼이 노출되어야 한다')
+      .toBeVisible({ timeout: 15_000 });
+    await this.page.evaluate(() => window.scrollTo(0, 0));
+    await this.page.waitForTimeout(2_000);
+    return true;
   }
 
   /** 선물 꾸미기 이미지 선택 후 선택 이미지가 활성 상태로 적용됐는지 확인 */

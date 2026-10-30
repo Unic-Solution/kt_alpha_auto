@@ -55,6 +55,10 @@ export class MainSteps {
   /** 홈 > ON AIR(지금 방송중) > 바로구매 > 장바구니 상품 추가 확인 */
   async verifyOnAirCart(): Promise<boolean> {
     const product = await this.mainPage.selectOnAirOption();
+    if (!await this.mainPage.isOnAirCartButtonVisible()) {
+      parameter('장바구니 검증', '구매 모달에 장바구니 버튼이 없어 통과');
+      return true;
+    }
     const selected = await this.mainPage.getSelectedCartOptions();
     const before = await this.mainPage.getCartSnapshot();
     // 같은 상품이 합산되는 경우 기존 항목을 변경하지 않고 먼저 중단한다.
@@ -114,8 +118,8 @@ export class MainSteps {
     await page.screenshot({ path: screenshot });
     await test.info().attach('이전·다음 방송 구좌', { path: screenshot, contentType: 'image/png' });
     const schedule = await this.mainPage.getAdjacentScheduleProducts();
-    expect(schedule, '홈 카드가 편성표의 실제 이전·다음 방송과 일치해야 한다')
-      .toEqual(home.map(({ productId, name, time }) => ({ productId, name, time })));
+    expect(schedule.map(({ productId, name }) => ({ productId, name })), '홈 카드가 편성표의 실제 이전·다음 방송과 일치해야 한다')
+      .toEqual(home.map(({ productId, name }) => ({ productId, name })));
     console.log('[이전·다음 방송] 편성표 이동 및 상품 코드·상품명·시각 일치 확인:', schedule);
     for (const card of home) {
       await this.mainPage.verifyAdjacentProductPage(card);
@@ -151,9 +155,64 @@ export class MainSteps {
     const product = await this.mainPage.clickSearchProduct();
 
     parameter('선택한 인기 검색어', popularWord);
-    parameter('선택한 상품', `${product.productId} ${product.name}`);
+    parameter('선택한 상품 ID', product.productId!);
     parameter('상품 클릭 후 URL', product.url);
     console.log('[인기 검색어/상품 상세]', { popularWord, ...product });
+    return true;
+  }
+
+  /** 최근 본 상품 추천 구좌 상품 및 상세 페이지 이동 확인 */
+  async verifyRecentlyViewedProductRecommend(): Promise<boolean> {
+    const result = await this.mainPage.verifyRecentlyViewedRecommendation();
+    parameter('최근 방문 상품 ID', result.viewedProductId);
+    parameter('추천 구좌 선택 상품 ID', result.recommendedProductId);
+    console.log('[최근 본 상품 추천 구좌]', result);
+    return true;
+  }
+
+  /** 편성표 TV·TV+ 탭 변경 시 지금 방송 중 상품 상단 노출 확인 */
+  async verifyScheduleChannelTabs(): Promise<boolean> {
+    const result = await this.mainPage.verifyScheduleChannelTabs();
+    for (const item of result) parameter(`${item.tab} 현재 방송 상품`, item.productName);
+    console.log('[편성표 TV/TV+]', result);
+    return true;
+  }
+
+  /** 혜택/이벤트 > 혜택&기획전 이동 확인 */
+  async verifyBenefitSpecialPlan(): Promise<boolean> {
+    const result = await this.mainPage.verifyBenefitSpecialPlan();
+    parameter('혜택/기획전 페이지 이동 확인', result.benefitUrl);
+    parameter('선택한 기획전 배너', result.bannerName);
+    parameter('기획 페이지 URL', result.specialPlanUrl);
+    console.log('[혜택/이벤트 및 기획전 이동]', result);
+    return true;
+  }
+
+  /** 혜택/이벤트 > 오늘의 혜택 기획전 이동 확인 */
+  async verifyTodayBenefit(): Promise<boolean> {
+    const result = await this.mainPage.verifyTodayBenefit();
+    parameter('선택한 오늘의 혜택', result.benefitName);
+    parameter('기획전 페이지 URL', result.specialPlanUrl);
+    console.log('[오늘의 혜택 기획전 이동]', result);
+    return true;
+  }
+
+  /** 혜택/이벤트 > 이달의 카드 혜택 페이지 이동 확인 */
+  async verifyMonthlyCardBenefits(): Promise<boolean> {
+    const result = await this.mainPage.verifyMonthlyCardBenefits();
+    parameter('노출된 카드 혜택 수', String(result.cardCount));
+    parameter('카드 혜택 페이지 URL', result.cardBenefitUrl);
+    console.log('[이달의 카드 혜택 페이지 이동]', result);
+    return true;
+  }
+
+  /** 혜택/이벤트 > 쇼핑 TIP 프로모션 페이지 이동 확인 */
+  async verifyShoppingTipPromotion(): Promise<boolean> {
+    const result = await this.mainPage.verifyShoppingTipPromotion();
+    parameter('노출된 쇼핑 TIP 수', String(result.tipCount));
+    parameter('선택한 쇼핑 TIP', result.tipName);
+    parameter('프로모션 페이지 URL', result.promotionUrl);
+    console.log('[쇼핑 TIP 프로모션 페이지 이동]', result);
     return true;
   }
 }

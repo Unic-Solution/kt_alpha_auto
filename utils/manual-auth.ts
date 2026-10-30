@@ -13,11 +13,12 @@ export async function notifyManualAuth(platform: string, action: '로그인' | '
   const runUrl = process.env.GITHUB_REPOSITORY && process.env.GITHUB_RUN_ID
     ? `${process.env.GITHUB_SERVER_URL ?? 'https://github.com'}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
     : undefined;
+  const threadTs = process.env.SLACK_THREAD_TS;
   const text = [message, process.env.RUNNER_NAME && `러너: ${process.env.RUNNER_NAME}`, runUrl && `실행 기록: ${runUrl}`].filter(Boolean).join('\n');
   try {
     const response = await fetch(webhook, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text }), signal: AbortSignal.timeout(5_000),
+      body: JSON.stringify({ text, ...(threadTs && { thread_ts: threadTs }) }), signal: AbortSignal.timeout(5_000),
     });
     if (!response.ok) console.warn(`[Slack] 사용자 작업 알림 전송 실패(HTTP ${response.status}). 브라우저에서는 계속 대기합니다.`);
   } catch {
@@ -29,13 +30,14 @@ export async function notifyManualAuth(platform: string, action: '로그인' | '
 export async function waitForManualAuthentication(
   page: Page, logout: Locator, certification: Locator, platform: string,
   loginRequired: boolean, timeout = 300_000,
+  isAlternativeCompletion: () => Promise<boolean> = async () => false,
 ) {
-  if (await logout.isVisible()) return;
+  if (await logout.isVisible() || await isAlternativeCompletion()) return;
   if (loginRequired && !await certification.isVisible()) await notifyManualAuth(platform, '로그인');
   let certificationNotified = false;
   await expect.poll(async () => {
     if (page.isClosed()) throw new Error('사용자 인증 대기 중 브라우저가 닫혔습니다.');
-    if (await logout.isVisible()) return true;
+    if (await logout.isVisible() || await isAlternativeCompletion()) return true;
     if (!certificationNotified && await certification.isVisible()) {
       certificationNotified = true;
       await notifyManualAuth(platform, '본인인증');

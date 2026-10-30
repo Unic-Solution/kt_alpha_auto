@@ -10,21 +10,26 @@ describe('사용자 로그인·본인인증 대기와 Slack 알림', { concurren
   let browser: Browser;
   let page: Page;
   let messages: string[];
+  let threadTimestamps: Array<string | undefined>;
   const originalFetch = globalThis.fetch;
-  const keys = ['LOGIN_ID', 'LOGIN_PW', 'SLACK_NOTIFICATIONS_ENABLED', 'SLACK_WEBHOOK_URL'] as const;
+  const keys = ['LOGIN_ID', 'LOGIN_PW', 'SLACK_NOTIFICATIONS_ENABLED', 'SLACK_WEBHOOK_URL', 'SLACK_THREAD_TS'] as const;
   const originalEnv = Object.fromEntries(keys.map(key => [key, process.env[key]]));
   before(async () => { browser = await chromium.launch({ channel: 'chrome', headless: true }); });
   after(async () => { await browser.close(); });
   beforeEach(async () => {
     page = await browser.newPage();
     messages = [];
+    threadTimestamps = [];
     process.env.LOGIN_ID = 'qa-test-id';
     process.env.LOGIN_PW = 'qa-test-password';
     process.env.SLACK_NOTIFICATIONS_ENABLED = 'true';
     process.env.SLACK_WEBHOOK_URL = 'https://slack.test.invalid/webhook';
+    process.env.SLACK_THREAD_TS = '1234567890.123456';
     globalThis.fetch = async (url, init) => {
       assert.equal(url, 'https://slack.test.invalid/webhook');
-      messages.push(JSON.parse(String(init?.body)).text);
+      const body = JSON.parse(String(init?.body));
+      messages.push(body.text);
+      threadTimestamps.push(body.thread_ts);
       return new Response('ok', { status: 200 });
     };
   });
@@ -77,6 +82,7 @@ describe('사용자 로그인·본인인증 대기와 Slack 알림', { concurren
       assert.equal(attempts(), 1, '자동 로그인은 한 번만 시도한다');
       assert.deepEqual(saved, [platform === 'PC' ? 'auth.json' : 'mw-auth.json']);
       assert.ok(messages.every(text => !text.includes('qa-test-id') && !text.includes('qa-test-password')));
+      assert.ok(threadTimestamps.every(value => value === '1234567890.123456'));
     });
   }
 

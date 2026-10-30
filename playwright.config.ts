@@ -13,6 +13,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
 
   reporter: [
+    ['list', { printSteps: true }],
     ['html'],
     ['./utils/suite-timing-reporter.ts'],
   ],
@@ -41,7 +42,7 @@ export default defineConfig({
     // PC WEB (auth 필요)
     {
       name: 'pc',
-      testMatch: /tests\/pc\/(?!auth\.setup|login|integrated).*\.test\.ts/,
+      testMatch: /tests\/pc\/(?!auth\.setup|login|buy-login|integrated).*\.test\.ts/,
       fullyParallel: false,
       use: {
         viewport: { width: 1440, height: 900 },
@@ -53,7 +54,7 @@ export default defineConfig({
     // PC WEB (auth 불필요 - login, integrated)
     {
       name: 'pc-no-auth',
-      testMatch: /tests\/pc\/(login|integrated)\.test\.ts/,
+      testMatch: /tests\/pc\/(login|buy-login|integrated)\.test\.ts/,
       fullyParallel: false,
       use: {
         viewport: { width: 1440, height: 900 },

@@ -2,6 +2,7 @@ import { test } from '../../fixtures/web/pc.fixture';
 import { LoginSteps } from '../../steps/pc/login.steps';
 import { MainSteps } from '../../steps/pc/main.steps';
 import { ProductSteps } from '../../steps/pc/product.steps';
+import { productCases } from '../../steps/pc/product.cases';
 import { QuickSteps } from '../../steps/pc/quick.steps';
 import { MySteps } from '../../steps/pc/my.steps';
 import { GsMainSteps } from '../../steps/pc/gs_main.steps';
@@ -17,7 +18,7 @@ const ENV = {
 };
 
 test('통합 테스트', async ({ sharedBasePage }) => {
-  test.setTimeout(900_000);
+  test.setTimeout(1_500_000);
 
   const loginSteps = new LoginSteps(sharedBasePage);
   const mainSteps = new MainSteps(sharedBasePage);
@@ -29,68 +30,66 @@ test('통합 테스트', async ({ sharedBasePage }) => {
 
   const run = createRun('PC Web', '통합 테스트', sharedBasePage.getPage());
 
-  await run('로그인 상태 확인', () => loginSteps.verifyLocalLogin());
+  await run('[테스트케이스 1번] GNB 메뉴별 화면 스크롤 후 메뉴 노출', () => mainSteps.verifyAllNavItems());
+  await run('[테스트케이스 2번] ON AIR 현재 방송 상품 정보 노출', () => mainSteps.verifyOnAirModal());
+  await run('[테스트케이스 3번] ON AIR 바로구매에서 선물하기', () => mainSteps.verifyOnAirGift());
+  await run('[테스트케이스 4번] ON AIR 바로구매에서 장바구니', () => mainSteps.verifyOnAirCart());
+  await run('[테스트케이스 5번] ON AIR 바로구매에서 구매하기', () => mainSteps.verifyOnAirBuy());
+  await run('[테스트케이스 6번] 이전·다음 방송', () => mainSteps.verifyAdjacentBroadcasts());
+  await run('[테스트케이스 7번] 탭바', () => quickSteps.verifyFixedNavigation());
+  await run('[테스트케이스 8번] 카테고리', () => mainSteps.verifyCategory());
+  await run('[테스트케이스 9번] 검색', () => mainSteps.verifySearch());
+  await run('[테스트케이스 10번] 일반 계정 로그인 확인', () => loginSteps.verifyLocalLogin());
+  await run('[테스트케이스 12번] 상품 구매하기에서 일반 계정 로그인', () => loginSteps.verifyBuyAndLogin());
 
-  await run('GNB 메뉴별 화면 확인', () => mainSteps.verifyAllNavItems());
-  await run('ON AIR > 현재 방송 중인 상품 정보 노출 확인', () => mainSteps.verifyOnAirModal());
-  await run('ON AIR > 바로구매 > 선물하기 주문서 페이지 이동 확인', () => mainSteps.verifyOnAirGift());
-  await run('ON AIR > 바로구매 > 장바구니 상품 추가 확인', () => mainSteps.verifyOnAirCart());
-  await run('ON AIR > 바로구매 > 구매하기 주문서 페이지 이동 확인', () => mainSteps.verifyOnAirBuy());
-  await run('이전·다음 방송 노출 및 편성표·상품 상세 이동 확인', () => mainSteps.verifyAdjacentBroadcasts());
-  await run('고정 메뉴 홈·카테고리·마이·채널 전환·TOP 확인', () => quickSteps.verifyFixedNavigation());
-  await run('카테고리 정상 노출 및 필터 기능 확인', () => mainSteps.verifyCategory());
-  await run('검색 후 상품 상세 페이지 이동 확인', () => mainSteps.verifySearch());
+  for (const item of productCases) {
+    await run(`[테스트케이스 ${item.number}번] ${item.name}`, () => item.run(productSteps));
+  }
 
-  await run('ON AIR > VOD 영상 재생 확인', () => productSteps.verifyVOD());
-  await run('편성표 > 방송알림 신청 및 등록 완료 확인', () => productSteps.verifyBroadcastNotification());
-  await run('상품 > 좋아요 추가 및 삭제 확인', () => productSteps.verifyProductLike());
-  await run('상품 > 상세정보 탭 노출 확인', () => productSteps.verifyProductDetailInfo());
-  await run('상품 > 구매정보 탭 노출 확인', () => productSteps.verifyProductBuyInfo());
-  await run('상품 > 상품평 탭 노출 확인', () => productSteps.verifyProductReview());
-  await run('상품 > 상품문의 탭 노출 확인', () => productSteps.verifyProductQna());
-  await run('상품 > 선물하기 주문서 페이지 이동 확인', () => productSteps.verifyProductGift());
-  await run('상품 > 장바구니 상품 추가 확인', () => productSteps.verifyProductCart());
-  await run('상품 > 구매하기 주문서 페이지 이동 확인', () => productSteps.verifyProductBuy());
+  await run('[테스트케이스 40번] 주문 내역', () => mySteps.verifyOrderHistory());
+  await run('[테스트케이스 41번] 취소·교환·반품', () => mySteps.verifyClaimHistory());
+  await run('[테스트케이스 42번] 기프티쇼 선물함', () => mySteps.verifyGiftShow());
+  await run('[테스트케이스 43번] 잔액형 상품권 내역', () => mySteps.verifyGiftShowBalance());
+  await run('[테스트케이스 44번] 거래 증빙 서류', () => mySteps.verifyTaxList());
+  await run('[테스트케이스 45번] 배송지 관리', () => mySteps.verifyDeliveryAddress());
+  await run('[테스트케이스 46번] 연락처 관리', () => mySteps.verifyPhoneAddress());
+  await run('[테스트케이스 47번] 환불 계좌 관리', () => mySteps.verifyRefundAccount());
+  await run('[테스트케이스 48번] 선물 메시지 관리', () => mySteps.verifyGiftMessage());
+  await run('[테스트케이스 49번] 알파포인트', () => mySteps.verifyAlphaPoint());
+  await run('[테스트케이스 50번] 이용권 등록', () => mySteps.verifyTicket());
+  await run('[테스트케이스 51번] 방송 알림 설정', () => mySteps.verifyBroadcastNotification());
+  await run('[테스트케이스 52번] 간편 로그인 연결', () => mySteps.verifySimpleLogin());
+  await run('[테스트케이스 53번] 회원 정보 수정', () => mySteps.verifyModifyCustomerInfo(ENV.name, ENV.year, ENV.month, ENV.day, ENV.phoneNumber));
+  await run('[테스트케이스 54번] 혜택 관리', () => mySteps.verifyBenefit());
+  await run('[테스트케이스 55번] 회원 탈퇴', () => mySteps.verifyWithdrawal());
+  await run('[테스트케이스 56번] 장바구니', () => mySteps.verifyCart());
+  await run('[테스트케이스 57번] 좋아요', () => mySteps.verifyLike());
+  await run('[테스트케이스 58번] 상품평', () => mySteps.verifyReview());
+  await run('[테스트케이스 59번] 최근 본 상품', () => mySteps.verifyRecently());
+  await run('[테스트케이스 60번] 1:1 문의하기', () => mySteps.verifyInquiry());
+  await run('[테스트케이스 61번] 문의 내역', () => mySteps.verifyInquiryList());
+  await run('[테스트케이스 62번] 공지 사항', () => mySteps.verifyNotice());
+  await run('[테스트케이스 63번] 자주하는 질문', () => mySteps.verifyFaq());
 
-  await run('독바 > ON AIR > 바로구매 > 선물하기 주문서 페이지 이동 확인', () => quickSteps.verifyOnAirGift());
-  await run('독바 > ON AIR > 바로구매 > 장바구니 상품 추가 확인', () => quickSteps.verifyOnAirCart());
-  await run('독바 > ON AIR > 바로구매 > 구매하기 주문서 페이지 이동 확인', () => quickSteps.verifyOnAirBuy());
+  await run('[테스트케이스 64번] 기프티쇼 GNB', () => gsMainSteps.gsVerifyAllNavItems());
+  await run('[테스트케이스 65번] 기프티쇼 카테고리', () => gsMainSteps.gsVerifyCategory());
+  await run('[테스트케이스 66번] 기프티쇼 검색', () => gsMainSteps.gsVerifySearch());
 
-  await run('주문 내역 확인', () => mySteps.verifyOrderHistory());
-  await run('취소/교환/반품 내역 확인', () => mySteps.verifyClaimHistory());
-  await run('기프티쇼 선물함 확인', () => mySteps.verifyGiftShow());
-  await run('잔액형 상품권 내역 확인', () => mySteps.verifyGiftShowBalance());
-  await run('거래 증빙 서류 신청/조회 확인', () => mySteps.verifyTaxList());
-  await run('배송지 관리 확인', () => mySteps.verifyDeliveryAddress());
-  await run('연락처 관리 확인', () => mySteps.verifyPhoneAddress());
-  await run('환불 계좌 관리 확인', () => mySteps.verifyRefundAccount());
-  await run('선물 메시지 관리 확인', () => mySteps.verifyGiftMessage());
-  await run('알파포인트 확인', () => mySteps.verifyAlphaPoint());
-  await run('이용권등록 확인', () => mySteps.verifyTicket());
-  await run('방송 알림 설정 확인', () => mySteps.verifyBroadcastNotification());
-  await run('간편 로그인 연결 확인', () => mySteps.verifySimpleLogin());
-  await run('회원 정보 수정 확인', () => mySteps.verifyModifyCustomerInfo(ENV.name, ENV.year, ENV.month, ENV.day, ENV.phoneNumber));
-  await run('혜택 관리 확인', () => mySteps.verifyBenefit());
-  await run('장바구니 확인', () => mySteps.verifyCart());
-  await run('좋아요 확인', () => mySteps.verifyLike());
-  await run('상품평 확인', () => mySteps.verifyReview());
-  await run('최근 본 상품 확인', () => mySteps.verifyRecently());
-  await run('1:1 문의하기 확인', () => mySteps.verifyInquiry());
-  await run('문의 내역 확인', () => mySteps.verifyInquiryList());
-  await run('공지 사항 확인', () => mySteps.verifyNotice());
-  await run('자주하는 질문 확인', () => mySteps.verifyFaq());
-
-  await run('기프티쇼 GNB 메뉴별 화면 노출 확인', () => gsMainSteps.gsVerifyAllNavItems());
-  await run('기프티쇼 카테고리 및 필터 기능 확인', () => gsMainSteps.gsVerifyCategory());
-  await run('기프티쇼 검색 후 상품 상세 페이지 이동 확인', () => gsMainSteps.gsVerifySearch());
-
-  await run('기프티쇼 > 상품 > 좋아요 추가 및 삭제 확인', () => gsProductSteps.gsVerifyProductLike());
-  await run('기프티쇼 > 상품 > 상세정보 탭 노출 확인', () => gsProductSteps.gsVerifyProductDetailInfo());
-  await run('기프티쇼 > 상품 > 구매정보 탭 노출 확인', () => gsProductSteps.gsVerifyProductBuyInfo());
-  await run('기프티쇼 > 상품 > 선물하기 주문서 이동 확인', () => gsProductSteps.gsVerifyProductGift());
-  await run('기프티쇼 > 상품 > 선물하기 > 기프티쇼 대표 번호로 보내기 확인', () => gsProductSteps.gsVerifyGiftShowMainPhoneNumber(ENV.name));
-  await run('기프티쇼 > 상품 > 선물하기 > 내 번호로 보내기 확인', () => gsProductSteps.gsVerifyMyPhoneNumber(ENV.name));
-  await run('기프티쇼 > 상품 > 선물하기 > 받는 사람 확인', () => gsProductSteps.gsVerifyRecipient(ENV.phoneNumber, ENV.name));
-  await run('기프티쇼 > 상품 > 선물하기 > 결제 진행 및 상품 결제 페이지 이동 확인', () => gsProductSteps.gsVerifyPayment());
-  await run('기프티쇼 > 상품 > 나에게 보내기 주문서 이동 확인', () => gsProductSteps.gsVerifyProductSendToMe());
+  await run('[테스트케이스 67번] 기프티쇼 상품 좋아요', () => gsProductSteps.gsVerifyProductLike());
+  await run('[테스트케이스 68번] 기프티쇼 상품 상세정보', () => gsProductSteps.gsVerifyProductDetailInfo());
+  await run('[테스트케이스 69번] 기프티쇼 상품 구매정보', () => gsProductSteps.gsVerifyProductBuyInfo());
+  await run('[테스트케이스 70번] 기프티쇼 나에게 보내기', () => gsProductSteps.gsVerifyProductSendToMe());
+  await run('[테스트케이스 71번] 기프티쇼 바로구매', () => gsProductSteps.gsVerifyProductGift());
+  await run('[테스트케이스 74번] 기프티쇼 대표 번호', () => gsProductSteps.gsVerifyGiftShowMainPhoneNumber(ENV.name));
+  await run('[테스트케이스 75번] 내 번호', () => gsProductSteps.gsVerifyMyPhoneNumber(ENV.name));
+  await run('[테스트케이스 77번] 다른 사람에게 보내기', () => gsProductSteps.gsVerifyRecipient(ENV.phoneNumber, ENV.name));
+  await run('[테스트케이스 78번] 선물 꾸미기 배너·카드 이미지', () => gsProductSteps.gsVerifyGiftDecoration());
+  await run('[테스트케이스 79번] 선물 꾸미기 메시지', () => gsProductSteps.gsVerifyGiftMessage('감사합니다.'));
+  await run('[테스트케이스 80번] 기프티쇼 결제 진행', () => gsProductSteps.gsVerifyPayment(ENV.phoneNumber, ENV.name));
+  await run('[테스트케이스 83번] 최근 본 상품 추천 구좌', () => mainSteps.verifyRecentlyViewedProductRecommend());
+  await run('[테스트케이스 90번] 편성표 TV·TV+ 현재 방송 상품', () => mainSteps.verifyScheduleChannelTabs());
+  await run('[테스트케이스 91번] 혜택/기획전 페이지 이동 확인', () => mainSteps.verifyBenefitSpecialPlan());
+  await run('[테스트케이스 92번] 오늘의 혜택 기획전 이동 확인', () => mainSteps.verifyTodayBenefit());
+  await run('[테스트케이스 93번] 이달의 카드 혜택 페이지 이동 확인', () => mainSteps.verifyMonthlyCardBenefits());
+  await run('[테스트케이스 94번] 쇼핑 TIP 프로모션 페이지 이동 확인', () => mainSteps.verifyShoppingTipPromotion());
 });

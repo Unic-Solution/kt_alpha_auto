@@ -2,6 +2,11 @@ name: KT ALPHA 통합 테스트(PC)
 
 on:
   workflow_dispatch:
+    inputs:
+      slack_thread_ts:
+        description: '진행상황을 표시할 Slack 스레드 timestamp'
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -34,6 +39,7 @@ jobs:
         env:
           SLACK_NOTIFICATIONS_ENABLED: 'true'
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_THREAD_TS: ${{ inputs.slack_thread_ts }}
           LOGIN_ID: ${{ secrets.LOGIN_ID }}
           LOGIN_PW: ${{ secrets.LOGIN_PW }}
           NAME: ${{ secrets.NAME }}

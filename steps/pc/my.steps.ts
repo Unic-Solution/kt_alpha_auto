@@ -10,6 +10,12 @@ export class MySteps {
     this.myPage = new MyPage(basePage.getPage());
   }
 
+  private async waitForManualAuthenticationIfNeeded() {
+    if (!await this.myPage.isManualAuthenticationVisible()) return;
+    await notifyManualAuth('PC', '본인인증');
+    await this.myPage.waitForManualAuthentication();
+  }
+
   /** 나의 쇼핑 현황 > 주문 내역 확인 */
   async verifyOrderHistory(): Promise<boolean> {
     await this.myPage.clickMyButton();
@@ -28,7 +34,10 @@ export class MySteps {
   async verifyGiftShow(): Promise<boolean> {
     await this.myPage.clickMyButton();
     await this.myPage.clickGiftShowTab();
-    return await this.myPage.isGiftShowContentVisible();
+    await this.waitForManualAuthenticationIfNeeded();
+    const visible = await this.myPage.isGiftShowContentVisible();
+    if (visible) await this.myPage.wait(2);
+    return visible;
   }
 
   /** 나의 쇼핑 현황 > 잔액형 상품권 내역 확인 */
@@ -49,14 +58,20 @@ export class MySteps {
   async verifyDeliveryAddress(): Promise<boolean> {
     await this.myPage.clickMyButton();
     await this.myPage.clickDeliveryAddressTab();
-    return await this.myPage.isDeliveryAddressContentVisible();
+    await this.waitForManualAuthenticationIfNeeded();
+    const visible = await this.myPage.isDeliveryAddressContentVisible();
+    if (visible) await this.myPage.wait(3);
+    return visible;
   }
 
   /** 나의 쇼핑 정보 관리 > 연락처 관리 확인 */
   async verifyPhoneAddress(): Promise<boolean> {
     await this.myPage.clickMyButton();
     await this.myPage.clickPhoneAddressTab();
-    return await this.myPage.isPhoneAddressContentVisible();
+    await this.waitForManualAuthenticationIfNeeded();
+    const visible = await this.myPage.isPhoneAddressContentVisible();
+    if (visible) await this.myPage.wait(2);
+    return visible;
   }
 
   /** 나의 쇼핑 정보 관리 > 환불 계좌 관리 확인 */
@@ -110,17 +125,10 @@ export class MySteps {
     await parameter('본인인증', `${modal}`);
 
     if (modal) {
-      await this.myPage.fillName(name);
-      await this.myPage.clickNextButton();
-      await this.myPage.clickMaleButton();
-      await this.myPage.fillYear(year);
-      await this.myPage.fillMonth(month);
-      await this.myPage.fillDay(day);
-      await this.myPage.clickKtAgencyButton();
-      await this.myPage.fillPhoneNumber(phoneNumber);
-      await this.myPage.wait(30);
+      await notifyManualAuth('PC', '본인인증');
+      return await this.myPage.isModifyCustomerInfoContentVisible(300);
     }
-    
+
     return await this.myPage.isModifyCustomerInfoContentVisible();
   }
 
@@ -128,7 +136,8 @@ export class MySteps {
   async verifyBenefit(): Promise<boolean> {
     await this.myPage.clickMyButton();
     await this.myPage.clickBenefitTab();
-    return await this.myPage.isModifyCustomerInfoContentVisible();
+    await this.waitForManualAuthenticationIfNeeded();
+    return await this.myPage.isBenefitContentVisible();
   }
 
   /** 나의 쇼핑 정보 관리 > 회원 탈퇴 본인인증 화면 이동 확인 */
