@@ -12,7 +12,6 @@ export class QuickSteps {
 
   /** 체크리스트 7: 화면을 초기화하지 않고 고정 메뉴를 연속 클릭한다. */
   async verifyFixedNavigation(): Promise<boolean> {
-    await this.quickPage.prepareFixedNavigation();
     try {
       const checks = [
         ['홈', () => this.quickPage.verifyFixedHome()],

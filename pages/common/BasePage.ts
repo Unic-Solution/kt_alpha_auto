@@ -15,12 +15,15 @@ export class BasePage {
 
   /** 공통 팝업 모달 닫기 (모달이 없으면 무시) */
   async closeModal() {
-    const buttons = this.page.locator(CommonLocators.modal.closeBtn);
-    await buttons.first().waitFor({ state: 'visible', timeout: 750 }).catch(() => {});
-    while (await buttons.filter({ visible: true }).count()) {
-      const button = buttons.filter({ visible: true }).first();
-      await button.click();
-      await button.waitFor({ state: 'hidden', timeout: 1_000 }).catch(() => {});
+    const modals = this.page.locator(CommonLocators.modal.modal);
+    await modals.last().waitFor({ state: 'visible', timeout: 750 }).catch(() => {});
+    while (await modals.filter({ visible: true }).count()) {
+      const modal = modals.filter({ visible: true }).last();
+      const button = modal.getByRole('button', { name: '닫기', exact: true }).filter({ visible: true }).last();
+      if (!await button.count()) break;
+      // 자동 전환 배너가 닫기 버튼 위의 포인터 이벤트를 가로막아 DOM 클릭으로 정리한다.
+      await button.dispatchEvent('click');
+      await modal.waitFor({ state: 'hidden', timeout: 3_000 });
     }
   }
 

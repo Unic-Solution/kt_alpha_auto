@@ -20,13 +20,6 @@ export class QuickPage extends BasePage {
     await item.click();
   }
 
-  /** 연속 검증 시작 전 최초 한 번만 편성표 화면을 준비한다. */
-  async prepareFixedNavigation() {
-    await this.goToUrl(new URL('/?currentChannel=alpha&gnbMenuId=G000000002', CommonLocators.urls.homePage).href);
-    await this.closeModal();
-    await expect(this.page).toHaveURL(url => url.searchParams.get('gnbMenuId') === 'G000000002');
-  }
-
   async verifyFixedHome(): Promise<boolean> {
     await this.clickFixedMenu('link', '홈');
     await expect(this.page).toHaveURL(url => url.pathname === '/' && url.searchParams.get('gnbMenuId') === 'G000000004');
