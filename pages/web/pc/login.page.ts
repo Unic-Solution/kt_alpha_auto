@@ -3,6 +3,7 @@ import { CommonLocators } from '../../common/common.locators';
 import { expect } from '@playwright/test';
 import { BasePage } from '../../common/BasePage';
 import { PcLocators } from './locators';
+import { MainPage } from './main.page';
 
 export class LoginPage extends BasePage {
 
@@ -40,7 +41,9 @@ export class LoginPage extends BasePage {
   async completeLoginFromCurrentScreen(successUrl?: string) {
     const logout = this.page.locator(PcLocators.login.logoutButton);
     const certification = this.page.locator(PcLocators.login.certificationRequestButton);
-    const loginCompleted = async () => await logout.isVisible() || Boolean(successUrl && this.page.url().includes(successUrl));
+    const successPath = successUrl ? `/${successUrl.replace(/^\/+/, '')}` : undefined;
+    const loginCompleted = async () => await logout.isVisible() ||
+      Boolean(successPath && new URL(this.page.url()).pathname === successPath);
     await expect(this.page.locator(PcLocators.login.idInput)).toBeVisible({ timeout: 20_000 });
     let manualLoginRequired = true;
     const id = process.env.LOGIN_ID;
@@ -99,14 +102,16 @@ export class LoginPage extends BasePage {
 
   /** 아이디 입력 */
   async fillId(id: string) {
-    await this.clear(PcLocators.login.idInput);
-    await this.pressSequentially(PcLocators.login.idInput, id);
+    const input = this.page.locator(PcLocators.login.idInput);
+    await input.fill(id);
+    await expect(input).toHaveValue(id);
   }
 
   /** 비밀번호 입력 */
   async fillPw(pw: string) {
-    await this.clear(PcLocators.login.pwInput);
-    await this.pressSequentially(PcLocators.login.pwInput, pw);
+    const input = this.page.locator(PcLocators.login.pwInput);
+    await input.fill(pw);
+    await expect(input).toHaveValue(pw);
   }
 
   /** 로그인 제출 */
@@ -153,18 +158,20 @@ export class LoginPage extends BasePage {
   /** 상품 상세의 실제 구매 버튼과 옵션 모달을 거쳐 로그인 화면으로 이동 */
   async clickProductBuyForLogin() {
     const modal = this.page.locator(PcLocators.main.purchaseModal);
+    const idInput = this.page.locator(PcLocators.login.idInput);
     const buyButton = this.page.locator('main [class*="ButtonPurchase_wrap"]')
       .getByRole('button', { name: /구매하기$/ }).filter({ visible: true }).first();
     await expect(async () => {
+      if (await idInput.isVisible()) return;
       if (!await modal.isVisible()) await buyButton.click();
       await expect(modal, '구매 옵션 모달이 열려야 한다').toBeVisible({ timeout: 3_000 });
-    }).toPass({ timeout: 15_000, intervals: [1_000] });
-    await this.clickFirstEnabled(PcLocators.main.onAirDirectBuyFirstOption);
-    const confirm = modal.getByRole('button', { name: /구매하기$/ }).filter({ visible: true }).last();
-    await expect(confirm).toBeEnabled();
-    await confirm.click();
-    await expect(this.page.locator(PcLocators.login.idInput), '구매하기 후 로그인 화면이 열려야 한다')
-      .toBeVisible({ timeout: 20_000 });
+      const option = this.page.locator(PcLocators.main.onAirDirectBuyFirstOption).filter({ visible: true }).first();
+      if (await option.isVisible()) await option.click();
+      const confirm = modal.getByRole('button', { name: /구매하기$/ }).filter({ visible: true }).last();
+      await expect(confirm).toBeEnabled();
+      await confirm.click();
+      await expect(idInput, '구매하기 후 로그인 화면이 열려야 한다').toBeVisible({ timeout: 5_000 });
+    }).toPass({ timeout: 30_000, intervals: [1_000] });
   }
 
   /** 구매하기 버튼 클릭 (옵션 선택 전) */
@@ -184,6 +191,6 @@ export class LoginPage extends BasePage {
 
   /** 주문서 페이지 URL 확인 */
   async isBuyOrderPage(): Promise<boolean> {
-    return this.urlContains(PcLocators.urls.onAirBuyOrder);
+    return new MainPage(this.page).isBuyOrderPage();
   }
 }

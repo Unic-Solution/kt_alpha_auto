@@ -7,7 +7,7 @@ import { QuickSteps } from '../../steps/pc/quick.steps';
 import { MySteps } from '../../steps/pc/my.steps';
 import { GsMainSteps } from '../../steps/pc/gs_main.steps';
 import { GsProductSteps } from '../../steps/pc/gs_product.steps';
-import { createRun } from '../../utils/step-runner';
+import { createSuiteRun } from '../../utils/step-runner';
 
 const ENV = {
   name: process.env.NAME ?? '',
@@ -28,7 +28,7 @@ test('통합 테스트', async ({ sharedBasePage }) => {
   const gsMainSteps = new GsMainSteps(sharedBasePage);
   const gsProductSteps = new GsProductSteps(sharedBasePage);
 
-  const run = createRun('PC Web', '통합 테스트', sharedBasePage.getPage());
+  const { run, finish } = createSuiteRun('PC Web', '통합 테스트', sharedBasePage.getPage());
 
   await run('[테스트케이스 1번] GNB 메뉴별 화면 스크롤 후 메뉴 노출', () => mainSteps.verifyAllNavItems());
   await run('[테스트케이스 2번] ON AIR 현재 방송 상품 정보 노출', () => mainSteps.verifyOnAirModal());
@@ -92,4 +92,5 @@ test('통합 테스트', async ({ sharedBasePage }) => {
   await run('[테스트케이스 92번] 오늘의 혜택 기획전 이동 확인', () => mainSteps.verifyTodayBenefit());
   await run('[테스트케이스 93번] 이달의 카드 혜택 페이지 이동 확인', () => mainSteps.verifyMonthlyCardBenefits());
   await run('[테스트케이스 94번] 쇼핑 TIP 프로모션 페이지 이동 확인', () => mainSteps.verifyShoppingTipPromotion());
+  finish();
 });

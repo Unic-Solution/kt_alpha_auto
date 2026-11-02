@@ -107,3 +107,33 @@ export function createRun(epicName: string, featureName: string, page?: Page) {
     }
   };
 }
+
+/** 통합 테스트는 각 케이스 실패를 기록하고 나머지를 실행한 뒤 마지막에 모아 실패 처리한다. */
+export function createSuiteRun(epicName: string, featureName: string, page: Page) {
+  const failures: string[] = [];
+
+  const run = async (name: string, fn: () => Promise<boolean>) => {
+    const start = Date.now();
+    let passed = true;
+    let errorMsg: string | undefined;
+    _params = [];
+    await test.step(name, async () => {
+      try {
+        if (!await fn()) throw new Error('expected true but received false');
+      } catch (error) {
+        passed = false;
+        errorMsg = String(error);
+        failures.push(`[${name}] ${errorMsg}`);
+      }
+    });
+    const screenshot = passed ? undefined : await page.screenshot({ fullPage: false }).catch(() => undefined);
+    writeStepResult(name, epicName, featureName, passed ? 'passed' : 'failed', start, Date.now(), [..._params], errorMsg, screenshot);
+    _params = [];
+  };
+
+  const finish = () => {
+    if (failures.length) throw new Error(`통합 테스트 실패 ${failures.length}건\n${failures.join('\n')}`);
+  };
+
+  return { run, finish };
+}
