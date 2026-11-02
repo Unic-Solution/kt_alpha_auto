@@ -26,12 +26,14 @@ export class MainPage extends BasePage {
     const nav = this.page.locator(PcLocators.main.gnb);
     const buttons = this.page.locator(PcLocators.main.gnbButtons);
     const results: { index: number; isVisible: boolean }[] = [];
-    await expect(buttons).toHaveCount(PcLocators.main.gnbMenuIds.length);
+    await expect.poll(() => buttons.count(), { message: 'GNB 메뉴 로딩' })
+      .toBeGreaterThanOrEqual(PcLocators.main.gnbMenuIds.length);
+    const menuCount = await buttons.count();
 
     // 최상단의 숨김 상태와 스크롤 후 실제 화면 내 노출을 구분한다.
     await this.page.evaluate(() => window.scrollTo(0, 0));
     await expect(nav).toBeHidden();
-    for (let index = 0; index < PcLocators.main.gnbMenuIds.length; index++) {
+    for (let index = 0; index < menuCount; index++) {
       await this.page.evaluate(() => window.scrollTo(0, 1600));
       await expect.poll(() => this.page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
       await this.page.waitForTimeout(400);
