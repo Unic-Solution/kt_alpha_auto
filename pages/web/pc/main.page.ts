@@ -79,11 +79,13 @@ export class MainPage extends BasePage {
     await expect(title).toBeVisible();
     await expect(title).toHaveText(/\S/);
     await expect(title).toHaveAttribute('href', /\/display\/product\/\d+(?:[?]|$)/);
-    const name = (await title.innerText()).trim();
+    const name = (await title.innerText()).replace(/\s+/g, ' ').trim();
     const productId = (await title.getAttribute('href'))!.match(/\/product\/(\d+)/)![1];
     const image = section.locator(PcLocators.main.onAirImage);
     await expect(image).toBeVisible();
-    await expect(image).toHaveAttribute('alt', name);
+    await expect.poll(async () => (await image.getAttribute('alt'))?.replace(/\s+/g, ' ').trim(), {
+      message: 'ON AIR 상품명과 이미지 대체 텍스트가 일치해야 한다',
+    }).toBe(name);
     await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0), {
       message: 'ON AIR 상품 이미지가 정상 로딩되어야 한다', timeout: 10_000,
     }).toBe(true);
@@ -143,7 +145,9 @@ export class MainPage extends BasePage {
       const name = (await title.innerText()).replace(/\s+/g, ' ').trim();
       const image = card.locator('img');
       await expect(image).toBeVisible();
-      await expect(image).toHaveAttribute('alt', name);
+      await expect.poll(async () => (await image.getAttribute('alt'))?.replace(/\s+/g, ' ').trim(), {
+        message: '이전·다음 방송 상품명과 이미지 대체 텍스트가 일치해야 한다',
+      }).toBe(name);
       await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0),
         { message: '이전·다음 방송 상품 이미지 로딩', timeout: 10_000 }).toBe(true);
       const href = (await link.getAttribute('href'))!;
