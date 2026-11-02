@@ -13,7 +13,10 @@ export class LoginPage extends BasePage {
     await this.closeModal();
     const logout = this.page.locator(PcLocators.login.logoutButton).filter({ visible: true }).first();
     if (!await logout.isVisible()) return false;
-    await logout.click();
+    await Promise.all([
+      this.page.waitForURL(url => url.pathname === '/'),
+      logout.click(),
+    ]);
     await expect.poll(() => logout.isVisible(), { message: '로그아웃 완료 확인' }).toBe(false);
     return true;
   }
