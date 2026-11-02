@@ -1,3 +1,4 @@
+import { expect } from '@playwright/test';
 import { BasePage } from '../../common/BasePage';
 import { PcLocators } from './locators';
 
@@ -7,11 +8,6 @@ export class MyPage extends BasePage {
   async clickMyButton() {
     await this.goToHome();
     await this.click(PcLocators.my.myButton);
-  }
-
-  /** 마이페이지 이동 */
-  async goToMyPage() {
-    await this.goToUrl(PcLocators.urls.myPage);
   }
 
   /** 마이 > 나의 쇼핑 현황 > 주문 내역 탭 클릭 */
@@ -36,7 +32,10 @@ export class MyPage extends BasePage {
 
   /** 기프티쇼 선물함 노출 여부 반환 */
   async isGiftShowContentVisible(): Promise<boolean> {
-    return await this.isVisible(PcLocators.my.giftShowContent);
+    await expect(this.page.getByRole('heading', { name: '기프티쇼 선물함', exact: true, level: 1 })).toBeVisible();
+    await expect(this.page.getByRole('tab', { name: /^사용 가능/ })).toBeVisible();
+    await expect(this.page.getByRole('tab', { name: /^전체보기/ })).toBeVisible();
+    return true;
   }
 
   /** 마이 > 나의 쇼핑 현황 > 잔액형 상품권 내역 조회 탭 클릭 */
@@ -126,7 +125,9 @@ export class MyPage extends BasePage {
 
   /** 방송 알림 설정 노출 여부 반환 */
   async isBroadcastNotificationContentVisible(): Promise<boolean> {
-    return await this.isVisible(PcLocators.my.broadcastNotificationContent);
+    await expect(this.page.getByRole('heading', { name: '방송알림', exact: true, level: 1 })).toBeVisible();
+    await expect(this.page.getByRole('button', { name: '방송 편성표 보기', exact: true })).toBeVisible();
+    return true;
   }
 
   /** 마이 > 나의 쇼핑 정보 관리 > 간편 로그인 연결 탭 클릭 */
@@ -185,18 +186,50 @@ export class MyPage extends BasePage {
   }
 
   /** 회원 정보 수정 노출 여부 반환 */
-  async isModifyCustomerInfoContentVisible(): Promise<boolean> {
-    return await this.isVisible(PcLocators.my.modifyCustomerInfoContent);
+  async isModifyCustomerInfoContentVisible(timeout = 3): Promise<boolean> {
+    await this.waitForElement(PcLocators.my.modifyCustomerInfoContent, timeout).catch(() => {});
+    return await this.page.locator(PcLocators.my.modifyCustomerInfoContent).isVisible();
   }
 
-  /** 혜택 관리 노출 여부 반환 (혜택 탭은 회원정보 수정과 동일한 wrapper 사용) */
+  /** 마이페이지 하위 화면의 휴대폰 본인인증 필요 여부 */
+  async isManualAuthenticationVisible(): Promise<boolean> {
+    return await this.page.locator(PcLocators.my.manualAuthRequestButton).isVisible();
+  }
+
+  /** 사용자가 휴대폰 본인인증을 완료해 인증 요청 화면이 사라질 때까지 대기 */
+  async waitForManualAuthentication(timeout = 300) {
+    await this.page.locator(PcLocators.my.manualAuthRequestButton).waitFor({ state: 'hidden', timeout: timeout * 1000 });
+  }
+
+  /** 혜택 관리 본문 노출 확인 */
   async isBenefitContentVisible(): Promise<boolean> {
-    return await this.isVisible(PcLocators.my.modifyCustomerInfoContent);
+    return !await this.isManualAuthenticationVisible()
+      && await this.page.locator(PcLocators.my.benefitTitle).first().isVisible();
   }
 
   /** 마이 > 나의 쇼핑 정보 관리 > 혜택 관리 탭 클릭 */
   async clickBenefitTab() {
     await this.click(PcLocators.my.benefitTab);
+  }
+
+  /** 마이 > 나의 쇼핑 정보 관리 > 회원 탈퇴 탭 클릭 */
+  async clickWithdrawalTab() {
+    await this.click(PcLocators.my.withdrawalTab);
+  }
+
+  /** 회원 탈퇴 본인인증 진입 화면이 완전히 노출됐는지 확인 */
+  async isWithdrawalAuthVisible(): Promise<boolean> {
+    await this.waitForURLContains('/custord/customer/auth/withdrawal');
+    return await this.isVisible(PcLocators.my.withdrawalTitle)
+      && await this.isVisible(PcLocators.my.withdrawalPhoneTitle);
+  }
+
+  /** 본인인증 후 회원 탈퇴 안내 화면 전체 노출을 기다려 확인 */
+  async isWithdrawalContentVisible(timeout = 300): Promise<boolean> {
+    await this.waitForElement(PcLocators.my.withdrawalGuideTitle, timeout);
+    return await this.isVisible(PcLocators.my.withdrawalReasonButton)
+      && await this.isVisible(PcLocators.my.withdrawalConsent)
+      && await this.isVisible(PcLocators.my.withdrawalSubmitButton);
   }
 
   /** 마이 > 나의 쇼핑 정보 관리 > 장바구니 탭 클릭 */

@@ -1,6 +1,5 @@
 import { Page } from '@playwright/test';
 import { CommonLocators } from './common.locators';
-import stringSimilarity from 'string-similarity';
 
 export class BasePage {
   constructor(protected page: Page) {}
@@ -16,14 +15,12 @@ export class BasePage {
 
   /** 공통 팝업 모달 닫기 (모달이 없으면 무시) */
   async closeModal() {
-    try {
-      await this.waitForElement(CommonLocators.modal.closeBtn, 5);
-    } catch {
-      return;
-    }
-    while (await this.isVisible(CommonLocators.modal.closeBtn)) {
-      await this.click(CommonLocators.modal.closeBtn);
-      await this.waitForHidden(CommonLocators.modal.closeBtn, 3).catch(() => {});
+    const buttons = this.page.locator(CommonLocators.modal.closeBtn);
+    await buttons.first().waitFor({ state: 'visible', timeout: 750 }).catch(() => {});
+    while (await buttons.filter({ visible: true }).count()) {
+      const button = buttons.filter({ visible: true }).first();
+      await button.click();
+      await button.waitFor({ state: 'hidden', timeout: 1_000 }).catch(() => {});
     }
   }
 
@@ -39,6 +36,16 @@ export class BasePage {
       await this.click(CommonLocators.button.giftShowButton);
       await this.closeModal();
     }
+
+  /** 메인페이지 전환 대기 */
+  async waitMainPage() {
+    await this.waitForURLContains(CommonLocators.urls.homePage);
+  }
+
+  /** 메인페이지 이동 확인 */
+  async isMainPage(): Promise<boolean> {
+    return this.urlContains(CommonLocators.urls.homePage);
+  }
 
   /** 확인 버튼 클릭 */
   async clickConfirmButton() {
@@ -56,6 +63,11 @@ export class BasePage {
     }
   }
 
+  /** 페이지 새로고침 */
+  async reload() {
+    await this.page.reload();
+  }
+
   /** 요소 단일 클릭 */
   async click(selector: string, force = false, timeout = 3) {
     await this.waitForElement(selector, timeout);
@@ -64,14 +76,17 @@ export class BasePage {
 
   /** index번째 요소 클릭 */
   async nthClick(selector: string, index: number) {
-    await this.waitForElement(selector);
     await this.page.locator(selector).nth(index).click();
   }
 
   /** 마지막 요소 클릭 */
   async lastClick(selector: string) {
-    await this.waitForElement(selector);
     await this.page.locator(selector).last().click();
+  }
+
+  /** 요소 더블 클릭 */
+  async doubleClick(selector: string) {
+    await this.page.locator(selector).dblclick();
   }
 
   /** 요소 개수 추출 */
@@ -85,14 +100,28 @@ export class BasePage {
     await this.page.locator(selector).pressSequentially(text);
   }
 
+  /** input 요소의 값 초기화 */
+  async clear(selector: string) {
+    await this.page.locator(selector).clear();
+  }
+
+  /** select 요소에서 옵션 선택 (value, label, index 모두 가능) */
+  async selectOption(selector: string, value: string) {
+    await this.page.locator(selector).selectOption(value);
+  }
+
+  /** 요소에 마우스 호버 */
+  async hover(selector: string) {
+    await this.page.locator(selector).hover();
+  }
+
   /** 키보드 키 입력 (예: 'Enter', 'Tab', 'Escape') */
   async pressKey(key: string) {
     await this.page.keyboard.press(key);
   }
 
   /** 요소의 텍스트 내용 반환 */
-  async getText(selector: string,  timeout = 3): Promise<string> {
-    await this.waitForElement(selector, timeout);
+  async getText(selector: string): Promise<string> {
     return await this.page.locator(selector).innerText();
   }
 
@@ -104,18 +133,6 @@ export class BasePage {
   /** 요소의 지정 attribute 값 반환 */
   async getAttribute(selector: string, attribute: string): Promise<string | null> {
     return await this.page.locator(selector).getAttribute(attribute);
-  }
-
-  /** 요소에 특정 attribute가 나타날 때까지 대기 */
-  async waitForAttribute(selector: string, attribute: string, seconds = 10) {
-    await this.page.waitForFunction(
-      ([sel, attr]) => {
-        const el = document.evaluate(sel, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue as Element;
-        return el?.hasAttribute(attr) ?? false;
-      },
-      [selector, attribute],
-      { timeout: seconds * 1000 },
-    );
   }
 
   /** input 요소의 현재 입력값 반환 */
@@ -137,12 +154,17 @@ export class BasePage {
   /** 요소가 화면에 보이는지 여부 반환 */
   async isVisible(selector: string): Promise<boolean> {
     await this.waitForElement(selector, 3).catch(() => {});
-    return await this.page.locator(selector).first().isVisible();
+    return await this.page.locator(selector).isVisible();
   }
 
   /** 요소가 활성화(enabled) 상태인지 여부 반환 */
   async isEnabled(selector: string): Promise<boolean> {
     return await this.page.locator(selector).isEnabled();
+  }
+
+  /** 체크박스 / 라디오 버튼의 체크 여부 반환 */
+  async isChecked(selector: string): Promise<boolean> {
+    return await this.page.locator(selector).isChecked();
   }
 
   /** 요소가 visible 상태가 될 때까지 대기 */
@@ -160,10 +182,19 @@ export class BasePage {
     await this.page.waitForURL(url => url.href.includes(path));
   }
 
+  /** 페이지 로드 완료까지 대기 (load / domcontentloaded / networkidle) */
+  async waitForLoad(state: 'load' | 'domcontentloaded' | 'networkidle' = 'load') {
+    await this.page.waitForLoadState(state);
+  }
+
   /** 요소가 뷰포트 내로 스크롤될 때까지 이동 */
   async scrollIntoView(selector: string) {
     await this.page.locator(selector).first().scrollIntoViewIfNeeded();
-    await this.wait(2);
+  }
+
+  /** 페이지 최하단으로 스크롤 */
+  async scrollToBottom() {
+    await this.page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   }
 
   /** 현재 페이지의 URL 반환 */
@@ -177,21 +208,9 @@ export class BasePage {
     return this.getCurrentURL().includes(text);
   }
 
-  /** 뷰포트 내에 실제로 노출된 첫 번째 요소의 텍스트 반환 */
-  async getTextFirstInViewport(selector: string): Promise<string> {
-    const locator = this.page.locator(selector);
-    const count = await locator.count();
-    for (let i = 0; i < count; i++) {
-      const el = locator.nth(i);
-      const isInViewport = await el.evaluate(node => {
-        const rect = node.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const vw = window.innerWidth || document.documentElement.clientWidth;
-        return centerX > vw / 3 && centerX < (vw * 2) / 3;
-      });
-      if (isInViewport) return (await el.textContent()) ?? '';
-    }
-    throw new Error(`뷰포트 내에 텍스트를 가져올 수 없음: ${selector}`);
+  /** 여러 요소 중 visible 상태인 첫 번째 요소 클릭 */
+  async clickVisible(selector: string) {
+    await this.page.locator(selector).filter({ visible: true }).first().click();
   }
 
   /** 뷰포트 내에 실제로 노출된 첫 번째 요소 클릭 (캐러셀 등 transform으로 숨겨진 요소 대응) */
@@ -211,7 +230,6 @@ export class BasePage {
         return;
       }
     }
-    throw new Error(`뷰포트 내에 클릭 가능한 요소를 찾을 수 없음: ${selector}`);
   }
 
   /** 활성화된 첫 번째 요소 클릭 (비활성화 건너뜀) */
@@ -245,20 +263,5 @@ export class BasePage {
   /** 현재 컨텍스트의 스토리지 상태를 파일로 저장 */
   async saveStorageState(path: string) {
     await this.page.context().storageState({ path });
-  }
-
-  /** 버튼 클릭 후 새로 열리는 팝업 창 반환 */
-  async clickAndWaitForPopup(selector: string): Promise<Page> {
-    const [popup] = await Promise.all([
-      this.page.waitForEvent('popup'),
-      this.click(selector),
-    ]);
-    await popup.waitForLoadState();
-    return popup;
-  }
-
-  /** 텍스트 유사도 반환 */
-  async isStringSimilarity(text1: string, text2: string): Promise<number> {
-    return stringSimilarity.compareTwoStrings(text1,text2);
   }
 }

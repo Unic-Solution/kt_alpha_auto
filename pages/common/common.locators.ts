@@ -6,7 +6,7 @@ export const CommonLocators = {
   },
   modal: {
     modal: '//div[contains(@class,"Modal_open")]',
-    closeBtn: '//button[text()="닫기"]',
+    closeBtn: '//button[normalize-space(.)="닫기"]',
     confirmButton: '//span[text()="확인"]',
   },
   button: {

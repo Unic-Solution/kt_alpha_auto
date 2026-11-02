@@ -37,27 +37,41 @@
     "allure:generate": "allure generate allure-results --clean -o allure-report && sed -i '' 's/lang=\"en\"/lang=\"kr\"/' allure-report/index.html && sed -i '' 's/sorter:`sorter.name`/sorter:`sorter.order`/' allure-report/assets/*.js",
     "allure:open": "allure open allure-report",
     "allure:report": "npm run allure:generate && npm run allure:open",
-    "allure:history": "allure serve allure-runs"
+    "allure:history": "allure serve allure-runs",
+    "test:gnb": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/gnb.test.ts tests/mw/gnb.test.ts --project=pc --project=mw --headed --workers=1 --trace=on --reporter=list,html,./utils/suite-timing-reporter.ts",
+    "test:onair": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/onair.test.ts tests/mw/onair.test.ts --project=pc --project=mw --headed --workers=1 --trace=on --reporter=list,html,./utils/suite-timing-reporter.ts",
+    "test:onair:gift": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/onair-gift.test.ts tests/mw/onair-gift.test.ts --project=pc --project=mw --headed --workers=1 --trace=on --reporter=list,html,./utils/suite-timing-reporter.ts",
+    "test:onair:cart": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/onair-cart.test.ts tests/mw/onair-cart.test.ts --project=pc --project=mw --headed --workers=1 --trace=on --reporter=list,html,./utils/suite-timing-reporter.ts",
+    "test:onair:buy": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/onair-buy.test.ts tests/mw/onair-buy.test.ts --project=pc --project=mw --headed --workers=1 --trace=on --reporter=list,html,./utils/suite-timing-reporter.ts",
+    "test:auth-flow": "tsx --test tests/auth/manual-auth.test.ts",
+    "test:onair:schedule": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/onair-schedule.test.ts tests/mw/onair-schedule.test.ts --project=pc --project=mw --headed --workers=1 --trace=off --reporter=list,html,./utils/suite-timing-reporter.ts",
+    "test:navigation": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/navigation.test.ts tests/mw/navigation.test.ts --project=pc --project=mw --headed --workers=1 --trace=off --reporter=list,html,./utils/suite-timing-reporter.ts",
+    "test:category": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/category.test.ts tests/mw/category.test.ts --project=pc --project=mw --headed --workers=1 --trace=off --reporter=list,html,./utils/suite-timing-reporter.ts",
+    "test:search": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/search.test.ts tests/mw/search.test.ts --project=pc --project=mw --headed --workers=1 --trace=off --reporter=list,html,./utils/suite-timing-reporter.ts",
+    "test:withdrawal": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/withdrawal.test.ts tests/mw/withdrawal.test.ts --project=pc --project=mw --headed --workers=1 --trace=off --reporter=list,html,./utils/suite-timing-reporter.ts",
+    "test:gift-decoration": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/gift-decoration.test.ts tests/mw/gift-decoration.test.ts --project=pc --project=mw --headed --workers=1 --trace=off --reporter=list,html,./utils/suite-timing-reporter.ts",
+    "test:gift-message": "PLAYWRIGHT_HTML_OPEN=never PW_CHANNEL=chrome PW_SLOW_MO=350 playwright test tests/pc/gift-message.test.ts tests/mw/gift-message.test.ts --project=pc --project=mw --headed --workers=1 --trace=off --reporter=list,html,./utils/suite-timing-reporter.ts"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Unic-Solution/kt_alpha_auto.git"
+    "url": "git+https://github.com/HUJO733/kt_alpha_auto.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/Unic-Solution/kt_alpha_auto/issues"
+    "url": "https://github.com/HUJO733/kt_alpha_auto/issues"
   },
-  "homepage": "https://github.com/Unic-Solution/kt_alpha_auto#readme",
+  "homepage": "https://github.com/HUJO733/kt_alpha_auto#readme",
   "devDependencies": {
     "@playwright/test": "^1.60.0",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^25.9.7",
+    "@types/node": "^25.7.0",
     "@types/string-similarity": "^4.0.2",
     "@wdio/globals": "^9.27.1",
     "allure-commandline": "^2.42.0",
+    "allure-playwright": "^3.8.0",
     "appium": "^3.4.2",
     "appium-uiautomator2-driver": "^7.2.3",
     "appium-xcuitest-driver": "^11.3.0",

@@ -9,8 +9,6 @@ import { GsProductSteps } from '../../steps/mw/gs_product.steps';
 import { createRun } from '../../utils/step-runner';
 
 const ENV = {
-  id: process.env.LOGIN_ID ?? '',
-  pw: process.env.LOGIN_PW ?? '',
   name: process.env.NAME ?? '',
   year: process.env.YEAR ?? '',
   month: process.env.MONTH ?? '',
@@ -31,15 +29,15 @@ test('통합 테스트 (MW)', async ({ sharedBasePage }) => {
 
   const run = createRun('MW Web', '통합 테스트', sharedBasePage.getPage());
 
-  await run('일반 계정 로그인 확인', () => loginSteps.verifyLocalLogin(ENV.id, ENV.pw));
-  await run('임의 상품 상세 > 구매하기 > 일반 계정 로그인 확인', () => loginSteps.verifyBuyAndLogin(ENV.id, ENV.pw), true);
-  await run('회원 정보 수정 확인', () => mySteps.verifyModifyCustomerInfo(ENV.name, ENV.year, ENV.month, ENV.day, ENV.phoneNumber));
+  await run('로그인 상태 확인', () => loginSteps.verifyLocalLogin());
 
   await run('GNB 메뉴별 화면 확인', () => mainSteps.verifyAllNavItems());
   await run('ON AIR > 현재 방송 중인 상품 정보 노출 확인', () => mainSteps.verifyOnAirModal());
   await run('ON AIR > 바로구매 > 선물하기 주문서 페이지 이동 확인', () => mainSteps.verifyOnAirGift());
   await run('ON AIR > 바로구매 > 장바구니 상품 추가 확인', () => mainSteps.verifyOnAirCart());
   await run('ON AIR > 바로구매 > 구매하기 주문서 페이지 이동 확인', () => mainSteps.verifyOnAirBuy());
+  await run('이전·다음 방송 노출 및 편성표·상품 상세 이동 확인', () => mainSteps.verifyAdjacentBroadcasts());
+  await run('고정 메뉴 홈·카테고리·마이·채널 전환·TOP 확인', () => quickSteps.verifyFixedNavigation());
   await run('카테고리 정상 노출 및 필터 기능 확인', () => mainSteps.verifyCategory());
   await run('검색 후 상품 상세 페이지 이동 확인', () => mainSteps.verifySearch());
 
@@ -71,6 +69,7 @@ test('통합 테스트 (MW)', async ({ sharedBasePage }) => {
   await run('이용권등록 확인', () => mySteps.verifyTicket());
   await run('방송 알림 설정 확인', () => mySteps.verifyBroadcastNotification());
   await run('간편 로그인 연결 확인', () => mySteps.verifySimpleLogin());
+  await run('회원 정보 수정 확인', () => mySteps.verifyModifyCustomerInfo(ENV.name, ENV.year, ENV.month, ENV.day, ENV.phoneNumber));
   await run('혜택 관리 확인', () => mySteps.verifyBenefit());
   await run('장바구니 확인', () => mySteps.verifyCart());
   await run('좋아요 확인', () => mySteps.verifyLike());

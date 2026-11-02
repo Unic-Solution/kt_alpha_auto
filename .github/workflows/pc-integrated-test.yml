@@ -11,6 +11,10 @@ on:
         options:
           - Windows
           - macOS
+      slack_thread_ts:
+        description: '진행상황을 표시할 Slack 스레드 timestamp'
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -118,6 +122,9 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
           SLACK_DEV_CHANNEL_ID: ${{ secrets.SLACK_DEV_CHANNEL_ID }}
+          SLACK_NOTIFICATIONS_ENABLED: 'true'
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_THREAD_TS: ${{ inputs.slack_thread_ts }}
         run: npx playwright test tests/pc/integrated --project=pc-no-auth --headed
         continue-on-error: true
 
