@@ -124,7 +124,7 @@ jobs:
           SLACK_DEV_CHANNEL_ID: ${{ secrets.SLACK_DEV_CHANNEL_ID }}
           SLACK_NOTIFICATIONS_ENABLED: 'true'
           SLACK_THREAD_TS: ${{ inputs.slack_thread_ts }}
-        run: npx playwright test tests/pc/integrated --project=pc-no-auth --headed
+        run: npx playwright test tests/pc/integrated.test.ts --project=pc-no-auth --headed
         continue-on-error: true
 
       - name: Allure 리포트 생성 (Mac)
