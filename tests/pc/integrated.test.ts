@@ -30,6 +30,9 @@ test('통합 테스트', async ({ sharedBasePage }) => {
 
   const { run, finish } = createSuiteRun('PC Web', '통합 테스트', sharedBasePage.getPage());
 
+  await run('[테스트케이스 10번] 일반 계정 로그인 확인', () => loginSteps.verifyLocalLogin());
+  await run('[테스트케이스 12번] 상품 구매하기에서 일반 계정 로그인', () => loginSteps.verifyBuyAndLogin());
+
   await run('[테스트케이스 1번] GNB 메뉴별 화면 스크롤 후 메뉴 노출', () => mainSteps.verifyAllNavItems());
   await run('[테스트케이스 2번] ON AIR 현재 방송 상품 정보 노출', () => mainSteps.verifyOnAirModal());
   await run('[테스트케이스 3번] ON AIR 바로구매에서 선물하기', () => mainSteps.verifyOnAirGift());
@@ -39,8 +42,6 @@ test('통합 테스트', async ({ sharedBasePage }) => {
   await run('[테스트케이스 7번] 탭바', () => quickSteps.verifyFixedNavigation());
   await run('[테스트케이스 8번] 카테고리', () => mainSteps.verifyCategory());
   await run('[테스트케이스 9번] 검색', () => mainSteps.verifySearch());
-  await run('[테스트케이스 10번] 일반 계정 로그인 확인', () => loginSteps.verifyLocalLogin());
-  await run('[테스트케이스 12번] 상품 구매하기에서 일반 계정 로그인', () => loginSteps.verifyBuyAndLogin());
 
   for (const item of productCases) {
     await run(`[테스트케이스 ${item.number}번] ${item.name}`, () => item.run(productSteps));
