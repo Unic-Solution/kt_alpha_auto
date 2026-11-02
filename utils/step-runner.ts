@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 import { writeFileSync, mkdirSync } from 'fs';
 import { randomUUID } from 'crypto';
 import { join } from 'path';
+import { postThreadReply, readThreadTs, updateMessage } from './slack-progress';
 
 let _params: Array<{ name: string; value: string }> = [];
 
@@ -111,8 +112,10 @@ export function createRun(epicName: string, featureName: string, page?: Page) {
 /** 통합 테스트는 각 케이스 실패를 기록하고 나머지를 실행한 뒤 마지막에 모아 실패 처리한다. */
 export function createSuiteRun(epicName: string, featureName: string, page: Page) {
   const failures: string[] = [];
+  const parentTs = readThreadTs();
 
   const run = async (name: string, fn: () => Promise<boolean>) => {
+    const replyTs = parentTs ? await postThreadReply(parentTs, `:arrow_forward: ${name}`) : undefined;
     const start = Date.now();
     let passed = true;
     let errorMsg: string | undefined;
@@ -129,6 +132,7 @@ export function createSuiteRun(epicName: string, featureName: string, page: Page
     const screenshot = passed ? undefined : await page.screenshot({ fullPage: false }).catch(() => undefined);
     writeStepResult(name, epicName, featureName, passed ? 'passed' : 'failed', start, Date.now(), [..._params], errorMsg, screenshot);
     _params = [];
+    if (replyTs) updateMessage(replyTs, passed ? `:white_check_mark: ${name}` : `:x: ${name}`);
   };
 
   const finish = () => {

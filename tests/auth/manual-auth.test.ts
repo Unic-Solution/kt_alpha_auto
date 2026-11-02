@@ -12,7 +12,7 @@ describe('사용자 로그인·본인인증 대기와 Slack 알림', { concurren
   let messages: string[];
   let threadTimestamps: Array<string | undefined>;
   const originalFetch = globalThis.fetch;
-  const keys = ['LOGIN_ID', 'LOGIN_PW', 'SLACK_NOTIFICATIONS_ENABLED', 'SLACK_WEBHOOK_URL', 'SLACK_THREAD_TS'] as const;
+  const keys = ['LOGIN_ID', 'LOGIN_PW', 'SLACK_NOTIFICATIONS_ENABLED', 'SLACK_BOT_TOKEN', 'SLACK_CHANNEL_ID', 'SLACK_THREAD_TS'] as const;
   const originalEnv = Object.fromEntries(keys.map(key => [key, process.env[key]]));
   before(async () => { browser = await chromium.launch({ channel: 'chrome', headless: true }); });
   after(async () => { await browser.close(); });
@@ -23,14 +23,15 @@ describe('사용자 로그인·본인인증 대기와 Slack 알림', { concurren
     process.env.LOGIN_ID = 'qa-test-id';
     process.env.LOGIN_PW = 'qa-test-password';
     process.env.SLACK_NOTIFICATIONS_ENABLED = 'true';
-    process.env.SLACK_WEBHOOK_URL = 'https://slack.test.invalid/webhook';
+    process.env.SLACK_BOT_TOKEN = 'xoxb-test-token';
+    process.env.SLACK_CHANNEL_ID = 'C0123456789';
     process.env.SLACK_THREAD_TS = '1234567890.123456';
     globalThis.fetch = async (url, init) => {
-      assert.equal(url, 'https://slack.test.invalid/webhook');
+      assert.equal(url, 'https://slack.com/api/chat.postMessage');
       const body = JSON.parse(String(init?.body));
       messages.push(body.text);
       threadTimestamps.push(body.thread_ts);
-      return new Response('ok', { status: 200 });
+      return new Response(JSON.stringify({ ok: true, ts: `${messages.length}.000001` }), { status: 200 });
     };
   });
   afterEach(async () => {
@@ -126,7 +127,7 @@ describe('사용자 로그인·본인인증 대기와 Slack 알림', { concurren
   });
 
   test('Slack 전송 실패가 사용자 인증 대기를 중단하지 않는다', async () => {
-    globalThis.fetch = async () => new Response('unavailable', { status: 503 });
+    globalThis.fetch = async () => new Response(JSON.stringify({ ok: false, error: 'unavailable' }), { status: 503 });
     await page.setContent('<span id="cert" hidden>인증요청</span><button id="logout" hidden>로그아웃</button>');
     const completion = waitForManualAuthentication(page, page.locator('#logout'), page.locator('#cert'), 'PC', true, 2_000);
     await page.locator('#logout').evaluate(node => { node.removeAttribute('hidden'); });
@@ -139,7 +140,9 @@ describe('사용자 로그인·본인인증 대기와 Slack 알림', { concurren
       const body = JSON.parse(String(init?.body));
       threadTimestamps.push(body.thread_ts);
       attempt++;
-      return new Response(attempt === 1 ? 'invalid_thread_ts' : 'ok', { status: 200 });
+      return new Response(JSON.stringify(attempt === 1
+        ? { ok: false, error: 'invalid_thread_ts' }
+        : { ok: true, ts: '2.000001' }), { status: 200 });
     };
     await notifyManualAuth('PC', '로그인');
     assert.deepEqual(threadTimestamps, ['1234567890.123456', undefined]);
