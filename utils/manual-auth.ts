@@ -15,15 +15,30 @@ export async function notifyManualAuth(platform: string, action: '로그인' | '
     : undefined;
   const threadTs = process.env.SLACK_THREAD_TS;
   const text = [message, process.env.RUNNER_NAME && `러너: ${process.env.RUNNER_NAME}`, runUrl && `실행 기록: ${runUrl}`].filter(Boolean).join('\n');
-  try {
-    const response = await fetch(webhook, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, ...(threadTs && { thread_ts: threadTs }) }), signal: AbortSignal.timeout(5_000),
-    });
-    if (!response.ok) console.warn(`[Slack] 사용자 작업 알림 전송 실패(HTTP ${response.status}). 브라우저에서는 계속 대기합니다.`);
-  } catch {
-    console.warn('[Slack] 사용자 작업 알림을 전송하지 못했습니다. 브라우저에서는 계속 대기합니다.');
+  const send = async (thread?: string) => {
+    try {
+      const response = await fetch(webhook, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, ...(thread && { thread_ts: thread }) }), signal: AbortSignal.timeout(5_000),
+      });
+      const result = await response.text();
+      return { ok: response.ok && result.trim() === 'ok', detail: `HTTP ${response.status}: ${result}` };
+    } catch (error) {
+      return { ok: false, detail: String(error) };
+    }
+  };
+
+  const first = await send(threadTs);
+  if (first.ok) {
+    console.log(`[Slack] ${action} 필요 알림 전송 완료${threadTs ? ' (스레드)' : ''}`);
+    return;
   }
+  console.warn(`[Slack] ${threadTs ? '스레드 ' : ''}알림 전송 실패(${first.detail}).`);
+  if (!threadTs) return;
+
+  const fallback = await send();
+  if (fallback.ok) console.log(`[Slack] ${action} 필요 알림을 채널 메시지로 재전송했습니다.`);
+  else console.warn(`[Slack] 채널 재전송도 실패(${fallback.detail}). 브라우저에서는 계속 대기합니다.`);
 }
 
 /** 로그인 실패 후 직접 입력 및 본인인증 완료를 기다린다. 인증 요청은 자동 클릭하지 않는다. */

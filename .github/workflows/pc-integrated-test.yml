@@ -48,7 +48,15 @@ jobs:
           DAY: ${{ secrets.DAY }}
           PHONE_NUMBER: ${{ secrets.PHONE_NUMBER }}
           BASE_URL: https://www.kshop.co.kr/
-        run: npx playwright test tests/pc/integrated --project=pc-no-auth --headed
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "::warning::SLACK_WEBHOOK_URL이 없어 로그인·본인인증 알림을 보낼 수 없습니다."
+          elif [ -z "$SLACK_THREAD_TS" ]; then
+            echo "::warning::Slack 스레드 timestamp가 없어 사용자 작업 알림은 채널 메시지로 전송됩니다."
+          else
+            echo "Slack 로그인·본인인증 알림을 현재 테스트 스레드로 전송합니다."
+          fi
+          npx playwright test tests/pc/integrated --project=pc-no-auth --headed
         continue-on-error: true
 
       - name: 이전 히스토리 복원
@@ -89,6 +97,9 @@ jobs:
 
       - name: Slack 알림
         if: always()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_THREAD_TS: ${{ inputs.slack_thread_ts }}
         run: |
           STATUS="${{ steps.test.outcome }}"
           if [ "$STATUS" = "success" ]; then
@@ -99,9 +110,14 @@ jobs:
             TEXT="실패"
           fi
 
-          curl -s -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
-            -H 'Content-type: application/json' \
-            --data "{
+          send_slack() {
+            THREAD_FIELD=""
+            if [ -n "$1" ]; then
+              THREAD_FIELD=", \"thread_ts\": \"$1\""
+            fi
+            curl -sS -X POST "$SLACK_WEBHOOK_URL" \
+              -H 'Content-type: application/json' \
+              --data "{
               \"blocks\": [
                 {
                   \"type\": \"header\",
@@ -111,5 +127,15 @@ jobs:
                   \"type\": \"section\",
                   \"text\": {\"type\": \"mrkdwn\", \"text\": \"<https://hujo733.github.io/kt_alpha_auto|📊 Allure 리포트 보기>\"}
                 }
-              ]
+              ]${THREAD_FIELD}
             }"
+          }
+
+          RESPONSE=$(send_slack "$SLACK_THREAD_TS")
+          if [ "$RESPONSE" != "ok" ] && [ -n "$SLACK_THREAD_TS" ]; then
+            echo "Slack 스레드 알림 실패(${RESPONSE}), 채널 메시지로 재전송합니다."
+            RESPONSE=$(send_slack "")
+          fi
+          if [ "$RESPONSE" != "ok" ]; then
+            echo "::warning::Slack 최종 결과 알림 전송 실패: ${RESPONSE}"
+          fi

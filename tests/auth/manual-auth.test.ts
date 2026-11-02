@@ -133,6 +133,18 @@ describe('사용자 로그인·본인인증 대기와 Slack 알림', { concurren
     await completion;
   });
 
+  test('Slack 스레드 전송이 거부되면 채널 메시지로 재전송한다', async () => {
+    let attempt = 0;
+    globalThis.fetch = async (_url, init) => {
+      const body = JSON.parse(String(init?.body));
+      threadTimestamps.push(body.thread_ts);
+      attempt++;
+      return new Response(attempt === 1 ? 'invalid_thread_ts' : 'ok', { status: 200 });
+    };
+    await notifyManualAuth('PC', '로그인');
+    assert.deepEqual(threadTimestamps, ['1234567890.123456', undefined]);
+  });
+
   test('사용자 작업이 완료되지 않으면 통과하지 않고 제한시간에 실패한다', async () => {
     await page.setContent('<span id="cert" hidden>인증요청</span><button id="logout" hidden>로그아웃</button>');
     await assert.rejects(waitForManualAuthentication(page, page.locator('#logout'), page.locator('#cert'), 'PC', true, 200), /사용자가 로그인·본인인증을 완료해야/);
