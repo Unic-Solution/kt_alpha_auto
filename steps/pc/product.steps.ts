@@ -31,8 +31,6 @@ export class ProductSteps {
   /** 편성표 > 방송알림 신청 팝업 확인 및 등록 완료 확인 */
   async verifyBroadcastNotification(): Promise<boolean> {
     const currentProductName = await this.enterCurrentProduct();
-    await this.productPage.goToHome();
-    await this.productPage.clickBroadcastSchedule();
     const productName = await this.productPage.clickAlarmButton(currentProductName);
     const registrationRequired = await this.productPage.isBroadcastNotificationModalVisible();
     if (registrationRequired) {

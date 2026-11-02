@@ -68,6 +68,17 @@ export class ProductPage extends BasePage {
 
   /** 방송알림 대상 상품명을 저장하고 알림 버튼 클릭 */
   async clickAlarmButton(expectedProductName?: string): Promise<string> {
+    const normalize = (name: string) => name.replace(/\s+/g, ' ').trim();
+    const detailButton = this.page.getByRole('button', { name: /^(?:방송\s*알림|알림\s*받는\s*중)$/ })
+      .filter({ visible: true }).first();
+    await detailButton.waitFor({ state: 'visible', timeout: 5_000 }).catch(() => {});
+    if (await detailButton.isVisible()) {
+      const productName = normalize(await this.page.locator(PcLocators.product.productName).innerText());
+      if (expectedProductName) expect(productName).toContain(normalize(expectedProductName));
+      if (!/알림\s*받는\s*중/.test(await detailButton.innerText())) await detailButton.click();
+      return productName;
+    }
+
     const buttons = this.page.locator(PcLocators.product.alarmButton);
     let button = buttons.last();
     if (expectedProductName) {
@@ -140,7 +151,14 @@ export class ProductPage extends BasePage {
 
   /** 마이페이지 방송알림 목록에서 등록 상품명 확인 */
   async getRegisteredBroadcastNotification(productName: string): Promise<string | null> {
-    const normalize = (name: string) => name.replace(/^(?:\[[^\]]+\]\s*)+/, '').trim();
+    const normalize = (name: string) => name
+      .replace(/^(?:\[[^\]]+\]|\([^)]*\))\s*/, '')
+      .replace(/^.*?_/, '')
+      .replace(/\d+\s*(?:박스|팩|개|세트|종)/g, '')
+      .replace(/[+]/g, ' ')
+      .replace(/\s+더(?:\s|$)/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
     const expected = normalize(productName);
     const names = await this.page.locator('main strong').allTextContents();
     return names.find(name => normalize(name) === expected) ?? null;
