@@ -1,0 +1,17 @@
+launch_status_failed 52
+launch_status_broken 0
+launch_status_passed 13
+launch_status_skipped 0
+launch_status_unknown 0
+launch_time_duration 656188
+launch_time_min_duration 2573
+launch_time_max_duration 37269
+launch_time_sum_duration 655777
+launch_time_start 1793597773936
+launch_time_stop 1793598430124
+launch_problems_검증_실패 17
+launch_problems_product_defects 7
+launch_problems_요소_중복 2
+launch_problems_타임아웃 26
+launch_retries_retries 0
+launch_retries_run 65
