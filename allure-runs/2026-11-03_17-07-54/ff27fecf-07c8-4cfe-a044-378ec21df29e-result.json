@@ -1,0 +1,1 @@
+{"uuid":"ff27fecf-07c8-4cfe-a044-378ec21df29e","name":"[테스트케이스 88번] 빈 장바구니 추천구좌","status":"passed","start":1793694066241,"stop":1793694073765,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20261103_17:08:00)"},{"name":"story","value":"[테스트케이스 88번] 빈 장바구니 추천구좌"}],"parameters":[{"name":"장바구니 상태","value":"비어 있음"},{"name":"추천 상품 개수","value":"10"}]}

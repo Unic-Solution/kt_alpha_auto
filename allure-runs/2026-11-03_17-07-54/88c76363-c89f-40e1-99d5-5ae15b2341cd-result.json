@@ -1,0 +1,1 @@
+{"uuid":"88c76363-c89f-40e1-99d5-5ae15b2341cd","name":"[테스트케이스 87번] 검색 추천구좌","status":"passed","start":1793694060693,"stop":1793694065896,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20261103_17:08:00)"},{"name":"story","value":"[테스트케이스 87번] 검색 추천구좌"}],"parameters":[{"name":"선택한 인기 검색어","value":"베네통"},{"name":"방송 상품 개수","value":"40"}]}
