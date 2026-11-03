@@ -5,6 +5,14 @@ import { PcLocators } from './locators';
 export class MainPage extends BasePage {
   private selectedOptionTexts: string[] = [];
 
+  /** 옵션을 구성요소로 나누고 화면에만 붙는 판매 단위 토큰을 제외한다. */
+  private normalizeOptions(options: string[]): string[] {
+    return options
+      .flatMap(option => option.split('/'))
+      .map(option => option.replace(/\s+/g, ' ').trim())
+      .filter(option => option.length > 0 && option !== '세트');
+  }
+
   private async goToBenefitsPage() {
     await this.goToHome();
     await this.page.evaluate(() => window.scrollTo(0, 1600));
@@ -349,7 +357,7 @@ export class MainPage extends BasePage {
     const visibleOptions = (await modal.locator(PcLocators.main.selectedOptions).allTextContents())
       .map(s => s.replace(/\s*\/\s*/g, '/').replace(/\s+/g, ' ').trim()).filter(Boolean);
     const options = visibleOptions.length ? visibleOptions : this.selectedOptionTexts;
-    return { quantity: count, options: options.length > 1 ? [options.join('/')] : options };
+    return { quantity: count, options: this.normalizeOptions(options) };
   }
 
   /** 화면이 빈 상태인지 목록 로딩이 끝난 상태인지 확인한 뒤 행을 읽는다. */
@@ -367,7 +375,7 @@ export class MainPage extends BasePage {
       const quantityText = options.find(s => /수량\s*:/.test(s));
       expect(quantityText, '장바구니 수량 표시').toMatch(/수량\s*:\s*\d+개/);
       result.push({ id: id!, name, quantity: Number(quantityText!.match(/:\s*(\d+)/)![1]),
-        options: options.filter(s => !/수량\s*:/.test(s)).map(s => s.replace(/\s*\/\s*/g, '/').replace(/\s+/g, ' ').trim()),
+        options: this.normalizeOptions(options.filter(s => !/수량\s*:/.test(s))),
         amount: Number((await row.locator(PcLocators.main.cartItemPrice).innerText()).replace(/\D/g, '')) });
     }
     return result;
@@ -449,7 +457,7 @@ export class MainPage extends BasePage {
       const quantityText = details.find(s => /\d+개$/.test(s));
       expect(quantityText, '주문상품 수량').toBeTruthy();
       expect(Number(quantityText!.match(/(\d+)개$/)![1]), '주문상품 수량 일치').toBe(expected.quantity);
-      const options = details.map(s => s.replace(/\s*\d+개$/, '').trim()).filter(Boolean);
+      const options = this.normalizeOptions(details.map(s => s.replace(/\s*\d+개$/, '').trim()).filter(Boolean));
       expect(options, '주문상품 옵션 일치').toEqual(expected.options);
       expect(Number((await price.innerText()).replace(/\D/g, '')), '주문상품 금액 일치').toBe(expected.amount * expected.quantity);
     }
