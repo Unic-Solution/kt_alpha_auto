@@ -86,9 +86,11 @@ export class GsProductPage extends BasePage {
 
   /** 선물하기 > 보내는 사람 input 입력 및 정상 입력 여부 확인 */
   async fillAndVerify(name: string): Promise<boolean> {
-    await this.pressSequentially(PcLocators.giftShowProduct.senderInput, name);
-    const value = await this.getValue(PcLocators.giftShowProduct.senderInput);
-    return value === name;
+    const input = this.page.locator(PcLocators.giftShowProduct.senderInput);
+    await input.fill(name);
+    await input.blur();
+    await expect(input).toHaveValue(name);
+    return true;
   }
 
   /** 선물하기 > 내 번호 버튼 클릭 */

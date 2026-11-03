@@ -52,10 +52,15 @@ export class MainPage extends BasePage {
       await this.page.evaluate(() => window.scrollBy(0, -300));
       await expect(nav).toBeVisible();
       await expect(nav).toBeInViewport();
+      await this.closeModal(500);
       const button = buttons.nth(index);
       const name = (await button.innerText()).replace(/\s+/g, ' ');
       console.log(`[GNB ${index + 1}] ${name} 클릭`);
-      await button.click();
+      await expect(async () => {
+        await this.closeModal(500);
+        await expect(this.page.locator('[class*="Dimmed_open"]')).toBeHidden({ timeout: 1_000 });
+        await button.click({ timeout: 3_000 });
+      }).toPass({ timeout: 10_000, intervals: [500] });
       await expect(this.page).toHaveURL(url => /^G\d+$/.test(url.searchParams.get('gnbMenuId') ?? ''));
       await expect(button).toHaveClass(/Header_active/);
       const slide = this.page.locator(PcLocators.main.gnbSlides).nth(index);
@@ -228,6 +233,7 @@ export class MainPage extends BasePage {
     this.selectedOptionTexts = [];
     for (let depth = 0; depth < 10; depth++) {
       if (await giftButton.isVisible()) {
+        await this.selectFreeGiftIfNeeded();
         await expect(giftButton).toBeEnabled();
         return;
       }
@@ -248,6 +254,24 @@ export class MainPage extends BasePage {
       { message: '다음 상품 옵션 또는 선물 버튼이 노출되어야 한다' }).toBeGreaterThan(0);
     }
     throw new Error('상품 옵션 선택이 10단계 안에 완료되지 않았습니다.');
+  }
+
+  /** 선택 상품에 필수 사은품이 있으면 첫 번째 활성 사은품을 적용한다. */
+  async selectFreeGiftIfNeeded() {
+    const trigger = this.page.locator(PcLocators.main.purchaseModal)
+      .locator(PcLocators.main.freeGiftTrigger).filter({ visible: true }).first();
+    await trigger.waitFor({ state: 'visible', timeout: 1_000 }).catch(() => {});
+    if (!await trigger.isVisible()) return;
+
+    await trigger.click();
+    const modal = this.page.locator(PcLocators.main.freeGiftModal).last();
+    await expect(modal, '사은품 선택 팝업이 노출되어야 한다').toBeVisible();
+    await modal.locator(PcLocators.main.freeGiftSelect).click();
+    const option = modal.locator(PcLocators.main.freeGiftOption).filter({ visible: true }).first();
+    await expect(option, '선택 가능한 사은품이 있어야 한다').toBeVisible();
+    await option.click();
+    await modal.getByRole('button', { name: '사은품 선택하기', exact: true }).click();
+    await expect(modal, '사은품 선택 후 팝업이 닫혀야 한다').toBeHidden();
   }
 
   async selectOnAirOption(allowScheduleFallback = false) {

@@ -249,10 +249,11 @@ export class ProductPage extends BasePage {
 
     while (true) {
       const count = await this.count(PcLocators.product.optionBox);
-      if (count === 0 || count === prevCount) return;
+      if (count === 0 || count === prevCount) break;
       prevCount = count;
       await this.clickFirstEnabled(PcLocators.main.onAirDirectBuyFirstOption);
     }
+    await new MainPage(this.page).selectFreeGiftIfNeeded();
   }
 
   /** 상품 > 선물하기 버튼 클릭 (옵션 선택 포함) */

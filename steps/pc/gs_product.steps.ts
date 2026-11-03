@@ -103,6 +103,7 @@ export class GsProductSteps {
     await this.gsProductPage.fillRecipientPhoneNumber(phoneNumber);
     await this.gsProductPage.fillRecipientName(name);
     await this.gsProductPage.waitForTotalRecipients(beforeRecipients + 1);
+    await this.gsProductPage.fillAndVerify(name);
     await this.gsProductPage.clickPaymentButton();
     return await this.gsProductPage.isPaymentPage();
   }

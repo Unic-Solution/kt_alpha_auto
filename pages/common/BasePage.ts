@@ -14,12 +14,12 @@ export class BasePage {
   }
 
   /** 공통 팝업 모달 닫기 (모달이 없으면 무시) */
-  async closeModal() {
+  async closeModal(appearTimeout = 3_000) {
     const modals = this.page.locator(CommonLocators.modal.modal);
     const closeButtons = modals.getByRole('button', { name: '닫기', exact: true }).filter({ visible: true });
 
     // 홈 팝업은 API 응답 후 늦게 렌더링될 수 있으므로 최초 노출을 충분히 기다린다.
-    await closeButtons.last().waitFor({ state: 'visible', timeout: 3_000 }).catch(() => {});
+    await closeButtons.last().waitFor({ state: 'visible', timeout: appearTimeout }).catch(() => {});
     while (await closeButtons.count()) {
       const button = closeButtons.last();
       const modal = button.locator('xpath=ancestor::div[contains(@class,"Modal_open")][1]');
@@ -34,6 +34,7 @@ export class BasePage {
       // 겹쳐 있던 다음 팝업 또는 연속으로 렌더링되는 팝업을 확인한다.
       await closeButtons.last().waitFor({ state: 'visible', timeout: 500 }).catch(() => {});
     }
+    await this.page.locator(CommonLocators.modal.dimmed).waitFor({ state: 'hidden', timeout: 3_000 }).catch(() => {});
   }
 
   /** 홈페이지로 이동 */

@@ -170,6 +170,7 @@ export class LoginPage extends BasePage {
       await expect(modal, '구매 옵션 모달이 열려야 한다').toBeVisible({ timeout: 3_000 });
       const option = this.page.locator(PcLocators.main.onAirDirectBuyFirstOption).filter({ visible: true }).first();
       if (await option.isVisible()) await option.click();
+      await new MainPage(this.page).selectFreeGiftIfNeeded();
       const confirm = modal.getByRole('button', { name: /구매하기$/ }).filter({ visible: true }).last();
       await expect(confirm).toBeEnabled();
       await confirm.click();
