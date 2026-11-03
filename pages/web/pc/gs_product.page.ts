@@ -67,7 +67,7 @@ export class GsProductPage extends BasePage {
     await expect(main).not.toBeEmpty();
     await expect(this.page.locator(PcLocators.giftShowProduct.senderInput), '보내는 사람 입력 영역이 노출되어야 한다')
       .toBeVisible({ timeout: 15_000 });
-    await expect(this.page.locator(PcLocators.giftShowProduct.paymentButton), '결제 진행 버튼 영역이 노출되어야 한다')
+    await expect(this.page.locator(PcLocators.giftShowProduct.paymentButton).filter({ visible: true }).first(), '결제 진행 버튼 영역이 노출되어야 한다')
       .toBeVisible();
     await this.page.evaluate(() => window.scrollTo(0, 0));
     await this.page.waitForTimeout(2_000);
@@ -119,7 +119,9 @@ export class GsProductPage extends BasePage {
 
   /** 선물하기 > 결제 진행 버튼 클릭 */
   async clickPaymentButton() {
-    await this.click(PcLocators.giftShowProduct.paymentButton);
+    const button = this.page.locator(PcLocators.giftShowProduct.paymentButton).filter({ visible: true }).first();
+    await expect(button, '화면에 노출된 결제 진행 버튼이 있어야 한다').toBeVisible();
+    await button.click();
   }
 
   /** 선물하기 > 받는 사람 휴대폰 번호 입력 */
