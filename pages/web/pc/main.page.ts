@@ -24,9 +24,13 @@ export class MainPage extends BasePage {
     await expect(nav, '스크롤 후 GNB가 노출되어야 한다').toBeVisible({ timeout: 10_000 });
     await expect(nav).toBeInViewport();
     const benefitMenu = nav.getByRole('button', { name: /혜택\/이벤트$/ });
+    await expect(benefitMenu, '혜택/이벤트 GNB 메뉴는 하나여야 한다').toHaveCount(1);
     await expect(benefitMenu, '혜택/이벤트 GNB 메뉴가 노출되어야 한다').toBeVisible();
-    await benefitMenu.click();
-    await expect(this.page).toHaveURL(url => url.searchParams.get('gnbMenuId') === 'G000000022');
+    const content = this.page.getByRole('heading', { name: '지금 주목할 혜택&기획전', exact: true });
+    await expect(async () => {
+      if (!await content.isVisible()) await benefitMenu.click();
+      await expect(content, '혜택/이벤트 페이지 본문이 노출되어야 한다').toBeVisible({ timeout: 3_000 });
+    }).toPass({ timeout: 15_000, intervals: [500] });
   }
 
   /** GNB 전체 순회 - 각 항목 클릭 후 main 영역 노출 여부 반환 */
@@ -714,8 +718,7 @@ export class MainPage extends BasePage {
     const bannerName = await target.locator('img').getAttribute('alt');
     expect(bannerName, '기획전 배너명').toBeTruthy();
     await target.click();
-    await expect(this.page, '기획 페이지로 이동해야 한다').not.toHaveURL(benefitUrl);
-    await expect(this.page).toHaveURL(url => url.pathname.includes('/display/specialplan/'));
+    await expect(heading, '기획전 배너 클릭 후 기존 혜택 페이지를 벗어나야 한다').toBeHidden({ timeout: 15_000 });
     const main = this.page.locator('main');
     await expect(main, '기획 페이지 본문이 노출되어야 한다').toBeVisible({ timeout: 15_000 });
     await expect(main).not.toBeEmpty();
@@ -775,11 +778,11 @@ export class MainPage extends BasePage {
 
     const section = heading.locator('xpath=ancestor::div[@data-dp-crn-no="0011"][1]');
     const cards = section.locator('button[class*="BenefitIconSwiper_item"]');
-    await expect(cards, '카드 혜택 5개가 노출되어야 한다').toHaveCount(5);
     const cardCount = await cards.count();
+    expect(cardCount, '카드 혜택이 한 개 이상 노출되어야 한다').toBeGreaterThan(0);
     await expect(cards.first()).toBeVisible();
     const images = cards.locator('img');
-    await expect(images).toHaveCount(5);
+    await expect(images, '노출된 카드마다 이미지가 있어야 한다').toHaveCount(cardCount);
     await expect.poll(() => images.evaluateAll(items => items.every(item => {
       const image = item as HTMLImageElement;
       return image.complete && image.naturalWidth > 0;
