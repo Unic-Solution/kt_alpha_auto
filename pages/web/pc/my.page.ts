@@ -30,6 +30,24 @@ export class MyPage extends BasePage {
     await this.click(PcLocators.my.giftShowTab);
   }
 
+  /** 선물함 진입 후 본인인증 화면 또는 실제 선물함 본문이 렌더링될 때까지 기다린다. */
+  async waitForGiftShowAuthenticationRequirement(): Promise<boolean> {
+    const authentication = this.page.getByRole('heading', { name: '휴대폰번호', exact: true, level: 5 });
+    const content = this.page.getByRole('tab', { name: /^사용 가능/ });
+    await expect.poll(async () => await authentication.isVisible() || await content.isVisible(), {
+      message: '본인인증 화면 또는 기프티쇼 선물함 본문이 노출되어야 한다',
+      timeout: 10_000,
+    }).toBe(true);
+    return await authentication.isVisible();
+  }
+
+  /** 인증번호 입력·확인이 끝나 실제 선물함 본문으로 전환될 때까지 기다린다. */
+  async waitForGiftShowContent(timeout = 300) {
+    await expect(this.page.getByRole('tab', { name: /^사용 가능/ })).toBeVisible({
+      timeout: timeout * 1000,
+    });
+  }
+
   /** 기프티쇼 선물함 노출 여부 반환 */
   async isGiftShowContentVisible(): Promise<boolean> {
     await expect(this.page.getByRole('heading', { name: '기프티쇼 선물함', exact: true, level: 1 })).toBeVisible();
@@ -193,12 +211,13 @@ export class MyPage extends BasePage {
 
   /** 마이페이지 하위 화면의 휴대폰 본인인증 필요 여부 */
   async isManualAuthenticationVisible(): Promise<boolean> {
-    return await this.page.locator(PcLocators.my.manualAuthRequestButton).isVisible();
+    return await this.page.getByRole('button', { name: '인증 요청', exact: true }).isVisible();
   }
 
   /** 사용자가 휴대폰 본인인증을 완료해 인증 요청 화면이 사라질 때까지 대기 */
   async waitForManualAuthentication(timeout = 300) {
-    await this.page.locator(PcLocators.my.manualAuthRequestButton).waitFor({ state: 'hidden', timeout: timeout * 1000 });
+    await this.page.getByRole('button', { name: '인증 요청', exact: true })
+      .waitFor({ state: 'hidden', timeout: timeout * 1000 });
   }
 
   /** 혜택 관리 본문 노출 확인 */

@@ -163,6 +163,7 @@ export class MainSteps {
 
   /** 최근 본 상품 추천 구좌 상품 및 상세 페이지 이동 확인 */
   async verifyRecentlyViewedProductRecommend(): Promise<boolean> {
+    await this.mainPage.goToUrl("https://www.kshop.co.kr/?gnbMenuId=G000000004");
     const result = await this.mainPage.verifyRecentlyViewedRecommendation();
     parameter('최근 방문 상품 ID', result.viewedProductId);
     parameter('추천 구좌 선택 상품 ID', result.recommendedProductId);

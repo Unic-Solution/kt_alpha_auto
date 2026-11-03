@@ -28,7 +28,7 @@ export class ProductSteps {
     return await this.productPage.isVideoPlaying();
   }
 
-  /** 편성표 > 방송알림 신청 팝업 확인 및 등록 완료 확인 */
+  /** 방송알림 신청 팝업 확인 및 등록 완료 확인 */
   async verifyBroadcastNotification(): Promise<boolean> {
     const currentProductName = await this.enterCurrentProduct();
     const productName = await this.productPage.clickAlarmButton(currentProductName);

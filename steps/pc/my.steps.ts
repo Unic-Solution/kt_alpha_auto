@@ -34,7 +34,10 @@ export class MySteps {
   async verifyGiftShow(): Promise<boolean> {
     await this.myPage.clickMyButton();
     await this.myPage.clickGiftShowTab();
-    await this.waitForManualAuthenticationIfNeeded();
+    if (await this.myPage.waitForGiftShowAuthenticationRequirement()) {
+      await notifyManualAuth('PC', '본인인증');
+      await this.myPage.waitForGiftShowContent();
+    }
     const visible = await this.myPage.isGiftShowContentVisible();
     if (visible) await this.myPage.wait(2);
     return visible;

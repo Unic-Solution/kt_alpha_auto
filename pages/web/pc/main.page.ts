@@ -212,13 +212,11 @@ export class MainPage extends BasePage {
   /** 현재 방송 대표 상품을 선택하고 필요한 옵션을 순서대로 선택한다. */
   async selectFirstEnabledOption(productName?: string) {
     const modal = this.page.locator(PcLocators.main.purchaseModal);
-    const selected = modal.locator(PcLocators.main.selectedProduct);
+    const giftButton = modal.getByRole('button', { name: '선물', exact: true });
     this.selectedOptionTexts = [];
     for (let depth = 0; depth < 10; depth++) {
-      if (await selected.count() > 0) {
-        await expect(selected).toHaveCount(1);
-        await expect(selected).toBeVisible();
-        if (productName) await expect(selected).toHaveText(productName);
+      if (await giftButton.isVisible()) {
+        await expect(giftButton).toBeEnabled();
         return;
       }
       const products = modal.locator(PcLocators.main.purchaseProduct).filter({ visible: true });
@@ -232,8 +230,10 @@ export class MainPage extends BasePage {
         this.selectedOptionTexts.push((await option.innerText()).replace(/\s*\/\s*/g, '/').replace(/\s+/g, ' ').trim());
         await option.click();
       }
-      await expect.poll(async () => await selected.count() +
-        await modal.locator(PcLocators.main.purchaseOption).filter({ visible: true }).count()).toBeGreaterThan(0);
+      await expect.poll(async () => Number(await giftButton.isVisible()) +
+        await modal.locator(PcLocators.main.purchaseProduct).filter({ visible: true }).count() +
+        await modal.locator(PcLocators.main.purchaseOption).filter({ visible: true }).count(),
+      { message: '다음 상품 옵션 또는 선물 버튼이 노출되어야 한다' }).toBeGreaterThan(0);
     }
     throw new Error('상품 옵션 선택이 10단계 안에 완료되지 않았습니다.');
   }
@@ -284,10 +284,20 @@ export class MainPage extends BasePage {
   }
 
   async clickOnAirGiftButton() {
-    const button = this.page.locator(PcLocators.main.purchaseModal).locator(PcLocators.main.onAirGiftButton);
+    const modal = this.page.locator(PcLocators.main.purchaseModal);
+    const button = modal.getByRole('button', { name: '선물', exact: true });
     await expect(button).toBeVisible();
     await expect(button).toBeEnabled();
-    await button.click();
+    await button.scrollIntoViewIfNeeded();
+    await expect(async () => {
+      if (new URL(this.page.url()).pathname !== '/' + PcLocators.urls.onAirGiftOrder) {
+        await button.click();
+      }
+      await expect(this.page).toHaveURL(
+        url => url.pathname === '/' + PcLocators.urls.onAirGiftOrder,
+        { timeout: 5_000 },
+      );
+    }).toPass({ timeout: 20_000, intervals: [1_000] });
   }
 
   /** 로그인 화면이 아닌 실제 선물하기 주문서 본문과 상품을 확인한다. */
