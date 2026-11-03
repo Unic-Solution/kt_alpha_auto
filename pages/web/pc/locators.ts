@@ -80,6 +80,10 @@ export const PcLocators = {
     searchProduct: 'button[class*="ProductItem_content"]',
     searchProductTitle: '[class*="ProductItem_title"]',
     recentlyViewedProduct: '[class*="ProductItem_box"]',
+    recentQuickList: '[class*="FloatingQuickAccess_listRecent"]',
+    recentlyViewedBadge: '[class*="ProductItem_recentlyViewed"]',
+    categoryRanking: '[class*="Category_popular"]',
+    productRank: '[class*="ProductItem_rank"]',
   },
   login: {
     loginButton: '//a[normalize-space()="로그인/회원 가입" or normalize-space()="로그인"]',

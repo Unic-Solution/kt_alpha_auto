@@ -633,24 +633,159 @@ export class MainPage extends BasePage {
     return { productId, url: this.page.url() };
   }
 
+  /** 인기 검색어 결과의 방송 상품 구좌를 확인한다. */
+  async verifyPopularSearchBroadcastProducts() {
+    await this.goToHome();
+    await this.clickSearchButton();
+    const popularWord = await this.clickPopularWord();
+    const section = this.page.locator('[class*="SearchResult_topLineBox"]');
+    const heading = section.getByRole('heading', { name: /방송 상품$/ });
+    await expect(heading, '검색 결과에 방송 상품 구좌가 노출되어야 한다').toBeVisible({ timeout: 15_000 });
+    await expect(heading, '방송 상품 구좌 제목에 선택한 인기 검색어가 표시되어야 한다').toContainText(popularWord);
+    await heading.scrollIntoViewIfNeeded();
+    const products = section.locator(PcLocators.main.searchResults);
+    await expect(products.first(), '방송 상품 구좌에 상품이 한 개 이상 노출되어야 한다')
+      .toBeVisible({ timeout: 15_000 });
+    return { popularWord, productCount: await products.count() };
+  }
+
+  /** 장바구니를 비운 뒤 빈 장바구니의 인기 상품 추천 구좌를 확인한다. */
+  async verifyEmptyCartPopularProducts() {
+    await this.goToHome();
+    await this.closeModal();
+    const cartButton = this.page.getByRole('button', { name: '장바구니', exact: true }).filter({ visible: true }).first();
+    await expect(cartButton, '메인 페이지 장바구니 버튼이 노출되어야 한다').toBeVisible();
+    await cartButton.click();
+    await expect(this.page).toHaveURL(url => url.pathname === '/custord/basket');
+
+    const rows = this.page.locator(PcLocators.main.cartItems);
+    while (await rows.count()) {
+      const id = await rows.first().locator('input[type="checkbox"]').getAttribute('value');
+      expect(id, '삭제할 장바구니 행 식별자').toMatch(/^\d+$/);
+      await this.deleteAddedCartItem(id!);
+    }
+    await expect(this.page.getByText(PcLocators.main.cartEmptyText, { exact: true }), '장바구니가 비어 있어야 한다')
+      .toBeVisible({ timeout: 15_000 });
+
+    const heading = this.page.getByRole('heading', { name: '지금 많은 고객님이 구매하는 상품', exact: true });
+    await expect(heading, '빈 장바구니에 인기 상품 추천 구좌가 노출되어야 한다').toBeVisible({ timeout: 15_000 });
+    await heading.scrollIntoViewIfNeeded();
+    const section = heading.locator('xpath=ancestor::*[.//*[contains(@class,"ProductItem_box")]][1]');
+    const products = section.locator(PcLocators.main.searchResults);
+    await expect(products.first(), '인기 상품 추천 구좌에 상품이 한 개 이상 노출되어야 한다')
+      .toBeVisible({ timeout: 15_000 });
+    return { productCount: await products.count() };
+  }
+
+  /** 특가 추천 상품 방문 후 해당 상품 아래에 생성되는 유사 상품 구좌를 확인한다. */
+  async verifySpecialPriceRecentlyViewedRecommendation() {
+    await this.goToHome();
+    await this.closeModal();
+    const specialHeading = this.page.getByRole('heading', { name: '고객님, 특가상품 추천드려요', exact: true });
+    await expect(async () => {
+      if (!await specialHeading.isVisible()) {
+        await this.page.evaluate(() => window.scrollBy(0, Math.max(window.innerHeight * 0.8, 600)));
+        await this.page.waitForTimeout(300);
+      }
+      await expect(specialHeading).toBeVisible({ timeout: 1_000 });
+    }).toPass({ timeout: 30_000, intervals: [300] });
+    await specialHeading.scrollIntoViewIfNeeded();
+
+    const specialSection = specialHeading.locator('xpath=ancestor::div[contains(@class,"displayWrap")][1]');
+    const product = specialSection.locator(PcLocators.main.searchResults).first();
+    await expect(product, '특가상품 추천 구좌에 상품이 한 개 이상 있어야 한다').toBeVisible({ timeout: 15_000 });
+    const productId = await product.getAttribute('data-product-id');
+    expect(productId, '선택한 특가상품 ID').toMatch(/^\d+$/);
+    const productName = (await product.locator(PcLocators.main.searchProductTitle).innerText()).trim();
+    await product.locator(PcLocators.main.searchProduct).click();
+
+    await expect(this.page).toHaveURL(url => url.pathname === `/display/product/${productId}`);
+    await expect(this.page.locator(PcLocators.product.productName), '특가상품 상세 화면이 로딩되어야 한다')
+      .toBeVisible({ timeout: 15_000 });
+    const detailImages = this.page.locator('main img').filter({ visible: true });
+    await expect(detailImages.first(), '특가상품 상세 이미지가 노출되어야 한다').toBeVisible({ timeout: 15_000 });
+    await expect.poll(async () => detailImages.evaluateAll(images => images.length > 0 && images.every(element => {
+      const image = element as HTMLImageElement;
+      return image.complete && image.naturalWidth > 0;
+    })), { message: '특가상품 상세 이미지가 모두 로딩되어야 한다', timeout: 15_000 }).toBe(true);
+    await this.page.waitForTimeout(2_000);
+
+    await this.goToHome();
+    await expect(this.page).toHaveURL(url => url.pathname === '/');
+    await expect(async () => {
+      if (!await specialHeading.isVisible()) {
+        await this.page.evaluate(() => window.scrollBy(0, Math.max(window.innerHeight * 0.8, 600)));
+        await this.page.waitForTimeout(300);
+      }
+      await expect(specialHeading, '메인 페이지에 특가상품 추천 구좌가 노출되어야 한다').toBeVisible({ timeout: 1_000 });
+    }).toPass({ timeout: 30_000, intervals: [300] });
+    const selectedProduct = specialSection.locator(`${PcLocators.main.searchResults}[data-product-id="${productId}"]`);
+    await expect(selectedProduct, '방문했던 특가상품이 복귀 후에도 노출되어야 한다').toBeVisible();
+    const recommendation = selectedProduct.locator(
+      'xpath=following-sibling::div[contains(@class,"RecommendDisplay_wrap")][1]',
+    );
+    const similarHeading = recommendation.getByRole('heading', { name: '방금 본 상품과 비슷한 상품', exact: true });
+    await expect(async () => {
+      if (!await similarHeading.isVisible()) {
+        await this.page.evaluate(() => window.scrollBy(0, Math.max(window.innerHeight * 0.8, 600)));
+        await this.page.waitForTimeout(300);
+      }
+      await expect(similarHeading, '방문한 상품 아래에 유사 상품 추천 구좌가 노출되어야 한다')
+        .toBeVisible({ timeout: 1_000 });
+    }).toPass({ timeout: 20_000, intervals: [300] });
+    await similarHeading.scrollIntoViewIfNeeded();
+    const similarProducts = recommendation.locator(PcLocators.main.searchResults);
+    await expect(similarProducts.first(), '유사 상품 추천 구좌에 상품이 한 개 이상 있어야 한다')
+      .toBeVisible({ timeout: 15_000 });
+    await this.page.waitForTimeout(2_000);
+    return { productId: productId!, productName, similarProductCount: await similarProducts.count() };
+  }
+
   /** 상품 상세 페이지 이동 확인 */
   async isProductDetailPage(): Promise<boolean> {
     return this.urlContains(PcLocators.urls.productDetail);
   }
 
-  /** 최근 본 상품 이력을 만든 뒤 홈 추천 구좌의 상품 상세 이동을 검증한다. */
+  /** 랭킹 1위 방문 후 오른쪽 최근 상품과 추천 구좌의 최근 본 상품 태그를 대조한다. */
   async verifyRecentlyViewedRecommendation() {
-    await this.goToHome();
-    const onAirTitle = this.page.locator(PcLocators.main.onAirDisplay).locator(PcLocators.main.onAirTitle);
-    await expect(onAirTitle, '최근 본 상품 이력을 만들 현재 방송 상품이 있어야 한다').toBeVisible();
-    const viewedHref = await onAirTitle.getAttribute('href');
-    expect(viewedHref).toMatch(/^\/display\/product\/\d+/);
-    await onAirTitle.click();
-    await expect(this.page).toHaveURL(url => url.pathname === new URL(viewedHref!, this.page.url()).pathname);
-    await expect(this.page.locator(PcLocators.product.productName), '방문한 상품 상세가 로딩되어야 한다')
-      .toBeVisible({ timeout: 15_000 });
+    const alphaHome = new URL('/', this.page.url());
+    alphaHome.searchParams.set('currentChannel', 'alpha');
+    await this.goToUrl(alphaHome.href);
+    await this.closeModal();
 
-    await this.goToHome();
+    const category = this.page.getByRole('button', { name: '카테고리', exact: true }).filter({ visible: true }).first();
+    await expect(category).toBeVisible();
+    await category.click();
+    const ranking = this.page.locator(PcLocators.main.categoryRanking)
+      .filter({ has: this.page.getByRole('heading', { name: '랭킹', exact: true, level: 2 }) });
+    await expect(ranking, '카테고리의 랭킹 구좌가 노출되어야 한다').toBeVisible();
+    const rankOne = ranking.locator(PcLocators.main.recentlyViewedProduct).filter({
+      has: this.page.locator(PcLocators.main.productRank).filter({ hasText: /^1$/ }),
+    });
+    await expect(rankOne, '랭킹 1위 상품이 하나 있어야 한다').toHaveCount(1);
+    const viewedProductId = await rankOne.getAttribute('data-product-id');
+    expect(viewedProductId, '랭킹 1위 상품 ID').toMatch(/^\d+$/);
+    const viewedProductName = (await rankOne.locator(PcLocators.main.searchProductTitle).innerText()).trim();
+    await rankOne.locator(PcLocators.main.searchProduct).click();
+    await expect(this.page).toHaveURL(url => url.pathname === `/display/product/${viewedProductId}`);
+    await this.page.waitForLoadState('domcontentloaded');
+    await expect(this.page.locator(PcLocators.product.productName), '랭킹 1위 상품 상세가 로딩되어야 한다')
+      .toContainText(viewedProductName, { timeout: 15_000 });
+    const detailImages = this.page.locator('main img').filter({ visible: true });
+    await expect(detailImages.first(), '랭킹 1위 상품 상세 이미지가 노출되어야 한다').toBeVisible({ timeout: 15_000 });
+    await expect.poll(async () => detailImages.evaluateAll(images => images.length > 0 && images.every(element => {
+      const image = element as HTMLImageElement;
+      return image.complete && image.naturalWidth > 0;
+    })), { message: '랭킹 1위 상품 상세 이미지가 모두 로딩되어야 한다', timeout: 15_000 }).toBe(true);
+    await this.page.waitForTimeout(2_000);
+
+    await this.goToUrl(alphaHome.href);
+    await this.closeModal();
+    const quickRecentImage = this.page.locator(PcLocators.main.recentQuickList).locator('li img').first();
+    await expect(quickRecentImage, '오른쪽 최근 본 상품의 첫 번째 상품이 노출되어야 한다').toBeVisible();
+    await expect(quickRecentImage, '방문한 랭킹 1위 상품이 최근 본 상품 첫 번째에 표시되어야 한다')
+      .toHaveAttribute('alt', viewedProductName, { timeout: 15_000 });
+
     const heading = this.page.getByRole('heading', { name: '최근 본 상품과 비슷한 상품이에요', exact: true });
     await expect(async () => {
       if (!await heading.isVisible()) {
@@ -661,22 +796,138 @@ export class MainPage extends BasePage {
     }).toPass({ timeout: 20_000, intervals: [300] });
     const section = heading.locator('xpath=ancestor::div[contains(@class,"displayWrap")][1]');
     await expect(section, '최근 본 상품 추천 구좌가 노출되어야 한다').toBeVisible();
-    const card = section.locator(PcLocators.main.recentlyViewedProduct).filter({ visible: true }).first();
-    await expect(card, '최근 본 상품 추천 구좌에 상품이 있어야 한다').toBeVisible();
-    const productId = await card.getAttribute('data-product-id');
-    expect(productId, '추천 상품 ID').toMatch(/^\d+$/);
-    if (!productId) throw new Error('최근 본 상품 추천 구좌에서 상품 ID를 확인할 수 없습니다.');
-    const target = card.locator('button[class*="ProductItem_content"]').first();
-    await expect(target, '추천 상품 상세 이동 버튼이 있어야 한다').toBeVisible();
+    const card = section.locator(PcLocators.main.recentlyViewedProduct).filter({
+      has: this.page.locator(PcLocators.main.recentlyViewedBadge).filter({ hasText: /^최근 본 상품$/ }),
+    });
+    await expect(card, '최근 본 상품 태그가 붙은 상품이 하나 있어야 한다').toHaveCount(1);
+    await expect(card).toHaveAttribute('data-product-id', viewedProductId!);
+    await expect(card.locator(PcLocators.main.searchProductTitle)).toContainText(viewedProductName);
+    return { viewedProductId: viewedProductId!, viewedProductName };
+  }
+
+  /** 83번에서 확인한 최근 본 상품 태그 카드를 클릭해 상세 화면을 확인한다. */
+  async openRecentlyViewedRecommendation(product: { viewedProductId: string; viewedProductName: string }) {
+    const heading = this.page.getByRole('heading', { name: '최근 본 상품과 비슷한 상품이에요', exact: true });
+    await expect(heading).toBeVisible();
+    const section = heading.locator('xpath=ancestor::div[contains(@class,"displayWrap")][1]');
+    const card = section.locator(`${PcLocators.main.recentlyViewedProduct}[data-product-id="${product.viewedProductId}"]`).filter({
+      has: this.page.locator(PcLocators.main.recentlyViewedBadge).filter({ hasText: /^최근 본 상품$/ }),
+    });
+    const target = card.locator(PcLocators.main.searchProduct);
+    await expect(target, '최근 본 상품 상세 이동 버튼이 있어야 한다').toBeVisible();
     await target.click();
-    await expect(this.page).toHaveURL(url => url.pathname === `/display/product/${productId}`);
+    await expect(this.page).toHaveURL(url => url.pathname === `/display/product/${product.viewedProductId}`);
     await expect(this.page.locator(PcLocators.product.productName), '추천 상품 상세 화면이 로딩되어야 한다')
-      .toBeVisible({ timeout: 15_000 });
-    const image = this.page.locator(PcLocators.product.productImage).filter({ visible: true }).first();
-    await expect(image, '추천 상품 상세 이미지가 노출되어야 한다').toBeVisible({ timeout: 15_000 });
-    await expect.poll(() => image.evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth > 0),
-      { message: '추천 상품 상세 이미지가 로딩되어야 한다', timeout: 15_000 }).toBe(true);
-    return { viewedProductId: viewedHref!.match(/\/display\/product\/(\d+)/)![1], recommendedProductId: productId };
+      .toContainText(product.viewedProductName, { timeout: 15_000 });
+    await this.page.waitForTimeout(2_000);
+    return { productId: product.viewedProductId, productName: product.viewedProductName, url: this.page.url() };
+  }
+
+  /** 상품 상세의 묶음 배송 상품 화면을 확인하고 복귀 후 비슷한 상품 추천 구좌를 검증한다. */
+  async verifyBundleShippingAndSimilarProducts(product: { viewedProductId: string; viewedProductName: string }) {
+    await expect(this.page).toHaveURL(url => url.pathname === `/display/product/${product.viewedProductId}`);
+    const bundleButton = this.page.getByRole('button', { name: '묶음 배송 상품보기', exact: true });
+    await bundleButton.scrollIntoViewIfNeeded();
+    await expect(bundleButton).toBeVisible();
+    await bundleButton.click();
+
+    const bundleHeading = this.page.getByRole('heading', { name: '묶음 배송 BEST 상품', exact: true, level: 3 });
+    await expect(bundleHeading, '묶음 배송 상품 화면이 노출되어야 한다').toBeVisible({ timeout: 15_000 });
+    const bundleSection = bundleHeading.locator('xpath=ancestor::div[contains(@class,"BundleProduct_topLineBox")][1]');
+    const bundleProducts = bundleSection.locator(PcLocators.main.recentlyViewedProduct);
+    const bundleProductCount = await bundleProducts.count();
+    expect(bundleProductCount, '묶음 배송 상품이 한 개 이상 있어야 한다').toBeGreaterThan(0);
+    await expect(bundleProducts.first()).toBeVisible();
+    await this.page.waitForTimeout(2_000);
+
+    await this.page.goBack();
+    await expect(this.page).toHaveURL(url => url.pathname === `/display/product/${product.viewedProductId}`);
+    await expect(this.page.locator(PcLocators.product.productName), '기존 상품 상세로 돌아와야 한다')
+      .toContainText(product.viewedProductName, { timeout: 15_000 });
+    await bundleButton.scrollIntoViewIfNeeded();
+    await expect(bundleButton).toBeVisible();
+
+    const similarHeading = this.page.getByRole('heading', { name: '비슷한 상품을 추천해요!', exact: true, level: 3 });
+    await expect(async () => {
+      if (!await similarHeading.isVisible()) {
+        await this.page.evaluate(() => window.scrollBy(0, Math.max(window.innerHeight * 0.8, 600)));
+        await this.page.waitForTimeout(300);
+      }
+      await expect(similarHeading).toBeVisible({ timeout: 1_000 });
+    }).toPass({ timeout: 20_000, intervals: [300] });
+    await similarHeading.scrollIntoViewIfNeeded();
+    const similarSection = similarHeading.locator('xpath=ancestor::div[contains(@class,"ProductSwiperList_wrap")][1]');
+    const similarProducts = similarSection.locator(PcLocators.main.recentlyViewedProduct);
+    const similarProductCount = await similarProducts.count();
+    expect(similarProductCount, '비슷한 추천 상품이 한 개 이상 있어야 한다').toBeGreaterThan(0);
+    await expect(similarProducts.first()).toBeVisible();
+    await this.page.waitForTimeout(2_000);
+    return { bundleProductCount, similarProductCount };
+  }
+
+  /** 카테고리 상품 상세 방문 후 카테고리 메인의 개인화 추천 구좌를 확인한다. */
+  async verifyCategoryRecommendationAfterProductVisit() {
+    const alphaHome = new URL('/', this.page.url());
+    alphaHome.searchParams.set('currentChannel', 'alpha');
+    await this.goToUrl(alphaHome.href);
+    await this.closeModal();
+
+    const openCategory = async () => {
+      const button = this.page.getByRole('button', { name: '카테고리', exact: true }).filter({ visible: true }).first();
+      await expect(button).toBeVisible();
+      await button.click();
+      await expect(this.page.locator('[class*="Category_categoryList"] a').first(), '상세 카테고리가 노출되어야 한다')
+        .toBeVisible();
+    };
+
+    await openCategory();
+    const category = this.page.locator('[class*="Category_categoryList"] a').first();
+    const categoryName = (await category.locator('[class*="Category_title"]').innerText()).trim();
+    await category.click();
+    const categoryHeading = this.page.getByRole('heading', { name: new RegExp(`${categoryName} BEST 100`), level: 2 });
+    await expect(categoryHeading, '선택한 상세 카테고리 상품 목록이 노출되어야 한다').toBeVisible({ timeout: 15_000 });
+    const categoryPage = this.page.locator('[class*="CategoryPage_wrap"]');
+    const product = categoryPage.locator(PcLocators.main.recentlyViewedProduct).first();
+    await expect(product, '상세 카테고리에 상품이 있어야 한다').toBeVisible();
+    const productId = await product.getAttribute('data-product-id');
+    expect(productId, '카테고리 상품 ID').toMatch(/^\d+$/);
+    const productName = (await product.locator(PcLocators.main.searchProductTitle).innerText()).trim();
+    await product.locator(PcLocators.main.searchProduct).click();
+    await expect(this.page).toHaveURL(url => url.pathname === `/display/product/${productId}`);
+    const detailImages = this.page.locator('main img').filter({ visible: true });
+    await expect(detailImages.first(), '카테고리 상품 상세 이미지가 노출되어야 한다').toBeVisible({ timeout: 15_000 });
+    await expect.poll(async () => detailImages.evaluateAll(images => images.length > 0 && images.every(element => {
+      const image = element as HTMLImageElement;
+      return image.complete && image.naturalWidth > 0;
+    })), { message: '카테고리 상품 상세 이미지가 모두 로딩되어야 한다', timeout: 15_000 }).toBe(true);
+    await this.page.waitForTimeout(2_000);
+
+    await this.page.goBack();
+    await expect(categoryHeading, '선택했던 상세 카테고리 화면으로 돌아와야 한다').toBeVisible({ timeout: 15_000 });
+    await openCategory();
+    const recommendationHeading = this.page.getByRole('heading', { name: '당신을 위한 추천 상품', exact: true, level: 2 });
+    await expect(async () => {
+      if (!await recommendationHeading.isVisible()) {
+        await this.page.evaluate(() => window.scrollBy(0, Math.max(window.innerHeight * 0.8, 600)));
+        await this.page.waitForTimeout(300);
+      }
+      await expect(recommendationHeading).toBeVisible({ timeout: 1_000 });
+    }).toPass({ timeout: 20_000, intervals: [300] });
+    await recommendationHeading.scrollIntoViewIfNeeded();
+    const recommendation = recommendationHeading.locator('xpath=ancestor::div[contains(@class,"Category_recommend")][1]');
+    const recommendedProducts = recommendation.locator(PcLocators.main.recentlyViewedProduct);
+    await expect(recommendedProducts.first(), '당신을 위한 추천 상품이 한 개 이상 노출되어야 한다')
+      .toBeVisible({ timeout: 20_000 });
+    const recommendationCount = await recommendedProducts.count();
+    expect(recommendationCount, '당신을 위한 추천 상품이 한 개 이상 있어야 한다').toBeGreaterThan(0);
+    const images = recommendedProducts.locator('img').filter({ visible: true });
+    await expect(images.first(), '추천 상품 이미지가 노출되어야 한다').toBeVisible();
+    await expect.poll(async () => images.evaluateAll(items => items.length > 0 && items.every(element => {
+      const image = element as HTMLImageElement;
+      return image.complete && image.naturalWidth > 0;
+    })), { message: '추천 상품 이미지가 로딩되어야 한다', timeout: 15_000 }).toBe(true);
+    await this.page.waitForTimeout(2_000);
+    return { categoryName, productId: productId!, productName, recommendationCount };
   }
 
   /** 편성표 TV·TV+ 탭별 현재 방송 상품 상단 노출을 확인한다. */

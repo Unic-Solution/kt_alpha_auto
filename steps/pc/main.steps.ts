@@ -5,6 +5,7 @@ import { parameter } from '../../utils/step-runner';
 
 export class MainSteps {
   private mainPage: MainPage;
+  private recentlyViewedRecommendation?: { viewedProductId: string; viewedProductName: string };
 
   constructor(basePage: BasePage) {
     this.mainPage = new MainPage(basePage.getPage());
@@ -161,13 +162,72 @@ export class MainSteps {
     return true;
   }
 
+  /** 인기 검색어 결과의 방송 상품 구좌 확인 */
+  async verifyPopularSearchBroadcastProducts(): Promise<boolean> {
+    const result = await this.mainPage.verifyPopularSearchBroadcastProducts();
+    parameter('선택한 인기 검색어', result.popularWord);
+    parameter('방송 상품 개수', `${result.productCount}`);
+    return true;
+  }
+
+  /** 빈 장바구니의 인기 상품 추천 구좌 확인 */
+  async verifyEmptyCartPopularProducts(): Promise<boolean> {
+    const result = await this.mainPage.verifyEmptyCartPopularProducts();
+    parameter('장바구니 상태', '비어 있음');
+    parameter('추천 상품 개수', `${result.productCount}`);
+    console.log('[빈 장바구니/인기 상품 추천]', result);
+    return true;
+  }
+
+  /** 특가상품 방문 후 메인에서 방금 본 상품과 비슷한 상품 구좌 확인 */
+  async verifySpecialPriceRecentlyViewedRecommendation(): Promise<boolean> {
+    const result = await this.mainPage.verifySpecialPriceRecentlyViewedRecommendation();
+    parameter('방문 상품 ID', result.productId);
+    parameter('방문 상품명', result.productName);
+    parameter('유사 추천 상품 개수', `${result.similarProductCount}`);
+    console.log('[특가상품/방금 본 상품과 비슷한 상품]', result);
+    return true;
+  }
+
   /** 최근 본 상품 추천 구좌 상품 및 상세 페이지 이동 확인 */
   async verifyRecentlyViewedProductRecommend(): Promise<boolean> {
-    await this.mainPage.goToUrl("https://www.kshop.co.kr/?gnbMenuId=G000000004");
     const result = await this.mainPage.verifyRecentlyViewedRecommendation();
+    this.recentlyViewedRecommendation = result;
     parameter('최근 방문 상품 ID', result.viewedProductId);
-    parameter('추천 구좌 선택 상품 ID', result.recommendedProductId);
+    parameter('최근 방문 상품명', result.viewedProductName);
     console.log('[최근 본 상품 추천 구좌]', result);
+    return true;
+  }
+
+  /** 최근 본 상품 태그 상품의 상세 페이지 이동 확인 */
+  async verifyRecentlyViewedProductDetail(): Promise<boolean> {
+    if (!this.recentlyViewedRecommendation) await this.verifyRecentlyViewedProductRecommend();
+    const result = await this.mainPage.openRecentlyViewedRecommendation(this.recentlyViewedRecommendation!);
+    parameter('상세 이동 상품 ID', result.productId);
+    parameter('상세 이동 상품명', result.productName);
+    parameter('상품 상세 URL', result.url);
+    console.log('[최근 본 상품 상세 이동]', result);
+    return true;
+  }
+
+  /** 상세 > 묶음 배송 상품보기 > 뒤로가기 > 비슷한 상품 추천 구좌 확인 */
+  async verifyBundleShippingAndSimilarProducts(): Promise<boolean> {
+    if (!this.recentlyViewedRecommendation) await this.verifyRecentlyViewedProductDetail();
+    const result = await this.mainPage.verifyBundleShippingAndSimilarProducts(this.recentlyViewedRecommendation!);
+    parameter('묶음 배송 상품 수', String(result.bundleProductCount));
+    parameter('비슷한 추천 상품 수', String(result.similarProductCount));
+    console.log('[묶음 배송 및 비슷한 상품 추천]', result);
+    return true;
+  }
+
+  /** 카테고리 상품 방문 후 당신을 위한 추천 상품 구좌 확인 */
+  async verifyCategoryRecommendationAfterProductVisit(): Promise<boolean> {
+    const result = await this.mainPage.verifyCategoryRecommendationAfterProductVisit();
+    parameter('선택 카테고리', result.categoryName);
+    parameter('방문 상품 ID', result.productId);
+    parameter('방문 상품명', result.productName);
+    parameter('추천 상품 수', String(result.recommendationCount));
+    console.log('[카테고리 개인화 추천]', result);
     return true;
   }
 
