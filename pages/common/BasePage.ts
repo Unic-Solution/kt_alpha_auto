@@ -16,14 +16,23 @@ export class BasePage {
   /** 공통 팝업 모달 닫기 (모달이 없으면 무시) */
   async closeModal() {
     const modals = this.page.locator(CommonLocators.modal.modal);
-    await modals.last().waitFor({ state: 'visible', timeout: 750 }).catch(() => {});
-    while (await modals.filter({ visible: true }).count()) {
-      const modal = modals.filter({ visible: true }).last();
-      const button = modal.getByRole('button', { name: '닫기', exact: true }).filter({ visible: true }).last();
-      if (!await button.count()) break;
-      // 자동 전환 배너가 닫기 버튼 위의 포인터 이벤트를 가로막아 DOM 클릭으로 정리한다.
-      await button.dispatchEvent('click');
-      await modal.waitFor({ state: 'hidden', timeout: 3_000 });
+    const closeButtons = modals.getByRole('button', { name: '닫기', exact: true }).filter({ visible: true });
+
+    // 홈 팝업은 API 응답 후 늦게 렌더링될 수 있으므로 최초 노출을 충분히 기다린다.
+    await closeButtons.last().waitFor({ state: 'visible', timeout: 3_000 }).catch(() => {});
+    while (await closeButtons.count()) {
+      const button = closeButtons.last();
+      const modal = button.locator('xpath=ancestor::div[contains(@class,"Modal_open")][1]');
+
+      // 자동 전환 배너가 포인터 이벤트를 가로막거나 hydration이 늦는 경우 클릭을 재시도한다.
+      for (let attempt = 0; attempt < 3 && await modal.isVisible(); attempt++) {
+        await button.dispatchEvent('click');
+        await modal.waitFor({ state: 'hidden', timeout: 1_500 }).catch(() => {});
+      }
+      if (await modal.isVisible()) throw new Error('팝업 모달의 닫기 버튼을 눌렀지만 모달이 닫히지 않았습니다.');
+
+      // 겹쳐 있던 다음 팝업 또는 연속으로 렌더링되는 팝업을 확인한다.
+      await closeButtons.last().waitFor({ state: 'visible', timeout: 500 }).catch(() => {});
     }
   }
 
