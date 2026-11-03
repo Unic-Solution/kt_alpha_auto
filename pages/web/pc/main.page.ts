@@ -536,16 +536,10 @@ export class MainPage extends BasePage {
       message: '필터 전 상품 목록이 로딩되어야 한다', timeout: 15_000,
     }).toBeGreaterThan(0);
     const beforeQuantity = await this.extractProductQuantity();
-    const detailUrl = this.page.url();
     const products = () => this.page.locator(PcLocators.main.categoryProducts).filter({ visible: true });
     const expectProducts = async () => {
       await expect(products().first(), '필터·정렬 결과 상품').toBeVisible();
       return (await products().allTextContents()).slice(0, 10).map(text => text.replace(/\s+/g, ' ').trim());
-    };
-    const goToDetail = async () => {
-      await this.page.goto(detailUrl);
-      await this.closeModal();
-      await expect(this.page.locator(PcLocators.main.firstFilterButton)).toBeVisible();
     };
 
     await this.page.locator(PcLocators.main.firstFilterButton).click();
@@ -553,7 +547,6 @@ export class MainPage extends BasePage {
     await expectProducts();
 
     const modalFilter = async (trigger: string, select: (modal: ReturnType<typeof this.page.locator>) => Promise<void>, parameter: string, value: RegExp) => {
-      await goToDetail();
       await this.page.getByRole('button', { name: trigger, exact: true }).click();
       const modal = this.page.locator(PcLocators.main.filterModal);
       await expect(modal).toBeVisible();
@@ -582,8 +575,11 @@ export class MainPage extends BasePage {
       ['상품평순', 'review_score_desc'],
     ] as const;
     for (const [name, value] of sorts) {
-      await goToDetail();
-      await this.page.getByRole('button', { name: '인기순', exact: true }).click();
+      const sortTrigger = this.page.getByRole('button', {
+        name: /^(?:인기순|신상품순|낮은 가격순|높은 가격순|할인율 높은순|상품평순)$/,
+      }).filter({ visible: true }).first();
+      await expect(sortTrigger, '현재 선택된 정렬 버튼이 노출되어야 한다').toBeVisible();
+      await sortTrigger.click();
       const options = this.page.locator(PcLocators.main.sortOptions);
       for (const [optionName] of sorts) {
         await expect(options.filter({ hasText: new RegExp(`^${optionName}$`) })).toHaveCount(1);
