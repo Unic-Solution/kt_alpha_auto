@@ -105,7 +105,10 @@ export class GsProductPage extends BasePage {
 
   /** 선물하기 > 받는 사람 수 추출 */
   async extractTotalRecipients(): Promise<number | false> {
-    const text = await this.getText(PcLocators.giftShowProduct.totalRecipients);
+    const total = this.page.locator(PcLocators.giftShowProduct.totalRecipients);
+    await expect(total, '상단 받는 사람 인원 수가 로딩되어야 한다')
+      .toHaveText(/총\s*\d+명/, { timeout: 15_000 });
+    const text = await total.innerText();
     return this.extractNumber(text);
   }
 
