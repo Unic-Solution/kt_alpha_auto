@@ -66,11 +66,12 @@ export class BasePage {
 
   /** 지정한 URL로 이동 */
   async goToUrl(url: string) {
+    const navigate = () => this.page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30_000 });
     try {
-      await this.page.goto(url);
+      await navigate();
     } catch (e: any) {
       if (e.message?.includes('ERR_ABORTED') || e.message?.includes('interrupted by another navigation')) {
-        await this.page.goto(url);
+        await navigate();
       } else throw e;
     }
   }

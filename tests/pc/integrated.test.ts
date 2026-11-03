@@ -9,6 +9,8 @@ import { GsMainSteps } from '../../steps/pc/gs_main.steps';
 import { GsProductSteps } from '../../steps/pc/gs_product.steps';
 import { createSuiteRun } from '../../utils/step-runner';
 
+test.use({ requiresAuth: false });
+
 const ENV = {
   name: process.env.NAME ?? '',
   year: process.env.YEAR ?? '',
