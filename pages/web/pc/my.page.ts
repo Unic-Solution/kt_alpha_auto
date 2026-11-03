@@ -81,6 +81,24 @@ export class MyPage extends BasePage {
     await this.click(PcLocators.my.deliveryAddressTab);
   }
 
+  /** 배송지 관리 진입 후 본인인증 화면 또는 실제 본문이 렌더링될 때까지 기다린다. */
+  async waitForDeliveryAddressAuthenticationRequirement(): Promise<boolean> {
+    const authentication = this.page.getByRole('heading', { name: '휴대폰번호', exact: true, level: 5 });
+    const content = this.page.locator(PcLocators.my.deliveryAddressContent);
+    await expect.poll(async () => await authentication.isVisible() || await content.isVisible(), {
+      message: '본인인증 화면 또는 배송지 관리 본문이 노출되어야 한다',
+      timeout: 10_000,
+    }).toBe(true);
+    return await authentication.isVisible();
+  }
+
+  /** 본인인증이 끝나 실제 배송지 관리 본문으로 전환될 때까지 기다린다. */
+  async waitForDeliveryAddressContent(timeout = 300) {
+    await expect(this.page.locator(PcLocators.my.deliveryAddressContent)).toBeVisible({
+      timeout: timeout * 1000,
+    });
+  }
+
   /** 배송지 관리 노출 여부 반환 */
   async isDeliveryAddressContentVisible(): Promise<boolean> {
     return await this.isVisible(PcLocators.my.deliveryAddressContent);
@@ -89,6 +107,24 @@ export class MyPage extends BasePage {
   /** 마이 > 나의 쇼핑 정보 관리 > 연락처 관리 탭 클릭 */
   async clickPhoneAddressTab() {
     await this.click(PcLocators.my.phoneAddressTab);
+  }
+
+  /** 연락처 관리 진입 후 본인인증 화면 또는 실제 본문이 렌더링될 때까지 기다린다. */
+  async waitForPhoneAddressAuthenticationRequirement(): Promise<boolean> {
+    const authentication = this.page.getByRole('heading', { name: '휴대폰번호', exact: true, level: 5 });
+    const content = this.page.locator(PcLocators.my.phoneAddressContent);
+    await expect.poll(async () => await authentication.isVisible() || await content.isVisible(), {
+      message: '본인인증 화면 또는 연락처 관리 본문이 노출되어야 한다',
+      timeout: 10_000,
+    }).toBe(true);
+    return await authentication.isVisible();
+  }
+
+  /** 본인인증이 끝나 실제 연락처 관리 본문으로 전환될 때까지 기다린다. */
+  async waitForPhoneAddressContent(timeout = 300) {
+    await expect(this.page.locator(PcLocators.my.phoneAddressContent)).toBeVisible({
+      timeout: timeout * 1000,
+    });
   }
 
   /** 연락처 관리 노출 여부 반환 */
@@ -222,13 +258,35 @@ export class MyPage extends BasePage {
 
   /** 혜택 관리 본문 노출 확인 */
   async isBenefitContentVisible(): Promise<boolean> {
-    return !await this.isManualAuthenticationVisible()
-      && await this.page.locator(PcLocators.my.benefitTitle).first().isVisible();
+    const content = this.page.locator(PcLocators.my.benefitContent);
+    await expect(content).toBeVisible();
+    await expect(content.getByRole('heading', { name: '맞춤형 상품·혜택 안내', exact: true })).toBeVisible();
+    await expect(content.getByRole('heading', { name: '광고성 정보 수신 동의', exact: true })).toBeVisible();
+    await expect(content.getByRole('heading', { name: 'KT 멤버십 인증', exact: true })).toBeVisible();
+    return true;
   }
 
   /** 마이 > 나의 쇼핑 정보 관리 > 혜택 관리 탭 클릭 */
   async clickBenefitTab() {
     await this.click(PcLocators.my.benefitTab);
+  }
+
+  /** 혜택 관리 진입 후 본인인증 화면 또는 실제 본문이 렌더링될 때까지 기다린다. */
+  async waitForBenefitAuthenticationRequirement(): Promise<boolean> {
+    const authentication = this.page.getByRole('heading', { name: '휴대폰번호', exact: true, level: 5 });
+    const content = this.page.locator(PcLocators.my.benefitContent);
+    await expect.poll(async () => await authentication.isVisible() || await content.isVisible(), {
+      message: '본인인증 화면 또는 혜택 관리 본문이 노출되어야 한다',
+      timeout: 10_000,
+    }).toBe(true);
+    return await authentication.isVisible();
+  }
+
+  /** 본인인증이 끝나 실제 혜택 관리 본문으로 전환될 때까지 기다린다. */
+  async waitForBenefitContent(timeout = 300) {
+    await expect(this.page.locator(PcLocators.my.benefitContent)).toBeVisible({
+      timeout: timeout * 1000,
+    });
   }
 
   /** 마이 > 나의 쇼핑 정보 관리 > 회원 탈퇴 탭 클릭 */

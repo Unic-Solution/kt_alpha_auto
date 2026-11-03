@@ -61,7 +61,10 @@ export class MySteps {
   async verifyDeliveryAddress(): Promise<boolean> {
     await this.myPage.clickMyButton();
     await this.myPage.clickDeliveryAddressTab();
-    await this.waitForManualAuthenticationIfNeeded();
+    if (await this.myPage.waitForDeliveryAddressAuthenticationRequirement()) {
+      await notifyManualAuth('PC', '본인인증');
+      await this.myPage.waitForDeliveryAddressContent();
+    }
     const visible = await this.myPage.isDeliveryAddressContentVisible();
     if (visible) await this.myPage.wait(3);
     return visible;
@@ -71,7 +74,10 @@ export class MySteps {
   async verifyPhoneAddress(): Promise<boolean> {
     await this.myPage.clickMyButton();
     await this.myPage.clickPhoneAddressTab();
-    await this.waitForManualAuthenticationIfNeeded();
+    if (await this.myPage.waitForPhoneAddressAuthenticationRequirement()) {
+      await notifyManualAuth('PC', '본인인증');
+      await this.myPage.waitForPhoneAddressContent();
+    }
     const visible = await this.myPage.isPhoneAddressContentVisible();
     if (visible) await this.myPage.wait(2);
     return visible;
@@ -139,7 +145,10 @@ export class MySteps {
   async verifyBenefit(): Promise<boolean> {
     await this.myPage.clickMyButton();
     await this.myPage.clickBenefitTab();
-    await this.waitForManualAuthenticationIfNeeded();
+    if (await this.myPage.waitForBenefitAuthenticationRequirement()) {
+      await notifyManualAuth('PC', '본인인증');
+      await this.myPage.waitForBenefitContent();
+    }
     return await this.myPage.isBenefitContentVisible();
   }
 

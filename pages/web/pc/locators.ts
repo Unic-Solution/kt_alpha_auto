@@ -163,6 +163,7 @@ export const PcLocators = {
     benefitTab: '//div[contains(@class,"MyPage_menuList")]/div[2]//li[10]',
     manualAuthRequestButton: '//main//button[normalize-space()="인증 요청"]',
     benefitTitle: '//*[normalize-space()="혜택 관리"]',
+    benefitContent: 'main [class*="ModifyCustInfo_wrap"]',
     withdrawalTab: '//div[contains(@class,"MyPage_menuList")]//a[normalize-space()="회원 탈퇴"]',
     withdrawalTitle: '//h1[normalize-space()="회원 탈퇴"]',
     withdrawalPhoneTitle: '//main//h5[normalize-space()="휴대폰번호"]',
