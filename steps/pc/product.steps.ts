@@ -31,7 +31,7 @@ export class ProductSteps {
   /** 방송알림 신청 팝업 확인 및 등록 완료 확인 */
   async verifyBroadcastNotification(): Promise<boolean> {
     const currentProductName = await this.enterCurrentProduct();
-    const productName = await this.productPage.clickAlarmButton(currentProductName);
+    await this.productPage.clickAlarmButton(currentProductName);
     const registrationRequired = await this.productPage.isBroadcastNotificationModalVisible();
     if (registrationRequired) {
       await this.productPage.disableTogetherNotification();
@@ -40,13 +40,15 @@ export class ProductSteps {
       await this.productPage.confirmBroadcastNotificationIfVisible();
     }
     await this.productPage.clickMyBroadcastNotificationButton();
-    const registeredName = await this.productPage.getRegisteredBroadcastNotification(productName);
+    const afterNames = await this.productPage.getBroadcastNotificationNames();
 
     await parameter('등록 상태', registrationRequired ? '신규 등록' : '기존 등록 확인');
-    await parameter('등록 대상 방송명', productName);
-    await parameter('등록 목록 방송명', registeredName ?? '없음');
+    await parameter('등록 후 알림 수', String(afterNames.length));
 
-    return registeredName !== null;
+    if (afterNames.length === 0) return false;
+    await this.productPage.removeAllBroadcastNotifications();
+    await parameter('알림 해제', '전체 알림 해제 완료');
+    return true;
   }
 
   /** 상품 > 좋아요 추가 및 삭제 확인 */

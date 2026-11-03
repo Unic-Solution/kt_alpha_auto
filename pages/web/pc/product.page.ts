@@ -149,19 +149,25 @@ export class ProductPage extends BasePage {
     }).toPass({ timeout: 15_000, intervals: [1_000] });
   }
 
-  /** 마이페이지 방송알림 목록에서 등록 상품명 확인 */
-  async getRegisteredBroadcastNotification(productName: string): Promise<string | null> {
-    const normalize = (name: string) => name
-      .replace(/^(?:\[[^\]]+\]|\([^)]*\))\s*/, '')
-      .replace(/^.*?_/, '')
-      .replace(/\d+\s*(?:박스|팩|개|세트|종)/g, '')
-      .replace(/[+]/g, ' ')
-      .replace(/\s+더(?:\s|$)/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-    const expected = normalize(productName);
-    const names = await this.page.locator('main strong').allTextContents();
-    return names.find(name => normalize(name) === expected) ?? null;
+  /** 현재 방송알림 목록의 상품명 스냅샷 */
+  async getBroadcastNotificationNames(): Promise<string[]> {
+    return await this.page.locator('main [class*="GetBroadcastNotificationList_title"]').allTextContents();
+  }
+
+  /** 방송알림을 전체 해제하고 목록이 비었는지 확인 */
+  async removeAllBroadcastNotifications() {
+    const items = this.page.locator('main [class*="GetBroadcastNotificationList_item"]');
+    await this.page.getByRole('button', { name: '전체 알림 해제', exact: true }).click();
+
+    const confirm = this.page.getByRole('button', { name: /^(?:확인|해제)$/, exact: true })
+      .filter({ visible: true }).last();
+    await confirm.waitFor({ state: 'visible', timeout: 1_500 }).catch(() => {});
+    if (await confirm.isVisible()) await confirm.click();
+
+    await expect(items, '전체 해제 후 방송알림 목록이 비어야 한다').toHaveCount(0, {
+      timeout: 10_000,
+    });
+    await expect(this.page.getByText('등록된 방송 알림 내역이 없습니다.', { exact: true })).toBeVisible();
   }
 
   /** MD's Pick 상품 영역으로 스크롤 */
