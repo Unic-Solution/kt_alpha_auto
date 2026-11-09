@@ -68,6 +68,7 @@ export const PcLocators = {
     orderProductOptions: '[class*="OrderProductItem_options"] li',
     orderProductPrice: '[class*="OrderProductItem_price__"]',
     onAirBuyButton: '//div[contains(@class,"ButtonPurchase")]//span[text()="구매하기"]',
+    fixedProductBuyButton: '[class*="FixedProdBtn_box"]',
     categoryButton: '//button[text()="카테고리"]',
     categoryModal: '[class*="Modal_open"]:has([role="tab"][data-value="alpha"])',
     homeShoppingOneDepthButton: '//div[contains(@class,"Modal")]//div[contains(@class,"Tab_wrap")]/div/button[1]',

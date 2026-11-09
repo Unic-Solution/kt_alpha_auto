@@ -162,11 +162,16 @@ export class LoginPage extends BasePage {
   async clickProductBuyForLogin() {
     const modal = this.page.locator(PcLocators.main.purchaseModal);
     const idInput = this.page.locator(PcLocators.login.idInput);
-    const buyButton = this.page.locator('main [class*="ButtonPurchase_wrap"]')
+    const fixedBuyButton = this.page.locator(PcLocators.main.fixedProductBuyButton)
+      .getByRole('button', { name: /구매하기$/ }).filter({ visible: true }).first();
+    const regularBuyButton = this.page.locator('main [class*="ButtonPurchase_wrap"]')
       .getByRole('button', { name: /구매하기$/ }).filter({ visible: true }).first();
     await expect(async () => {
       if (await idInput.isVisible()) return;
-      if (!await modal.isVisible()) await buyButton.click();
+      if (!await modal.isVisible()) {
+        const buyButton = await fixedBuyButton.isVisible() ? fixedBuyButton : regularBuyButton;
+        await buyButton.click();
+      }
       await expect(modal, '구매 옵션 모달이 열려야 한다').toBeVisible({ timeout: 3_000 });
       const option = this.page.locator(PcLocators.main.onAirDirectBuyFirstOption).filter({ visible: true }).first();
       if (await option.isVisible()) await option.click();

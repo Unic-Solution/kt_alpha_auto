@@ -219,10 +219,13 @@ export class MainPage extends BasePage {
     const button = this.page.locator(PcLocators.main.onAirDirectBuyButton);
     await button.scrollIntoViewIfNeeded();
     const modal = this.page.locator(PcLocators.main.purchaseModal);
-    // 초기 화면의 이벤트 연결이 늦는 경우 패널이 열리지 않았을 때만 재시도한다.
+    // 지연 홈 팝업이나 초기 hydration이 클릭을 막으면 팝업 정리부터 다시 수행한다.
     await expect(async () => {
-      if (!await modal.isVisible()) await button.click();
-      await expect(modal).toBeVisible({ timeout: 10_000 });
+      if (!await modal.isVisible()) {
+        await this.closeModal(500);
+        await button.click({ timeout: 3_000 });
+      }
+      await expect(modal).toBeVisible({ timeout: 3_000 });
     }).toPass({ timeout: 30_000, intervals: [1_000] });
   }
 

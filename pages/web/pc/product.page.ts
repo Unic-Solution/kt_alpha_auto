@@ -313,9 +313,15 @@ export class ProductPage extends BasePage {
   /** 상품 > 구매하기 버튼 클릭 (옵션 선택 포함) */
   async clickProductBuy() {
     const modal = this.page.locator(PcLocators.main.purchaseModal);
-    const button = this.page.locator('main [class*="ButtonPurchase_wrap"]').getByRole('button', { name: /구매하기$/ }).first();
+    const fixedButton = this.page.locator(PcLocators.main.fixedProductBuyButton)
+      .getByRole('button', { name: /구매하기$/ }).filter({ visible: true }).first();
+    const regularButton = this.page.locator('main [class*="ButtonPurchase_wrap"]')
+      .getByRole('button', { name: /구매하기$/ }).filter({ visible: true }).first();
     await expect(async () => {
-      if (!await modal.isVisible()) await button.click();
+      if (!await modal.isVisible()) {
+        const button = await fixedButton.isVisible() ? fixedButton : regularButton;
+        await button.click();
+      }
       await expect(modal, '구매 옵션 모달이 열려야 한다').toBeVisible({ timeout: 3_000 });
     }).toPass({ timeout: 15_000, intervals: [1_000] });
     await this.selectFirstEnabledOption();
