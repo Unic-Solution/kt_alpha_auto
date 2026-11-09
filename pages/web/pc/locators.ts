@@ -80,6 +80,7 @@ export const PcLocators = {
     filterModal: '[class*="Modal_open"]:has-text("필터")',
     sortOptions: '[class*="ModalSelectOption"] button',
     searchButton: '//div[contains(@class,"Header_right")]/a',
+    headerCartButton: 'button[class*="Header_btnCart"]',
     popularWords: '//ul[contains(@class,"PopularWords")]//p',
     searchResults: '[class*="ProductItem_box"][data-product-id]',
     searchProduct: 'button[class*="ProductItem_content"]',

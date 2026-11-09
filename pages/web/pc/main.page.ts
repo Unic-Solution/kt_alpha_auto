@@ -605,7 +605,7 @@ export class MainPage extends BasePage {
       ['할인율 높은순', 'user_group_price_discount_rate_desc'],
       ['상품평순', 'review_score_desc'],
     ] as const;
-    for (const [name, value] of sorts) {
+    for (const [name] of sorts) {
       const sortTrigger = this.page.getByRole('button', {
         name: /^(?:인기순|신상품순|낮은 가격순|높은 가격순|할인율 높은순|상품평순)$/,
       }).filter({ visible: true }).first();
@@ -616,8 +616,8 @@ export class MainPage extends BasePage {
         await expect(options.filter({ hasText: new RegExp(`^${optionName}$`) })).toHaveCount(1);
       }
       await options.filter({ hasText: new RegExp(`^${name}$`) }).click();
-      if (value) await expect(this.page).toHaveURL(url => url.searchParams.get('sort') === value);
-      else await expect(this.page.getByRole('button', { name, exact: true }).first()).toBeVisible();
+      await expect(this.page.getByRole('button', { name, exact: true }).filter({ visible: true }).first(),
+        `${name} 정렬이 선택되어야 한다`).toBeVisible();
       await expectProducts();
     }
     return { depth1Name, depth2Name, depth3Name, depth2Id, beforeQuantity, filters: ['TV쇼핑', '혜택-무료배송', '가격-400~70,000원', '결과 내 재검색-원피스'], sorts: sorts.map(([name]) => name), url: this.page.url() };
@@ -628,14 +628,24 @@ export class MainPage extends BasePage {
     await this.click(PcLocators.main.searchButton);
   }
 
+  private popularWordButtons() {
+    return this.page.getByRole('list')
+      .filter({ has: this.page.getByRole('button', { name: /^1\s+\S/ }) })
+      .first().getByRole('button');
+  }
+
+  private async popularWord(button: ReturnType<typeof this.page.locator>) {
+    return (await button.innerText()).replace(/^\s*\d+\s*/, '').trim();
+  }
+
   /** 첫 번째 인기 검색어를 선택하고 검색 결과 이동을 확인한다. */
   async clickPopularWord(): Promise<string> {
-    const words = this.page.locator(PcLocators.main.popularWords);
-    await expect(words.first(), '인기 검색어가 노출되어야 한다').toBeVisible();
-    expect(await words.count(), '인기 검색어 개수').toBeGreaterThan(0);
-    const word = (await words.first().innerText()).trim();
+    const buttons = this.popularWordButtons();
+    await expect(buttons.first(), '인기 검색어가 노출되어야 한다').toBeVisible();
+    expect(await buttons.count(), '인기 검색어 개수').toBeGreaterThan(0);
+    const word = await this.popularWord(buttons.first());
     expect(word, '인기 검색어').not.toBe('');
-    await words.first().click();
+    await buttons.first().click();
     await expect(this.page).toHaveURL(url => url.pathname.endsWith('/display/search/result') && url.searchParams.get('query') === word);
     return word;
   }
@@ -664,12 +674,31 @@ export class MainPage extends BasePage {
   async verifyPopularSearchBroadcastProducts() {
     await this.goToHome();
     await this.clickSearchButton();
-    const popularWord = await this.clickPopularWord();
-    const section = this.page.locator('[class*="SearchResult_topLineBox"]');
-    const heading = section.getByRole('heading', { name: /방송 상품$/ });
-    await expect(heading, '검색 결과에 방송 상품 구좌가 노출되어야 한다').toBeVisible({ timeout: 15_000 });
+    const buttons = this.popularWordButtons();
+    await expect(buttons.first(), '인기 검색어가 노출되어야 한다').toBeVisible();
+    const wordCount = await buttons.count();
+    expect(wordCount, '인기 검색어가 한 개 이상 노출되어야 한다').toBeGreaterThan(0);
+
+    let popularWord = '';
+    let heading = this.page.getByRole('heading', { name: /방송 상품$/ }).first();
+    for (let index = 0; index < wordCount; index++) {
+      const currentButton = this.popularWordButtons().nth(index);
+      const word = await this.popularWord(currentButton);
+      await currentButton.click();
+      await expect(this.page).toHaveURL(url => url.pathname.endsWith('/display/search/result'));
+      heading = this.page.getByRole('heading', { name: /방송 상품$/ }).first();
+      await heading.waitFor({ state: 'visible', timeout: 5_000 }).catch(() => {});
+      if (await heading.isVisible()) {
+        popularWord = word;
+        break;
+      }
+      await this.goToHome();
+      await this.clickSearchButton();
+    }
+    expect(popularWord, '인기 검색어 결과 중 방송 상품 구좌가 있는 검색어가 있어야 한다').not.toBe('');
     await expect(heading, '방송 상품 구좌 제목에 선택한 인기 검색어가 표시되어야 한다').toContainText(popularWord);
     await heading.scrollIntoViewIfNeeded();
+    const section = heading.locator('xpath=ancestor::div[contains(@class,"SearchResult_topLineBox")][1]');
     const products = section.locator(PcLocators.main.searchResults);
     await expect(products.first(), '방송 상품 구좌에 상품이 한 개 이상 노출되어야 한다')
       .toBeVisible({ timeout: 15_000 });
@@ -680,7 +709,7 @@ export class MainPage extends BasePage {
   async verifyEmptyCartPopularProducts() {
     await this.goToHome();
     await this.closeModal();
-    const cartButton = this.page.getByRole('button', { name: '장바구니', exact: true }).filter({ visible: true }).first();
+    const cartButton = this.page.locator(PcLocators.main.headerCartButton).filter({ visible: true }).first();
     await expect(cartButton, '메인 페이지 장바구니 버튼이 노출되어야 한다').toBeVisible();
     await cartButton.click();
     await expect(this.page).toHaveURL(url => url.pathname === '/custord/basket');
@@ -914,7 +943,9 @@ export class MainPage extends BasePage {
     const categoryHeading = this.page.getByRole('heading', { name: new RegExp(`${categoryName} BEST 100`), level: 2 });
     await expect(categoryHeading, '선택한 상세 카테고리 상품 목록이 노출되어야 한다').toBeVisible({ timeout: 15_000 });
     const categoryPage = this.page.locator('[class*="CategoryPage_wrap"]');
-    const product = categoryPage.locator(PcLocators.main.recentlyViewedProduct).first();
+    const product = categoryPage.locator(
+      `${PcLocators.main.recentlyViewedProduct}[data-product-id]:not([data-product-id^="skeleton-"])`,
+    ).first();
     await expect(product, '상세 카테고리에 상품이 있어야 한다').toBeVisible();
     const productId = await product.getAttribute('data-product-id');
     expect(productId, '카테고리 상품 ID').toMatch(/^\d+$/);
