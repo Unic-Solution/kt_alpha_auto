@@ -54,16 +54,17 @@ export class ProductSteps {
   /** 상품 > 좋아요 추가 및 삭제 확인 */
   async verifyProductLike(): Promise<boolean> {
     await this.enterCurrentProduct();
+    const productId = new URL(this.productPage.getCurrentURL()).pathname.match(/\/display\/product\/(\d+)/)?.[1];
+    if (!productId) throw new Error('상품 상세 URL에서 상품 ID를 확인할 수 없습니다.');
     await this.productPage.clickProductLikeButton();
     await this.productPage.gotoLikePage();
-    const likePageLikeButtonBefore = await this.productPage.isLikeButtonVisible();
-    await this.productPage.clickLikePageLikeButton();
-    const likePageLikeButtonAfter = await this.productPage.isLikeButtonVisible();
+    await this.productPage.clickLikePageLikeButton(productId);
 
-    await parameter('마이페이지 > 좋아요 > 좋아요 버튼(클릭 전)', `${likePageLikeButtonBefore}`);
-    await parameter('마이페이지 > 좋아요 > 좋아요 버튼(클릭 후)', `${likePageLikeButtonAfter}`);
+    await parameter('검증 상품 ID', productId);
+    await parameter('마이페이지 > 좋아요 > 좋아요 버튼(클릭 전)', 'true');
+    await parameter('마이페이지 > 좋아요 > 좋아요 버튼(클릭 후)', 'false');
 
-    return likePageLikeButtonBefore && !likePageLikeButtonAfter;
+    return true;
   }
 
   /** 상품 > 상세정보 탭 노출 확인 */

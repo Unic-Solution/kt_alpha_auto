@@ -19,16 +19,17 @@ export class GsProductSteps {
   /** 기프티쇼 > 상품 > 좋아요 추가 및 삭제 확인 */
   async gsVerifyProductLike(): Promise<boolean> {
     await this.gsProductPage.clickProduct();
+    const productId = new URL(this.gsProductPage.getCurrentURL()).pathname.match(/\/display\/product\/(\d+)/)?.[1];
+    if (!productId) throw new Error('기프티쇼 상품 상세 URL에서 상품 ID를 확인할 수 없습니다.');
     await this.gsProductPage.clickProductLikeButton();
     await this.gsProductPage.gotoLikePage();
-    const likePageLikeButtonBefore = await this.gsProductPage.isLikeButtonVisible();
-    await this.gsProductPage.clickLikePageLikeButton();
-    const likePageLikeButtonAfter = await this.gsProductPage.isLikeButtonVisible();
+    await this.gsProductPage.clickLikePageLikeButton(productId);
 
-    await parameter('마이페이지 > 좋아요 > 좋아요 버튼(클릭 전)', `${likePageLikeButtonBefore}`);
-    await parameter('마이페이지 > 좋아요 > 좋아요 버튼(클릭 후)', `${likePageLikeButtonAfter}`);
+    await parameter('검증 상품 ID', productId);
+    await parameter('마이페이지 > 좋아요 > 좋아요 버튼(클릭 전)', 'true');
+    await parameter('마이페이지 > 좋아요 > 좋아요 버튼(클릭 후)', 'false');
 
-    return likePageLikeButtonBefore && !likePageLikeButtonAfter;
+    return true;
   }
 
   /** 기프티쇼 > 상품 > 상세정보 탭 노출 확인 */

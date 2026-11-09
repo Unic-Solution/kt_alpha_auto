@@ -12,7 +12,14 @@ export class GsProductPage extends BasePage {
 
   /** 상품 > 좋아요(하트) 버튼 클릭 */
   async clickProductLikeButton() {
-    await this.click(PcLocators.product.productLikeButton);
+    const button = this.page.locator(PcLocators.product.productLikeButton);
+    await expect(button).toBeVisible();
+    if ((await button.textContent())?.includes('좋아요 취소')) {
+      await button.click();
+      await expect(button).toContainText('좋아요 추가');
+    }
+    await button.click();
+    await expect(button).toContainText('좋아요 취소');
   }
 
   /** 마이페이지 > 좋아요 탭으로 이동 */
@@ -20,15 +27,14 @@ export class GsProductPage extends BasePage {
     await this.goToUrl(PcLocators.urls.myLikePage);
   }
 
-  /** 마이페이지 > 좋아요 탭 > 좋아요 버튼 노출 여부 반환 */
-  async isLikeButtonVisible(): Promise<boolean> {
-    return await this.isVisible(PcLocators.product.likePageLikeButton);
-  }
-
-  /** 마이페이지 > 좋아요 탭 > 좋아요(하트) 버튼 클릭 */
-  async clickLikePageLikeButton() {
-    await this.click(PcLocators.product.likePageLikeButton);
-    await this.waitForHidden(PcLocators.product.likePageLikeButton, 5).catch(() => {});
+  /** 마이페이지 > 좋아요 탭 > 해당 상품의 좋아요(하트) 버튼 클릭 */
+  async clickLikePageLikeButton(productId: string) {
+    const product = this.page.locator(`${PcLocators.main.recentlyViewedProduct}[data-product-id="${productId}"]`);
+    const button = product.locator('button[class*="ProductItem_btnLike"]');
+    await expect(button, '추가한 기프티쇼 상품의 좋아요 취소 버튼이 노출되어야 한다').toBeVisible();
+    await button.click();
+    await expect(product, '좋아요 취소 후 해당 기프티쇼 상품이 목록에서 사라져야 한다')
+      .toBeHidden({ timeout: 5_000 });
   }
 
   /** 상품 > 상세정보 탭 클릭 */
