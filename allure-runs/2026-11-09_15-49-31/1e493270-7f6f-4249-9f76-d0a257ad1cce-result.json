@@ -1,0 +1,1 @@
+{"uuid":"1e493270-7f6f-4249-9f76-d0a257ad1cce","name":"[테스트케이스 22번] 일반상품 장바구니","status":"passed","start":1794207298747,"stop":1794207305365,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20261109_15:49:37)"},{"name":"story","value":"[테스트케이스 22번] 일반상품 장바구니"}],"parameters":[{"name":"메인페이지 > 상품 > 장바구니","value":"장바구니 버튼 없는 케이스"}]}

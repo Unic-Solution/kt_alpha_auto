@@ -1,0 +1,1 @@
+{"uuid":"0842c243-258e-4b08-9aca-10415c46e24c","name":"[테스트케이스 4번] ON AIR 바로구매에서 장바구니","status":"passed","start":1794207157739,"stop":1794207164037,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20261109_15:49:37)"},{"name":"story","value":"[테스트케이스 4번] ON AIR 바로구매에서 장바구니"}],"parameters":[{"name":"장바구니 검증","value":"구매 모달에 장바구니 버튼이 없어 통과"}]}
