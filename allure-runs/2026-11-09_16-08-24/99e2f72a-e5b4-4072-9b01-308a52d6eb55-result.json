@@ -1,0 +1,1 @@
+{"uuid":"99e2f72a-e5b4-4072-9b01-308a52d6eb55","name":"[테스트케이스 65번] 기프티쇼 카테고리","status":"passed","start":1794208672679,"stop":1794208686122,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20261109_16:08:31)"},{"name":"story","value":"[테스트케이스 65번] 기프티쇼 카테고리"}],"parameters":[{"name":"필터 적용 전 상품 개수","value":"35"},{"name":"필터 적용 후 상품 개수","value":"1"}]}
