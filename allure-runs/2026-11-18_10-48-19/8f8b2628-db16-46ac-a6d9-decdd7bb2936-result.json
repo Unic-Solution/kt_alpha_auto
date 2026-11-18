@@ -1,0 +1,1 @@
+{"uuid":"8f8b2628-db16-46ac-a6d9-decdd7bb2936","name":"[테스트케이스 55번] 회원 탈퇴","status":"passed","start":1794966927306,"stop":1794966942830,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20261118_10:48:27)"},{"name":"story","value":"[테스트케이스 55번] 회원 탈퇴"}],"parameters":[{"name":"본인인증 화면","value":"정상 노출"},{"name":"탈퇴 안내 화면","value":"정상 노출"}]}
