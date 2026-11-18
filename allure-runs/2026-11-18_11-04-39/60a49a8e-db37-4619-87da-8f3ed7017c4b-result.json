@@ -1,0 +1,1 @@
+{"uuid":"60a49a8e-db37-4619-87da-8f3ed7017c4b","name":"[테스트케이스 55번] 회원 탈퇴","status":"failed","start":1794968990573,"stop":1794968990576,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20261118_11:04:46)"},{"name":"story","value":"[테스트케이스 55번] 회원 탈퇴"}],"statusDetails":{"message":"Error: page.goto: Target page, context or browser has been closed"}}

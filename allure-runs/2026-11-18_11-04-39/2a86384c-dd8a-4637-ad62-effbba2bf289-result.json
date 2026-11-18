@@ -1,0 +1,1 @@
+{"uuid":"2a86384c-dd8a-4637-ad62-effbba2bf289","name":"[테스트케이스 56번] 장바구니","status":"failed","start":1794968990866,"stop":1794968990871,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20261118_11:04:46)"},{"name":"story","value":"[테스트케이스 56번] 장바구니"}],"statusDetails":{"message":"Error: page.goto: Target page, context or browser has been closed"}}
