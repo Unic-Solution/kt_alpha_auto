@@ -1,0 +1,1 @@
+{"uuid":"1936a523-73f9-46a2-8dff-5f061b3b773b","name":"[테스트케이스 53번] 회원 정보 수정","status":"passed","start":1795064968299,"stop":1795065005101,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20261119_14:03:06)"},{"name":"story","value":"[테스트케이스 53번] 회원 정보 수정"}],"parameters":[{"name":"본인인증","value":"true"}]}
