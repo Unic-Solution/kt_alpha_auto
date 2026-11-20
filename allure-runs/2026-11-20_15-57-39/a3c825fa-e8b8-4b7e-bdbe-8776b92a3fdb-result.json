@@ -1,0 +1,1 @@
+{"uuid":"a3c825fa-e8b8-4b7e-bdbe-8776b92a3fdb","name":"[테스트케이스 87번] 검색 추천구좌","status":"passed","start":1795158672972,"stop":1795158678497,"labels":[{"name":"epic","value":"PC Web"},{"name":"feature","value":"통합 테스트 (20261120_15:57:47)"},{"name":"story","value":"[테스트케이스 87번] 검색 추천구좌"}],"parameters":[{"name":"선택한 인기 검색어","value":"신미사"},{"name":"방송 상품 개수","value":"10"}]}
